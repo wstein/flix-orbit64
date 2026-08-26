@@ -6,8 +6,11 @@
 /// combined by mixed radix, and the result is written in base64url at a fixed
 /// width. Nothing is spent on separators, field alignment, or type tags.
 ///
-/// The encoding is canonical: two cubes that look the same produce the same
-/// token, so string equality is state equality.
+/// The encoding is canonical for a given slot convention: two coordinate states
+/// produce the same token exactly when they are the same state, so string
+/// equality is state equality. The qualifier matters -- a token records ordinals
+/// and no geometry, so which physical piece "wing 17" is has to be agreed
+/// elsewhere. `Orbit64.Net` is where this package says what it assumes.
 ///
 /// | cube  | bits   | chars |
 /// |-------|--------|-------|

@@ -9,9 +9,12 @@
 A canonical, URL-safe, minimal-width encoding for `n x n x n` twisty cube
 state, for every size from the 2x2x2 to the 7x7x7.
 
-Two cubes that look the same produce the same token, so string equality is
-state equality -- and no token is a character wider than the state count
-requires.
+Read under the same slot convention, two identical cubes always produce the
+same token, so string equality is state equality. That qualifier is load-bearing
+rather than lawyerly: a token records ordinals and carries no geometry of its
+own, so two implementations that number their slots differently will describe
+one physical cube with two tokens. [Slot numbering](#slot-numbering) says what
+follows from that. No token is a character wider than the state count requires.
 
 ```
 3x3x3  AAAAAAAAAAf_                                (superflip)
@@ -31,7 +34,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                          # 94 tests
+./flixw test                                          # 101 tests
 ./flixw run --entrypoint Orbit64.Cli.main             # size table, round-trip
 ./flixw run --entrypoint Orbit64.Cli.main -- <token>  # decode; length picks n
 ```
@@ -427,6 +430,9 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   expected output.
 - `test/TestNet5x5.flix` -- the same for the 5x5x5, including a wide turn that
   distinguishes the two centre orbits.
+- `test/TestNetGuards.flix` -- what the renderer must refuse (incomplete,
+  reordered, duplicated and foreign orbit lists), and a direct check that each
+  convention's tables cover every facelet exactly once.
 - `test/TestOrbitDiscovery.flix` -- derives `Orbit.layout` a second time, from
   geometry instead of arithmetic. It builds a cube, turns it, and takes the
   connected components of the "one turn maps this piece to that one" graph,
