@@ -87,16 +87,21 @@ mod Orbit64.Cli {
     def draw(n: Int32, orbits: List[Orbit64.Coord.Coord], colour: Bool): Unit \ IO =
         println("");
         match Orbit64.Net.draw(n, orbits, colour) {
-            case Some(net) => println(net)
+            case Some(net) =>
+                println(net);
+                // A token carries ordinals, not geometry. Which slot sits where
+                // is agreed out of band, so the picture has to say what it read.
+                println("");
+                println("  drawn as ${Orbit64.Net.convention(n)}")
             // `draw` declines for two different reasons, and only the caller
             // knows which applies: it has the size, and the size is what
             // decides.
-            case None if n == 2 or n == 3 =>
+            case None if n == 2 or n == 3 or n == 4 =>
                 println("  (that state is not a cube, so there is nothing to draw)")
             case None =>
-                println("  (no net for the ${n}x${n}x${n}: every wing and centre orbit needs its own");
-                println("   slot-to-facelet mapping, and only corners and edges have one here.");
-                println("   See Orbit64.Net.)")
+                println("  (no net for the ${n}x${n}x${n}: every wing and centre orbit needs its");
+                println("   own slot-to-facelet mapping, and this module has one only for the");
+                println("   2x2x2, 3x3x3 and 4x4x4. See Orbit64.Net.)")
         }
 
     ///
