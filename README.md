@@ -31,7 +31,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                          # 72 tests
+./flixw test                                          # 74 tests
 ./flixw run --entrypoint Orbit64.Cli.main             # size table, round-trip
 ./flixw run --entrypoint Orbit64.Cli.main -- <token>  # decode; length picks n
 ```
@@ -238,6 +238,11 @@ depending on the slot's handedness, so `24!` is right and `24!/2^12` is not.
   3D facelet representation, orbits found by connected components, every state
   verified to round-trip at sticker level.
 - `test/TestOrbit64.flix` -- sizes, round-trips, and error handling.
+- `test/TestOrbitDiscovery.flix` -- derives `Orbit.layout` a second time, from
+  geometry instead of arithmetic. It builds a cube, turns it, and takes the
+  connected components of the "one turn maps this piece to that one" graph,
+  which is three Datalog rules. The two derivations share no code, so an orbit
+  count that is wrong at a size with no test vectors still fails.
 
 See `AGENTS.md` for the toolchain, and
 <https://wstein.github.io/flix-orbit64/> for the generated API documentation.
