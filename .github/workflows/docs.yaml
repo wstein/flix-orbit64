@@ -153,11 +153,43 @@ jobs:
           TAIL
           } > site/index.html
 
-          # Nothing published may point at a page that was not published. The
-          # module pages here link only to index.html and the assets, but a
-          # richer project can link to a standard library page, and that would
-          # 404 silently without this.
+          # `flix doc` documents this project only, but it still emits links to
+          # the standard library entities a module mentions -- deriving Eq,
+          # Order or ToString is enough. Those pages are never generated here,
+          # so the links dangle by construction. Publishing a copy of the
+          # standard library to satisfy them is the wrong trade and dropping
+          # them loses real information, so they are sent to the canonical
+          # documentation instead.
           broken=0
+          external=""
+          for f in site/*.html; do
+            while IFS= read -r target; do
+              [ -n "$target" ] || continue
+              [ -f "site/$target" ] && continue
+              sed "s|href='$target'|href='https://api.flix.dev/$target'|g" "$f" > "$f.tmp"
+              mv "$f.tmp" "$f"
+              external="$external$target\n"
+            done < <(grep -oE "href='[A-Za-z0-9_.-]+\.html'" "$f" | sed "s/^href='//; s/'$//" | sort -u)
+          done
+
+          # Fail closed, at the only place the answer actually lives. A link
+          # that 404s upstream is a broken link whoever generated it, and the
+          # run already needs the network to have got this far, so a failure
+          # here is a real result rather than flake.
+          if [ -n "$external" ]; then
+            while IFS= read -r target; do
+              [ -n "$target" ] || continue
+              url="https://api.flix.dev/$target"
+              if curl -sfI --retry 2 --max-time 15 -o /dev/null "$url"; then
+                echo "  standard library: $target -> $url"
+              else
+                echo "::error::$target is not published here and $url does not resolve"
+                broken=1
+              fi
+            done < <(printf "$external" | sort -u)
+          fi
+
+          # Backstop: after that rewrite nothing local may still dangle.
           for f in site/*.html; do
             while IFS= read -r target; do
               [ -n "$target" ] || continue
