@@ -359,17 +359,70 @@ mod Orbit64.Net {
     ///
     /// `colour` false gives plain letters, for pipes and for `NO_COLOR`.
     ///
-    pub def draw(n: Int32, orbits: List[Coord], colour: Bool): Option[String] =
-        if (n != 2 and n != 3 and n != 4 and n != 5) None
+    ///
+    /// Every facelet index the tables for size `n` write to, in no order.
+    ///
+    /// These tables are hand-derived, and the failure they invite is a
+    /// duplicated or omitted index -- which a scramble fixture can miss, since
+    /// a doubly-written facelet still holds a plausible colour. A caller that
+    /// wants to check them can count instead: this should hold `6 * n * n`
+    /// entries, all distinct. `None` for a size with no tables, and for the
+    /// 2x2x2, which borrows the 3x3x3's.
+    ///
+    pub def writtenFacelets(n: Int32): Option[Vector[Int32]] =
+        let flat = xss -> Vector.flatten(xss);
+        match n {
+            case 3 => Some(Vector.append(
+                        Vector.append(flat(cornerFacelet()), flat(edgeFacelet())),
+                        Vector.range(0, 6) |> Vector.map(i -> i * 9 + 4)))
+            case 4 => Some(Vector.append(
+                        Vector.append(flat(cornerFacelet4()), flat(wingFacelet4())),
+                        centreFacelet4()))
+            case 5 => Some(
+                        Vector.append(flat(cornerFacelet5()),
+                        Vector.append(flat(midgeFacelet5()),
+                        Vector.append(flat(wingFacelet5()),
+                        Vector.append(xFacelet5(),
+                        Vector.append(plusFacelet5(), fixedFacelet5()))))))
+            case _ => None
+        }
+
+    ///
+    /// Whether this module has a slot convention for an `n x n x n`.
+    ///
+    /// Separate from `draw` because "there is no convention for a 6x6x6" and
+    /// "these orbits are not a cube" are different answers, and a caller that
+    /// wants to know which without building a state should not have to guess
+    /// from `n`.
+    ///
+    pub def canDraw(n: Int32): Bool = n >= 2 and n <= 5
+
+    pub def draw(n: Int32, orbits: List[Coord], colour: Bool): Result[String, String] =
+        let expected = Orbit64.Orbit.layout(n);
+        let got = List.map(Orbit64.Coord.kind, orbits);
+        if (not canDraw(n))
+            Err("no net for the ${n}x${n}x${n}: every wing and centre orbit needs its own "
+                + "slot-to-facelet mapping, and this module has one only up to the 5x5x5")
+        // Each orbit being individually valid is not enough. A list that is
+        // short, reordered, or carries an orbit this size does not have leaves
+        // stickers nothing ever writes to, and the result would be a tidy
+        // picture of a cube that does not exist.
+        else if (got != expected)
+            Err("expected orbits ${expected} for the ${n}x${n}x${n}, got ${got}")
         // A slot-to-facelet table is indexed by the piece sitting in a slot, so
         // a permutation with an entry outside its orbit reads off the end of
         // one. Everything `decode` produces is a genuine permutation, but this
-        // is public and a hand-built coordinate is not, and declining to draw
-        // is a better answer than an exception out of an `Option`.
-        else if (List.exists(c -> not Orbit64.Coord.isValid(c), orbits)) None
+        // is public and a hand-built coordinate is not.
+        else if (List.exists(c -> not Orbit64.Coord.isValid(c), orbits))
+            Err("that state is not a cube")
         else
-            if (n == 4) draw4(orbits, colour)
-            else if (n == 5) draw5(orbits, colour)
+            if (n == 4) Ok(draw4(orbits, colour))
+            else if (n == 5)
+                match draw5(orbits, colour) {
+                    case Some(net) => Ok(net)
+                    // Unreachable: the layout check above already fixed the shape.
+                    case None      => Err("expected orbits ${expected} for the ${n}x${n}x${n}")
+                }
             else
                 region rc {
                     // Centres never move, so they are the frame the rest is drawn in.
@@ -380,7 +433,7 @@ mod Orbit64.Net {
                         case MidgeCoord(ep, eo)  => placeEdges(sticker, ep, eo)
                         case _                   => ()
                     });
-                    Some(render(3, n, Array.toVector(sticker), colour))
+                    Ok(render(3, n, Array.toVector(sticker), colour))
                 }
 
     ///
@@ -437,7 +490,7 @@ mod Orbit64.Net {
     /// comes from the token. An orbit this convention has no table for is left
     /// alone rather than guessed at.
     ///
-    def draw4(orbits: List[Coord], colour: Bool): Option[String] =
+    def draw4(orbits: List[Coord], colour: Bool): String =
         region rc {
             let sticker = Array.repeat(rc, 96, 0);
             orbits |> List.forEach(c -> match c {
@@ -465,7 +518,7 @@ mod Orbit64.Net {
                     })
                 case _ => ()
             });
-            Some(render(4, 4, Array.toVector(sticker), colour))
+            render(4, 4, Array.toVector(sticker), colour)
         }
 
     def placeCorners(sticker: Array[Int32, r], cp: Vector[Int32], co: Vector[Int32]): Unit \ r =

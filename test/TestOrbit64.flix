@@ -347,9 +347,9 @@ def everyDecodedStateStillEncodes(): Unit \ Assert =
 @Test
 def netDeclinesAStateThatIsNotACube(): Unit \ Assert = {
     let outOfRange = CornerCoord(Vector#{9, 1, 2, 3, 4, 5, 6, 7}, Vector.repeat(8, 0));
-    Assert.assertEq(expected = None, Orbit64.Net.draw(2, List#{outOfRange}, false));
+    Assert.assertEq(expected = true, Result.isErr(Orbit64.Net.draw(2, List#{outOfRange}, false)));
     let repeated = CornerCoord(Vector#{0, 0, 2, 3, 4, 5, 6, 7}, Vector.repeat(8, 0));
-    Assert.assertEq(expected = None, Orbit64.Net.draw(2, List#{repeated}, false))
+    Assert.assertEq(expected = true, Result.isErr(Orbit64.Net.draw(2, List#{repeated}, false)))
 }
 
 ///
@@ -364,7 +364,7 @@ def netStillDrawsEveryDecodableSmallCube(): Unit \ Assert =
                 |> List.map(o -> Orbit64.Coord.unrank(o,
                     BigInt.modulo(seed, Orbit64.Orbit.radix(o))));
             Assert.assertTrueWithMsg(
-                not Option.isEmpty(Orbit64.Net.draw(n, orbits, false)),
+                Result.isOk(Orbit64.Net.draw(n, orbits, false)),
                 "declined to draw a ${n}x${n} state it decoded")
         }))
 
@@ -386,7 +386,7 @@ def alphabetIsSixtyFourDistinctUrlSafeCharacters(): Unit \ Assert =
 @Test
 def solvedCubeDrawsSixSolidFaces(): Unit \ Assert =
     let expected = "             U  U  U \n             U  U  U \n             U  U  U \n\n L  L  L     F  F  F     R  R  R     B  B  B \n L  L  L     F  F  F     R  R  R     B  B  B \n L  L  L     F  F  F     R  R  R     B  B  B \n\n             D  D  D \n             D  D  D \n             D  D  D ";
-    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(3, Orbit64.solved(3), false))
+    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(3, Orbit64.solved(3), false))
 
 @Test
 def superflipDrawsSolvedCornersAndFlippedEdges(): Unit \ Assert =
@@ -395,23 +395,25 @@ def superflipDrawsSolvedCornersAndFlippedEdges(): Unit \ Assert =
         CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
         MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
     };
-    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(3, orbits, false))
+    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(3, orbits, false))
 
 @Test
 def solved2x2DrawsFourStickersPerFace(): Unit \ Assert =
     let expected = "          U  U \n          U  U \n\n L  L     F  F     R  R     B  B \n L  L     F  F     R  R     B  B \n\n          D  D \n          D  D ";
-    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(2, Orbit64.solved(2), false))
+    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(2, Orbit64.solved(2), false))
 
 @Test
 def sizesWithoutAConventionAreNotDrawn(): Unit \ Assert =
-    List.range(6, 8) |> List.forEach(n ->
-        Assert.assertEq(expected = None, Orbit64.Net.draw(n, Orbit64.solved(n), false)))
+    List.range(6, 8) |> List.forEach(n -> {
+        Assert.assertEq(expected = false, Orbit64.Net.canDraw(n));
+        Assert.assertEq(expected = true, Result.isErr(Orbit64.Net.draw(n, Orbit64.solved(n), false)))
+    })
 
 @Test
 def colourWrapsEveryStickerAndResetsIt(): Unit \ Assert =
     match Orbit64.Net.draw(3, Orbit64.solved(3), true) {
-        case None      => Assert.assertEq(expected = "a net", "nothing")
-        case Some(net) =>
+        case Err(e)  => Assert.assertEq(expected = "a net", e)
+        case Ok(net) =>
             // 54 stickers, each opened with a background and closed with a reset.
             Assert.assertEq(expected = 54, String.countSubstring(substr = "[48;5;", net));
             Assert.assertEq(expected = 54, String.countSubstring(substr = "[0m", net))

@@ -26,7 +26,7 @@ def fourByFourSolvedDrawsSixSolidFaces(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
     let expected = "                U  U  U  U \n                U  U  U  U \n                U  U  U  U \n                U  U  U  U \n\n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n\n                D  D  D  D \n                D  D  D  D \n                D  D  D  D \n                D  D  D  D ";
-    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(4, orbits, false));
+    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(4, orbits, false));
     // and the same state must survive a round trip through the codec
     match Orbit64.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
@@ -44,7 +44,7 @@ def fourByFourWideTurnAndRotation(): Unit \ Assert =
         CenterCoord(Vector#{4, 0, 0, 4, 1, 1, 1, 1, 2, 0, 0, 2, 3, 3, 3, 3, 5, 4, 4, 5, 5, 2, 2, 5})
     };
     let expected = "                U  F  U  U \n                F  F  U  U \n                F  F  U  U \n                F  F  U  U \n\n R  L  L  L     D  U  B  B     L  L  L  L     F  F  D  F \n R  L  L  L     D  F  D  D     R  R  R  R     U  U  B  F \n R  L  L  L     D  F  D  D     R  R  R  R     U  U  B  F \n R  L  L  L     D  F  D  D     R  R  R  R     U  U  B  F \n\n                B  D  B  B \n                B  D  B  B \n                B  D  B  B \n                D  D  B  B ";
-    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(4, orbits, false));
+    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(4, orbits, false));
     // and the same state must survive a round trip through the codec
     match Orbit64.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
@@ -62,7 +62,7 @@ def fourByFourATwelveMoveScramble(): Unit \ Assert =
         CenterCoord(Vector#{5, 4, 0, 4, 1, 1, 1, 1, 0, 4, 0, 2, 3, 3, 3, 3, 4, 5, 2, 5, 2, 0, 2, 5})
     };
     let expected = "                R  L  L  L \n                F  F  U  B \n                F  D  F  B \n                R  D  R  U \n\n B  U  U  F     D  F  F  F     R  U  L  F     U  F  F  D \n R  L  L  D     B  D  F  B     U  R  R  U     R  F  U  F \n U  L  L  D     L  B  D  F     D  R  R  U     R  U  B  L \n B  U  B  R     U  R  R  F     D  B  B  L     B  B  D  D \n\n                B  D  D  L \n                D  D  B  R \n                L  B  U  R \n                L  L  L  U ";
-    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(4, orbits, false));
+    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(4, orbits, false));
     // and the same state must survive a round trip through the codec
     match Orbit64.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
