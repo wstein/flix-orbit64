@@ -9,15 +9,33 @@
 mod Orbit64.Rank {
 
     ///
-    /// Binomial coefficient. Returns `0` when `k` is out of range.
+    /// Binomial coefficient, saturating at `Int32.maxValue`. Returns `0` when
+    /// `k` is out of range.
     ///
-    /// Kept in `Int32` on purpose: the codec only ever asks for `C(24, 4)` and
-    /// smaller, so the largest value it can produce is `10626`.
+    /// The result stays in `Int32` because that is what the ranks it feeds are:
+    /// the codec only ever asks for `C(24, 4)` and smaller, so the largest it
+    /// really produces is `10626`. The running product is `Int64` all the same,
+    /// because this is public and a caller is not bound by what the codec asks.
+    /// Overflowing to a negative number would be worse than saying "very
+    /// large" -- `combUnrank` searches upwards until this exceeds a rank, and a
+    /// negative never does.
+    ///
+    /// `C(n, k) = C(n, n - k)`, and the smaller of the two is taken. That is
+    /// not only cheaper: it keeps the running product monotone, so stopping
+    /// early at the cap cannot skip past a final value that would have fitted.
     ///
     pub def binomial(n: Int32, k: Int32): Int32 =
         if (k < 0 or k > n) 0
-        else Vector.range(0, k) |> Vector.foldLeft(
-            (acc, i) -> acc * (n - i) / (i + 1), 1)
+        else
+            let j = Int32.min(k, n - k);
+            let v = Vector.range(0, j) |> Vector.foldLeft((acc, i) ->
+                if (acc >= saturation()) saturation()
+                else acc * Int32.toInt64(n - i) / Int32.toInt64(i + 1), 1i64);
+            if (v >= saturation()) Int32.maxValue()
+            else Int64.tryToInt32(v) |> Option.getWithDefault(0)
+
+    /// `Int32.maxValue` as the running product sees it.
+    def saturation(): Int64 = 2147483647i64
 
     ///
     /// Lexicographic (Lehmer) rank of the permutation `p` of `0..n-1`.
@@ -83,6 +101,12 @@ mod Orbit64.Rank {
     ///
     /// The inverse of `combRank`.
     ///
+    /// `r` is expected below `C(n, k)` for the `n` the caller has in mind --
+    /// which is not a number this function is given, so it cannot check it. A
+    /// rank from outside that range still returns, and still returns `k`
+    /// ascending values; they are simply not a subset of anything the caller
+    /// asked about.
+    ///
     pub def combUnrank(r: Int32, k: Int32): Vector[Int32] =
         unrankDown(r, k, Nil) |> List.toVector
 
@@ -92,8 +116,19 @@ mod Orbit64.Rank {
             let c = largestBelow(r, i, i - 1);
             unrankDown(r - binomial(c, i), i - 1, c :: acc)
 
+    ///
+    /// The largest `c` with `C(c, i) <= r`, found by climbing.
+    ///
+    /// The climb is bounded twice over, because an unbounded one is what an
+    /// out-of-range `r` used to get. `binomial` saturates rather than
+    /// overflowing, so it eventually exceeds any rank and the climb ends. And
+    /// `C(c, i) >= c - i + 1`, so the answer can never exceed `r + i - 1` --
+    /// stated as `c - i + 1 < r`, which cannot overflow the way `r + i - 1`
+    /// could. Either alone would do; together the loop is finite by arithmetic
+    /// rather than by trusting a value not to wrap.
+    ///
     def largestBelow(r: Int32, i: Int32, c: Int32): Int32 =
-        if (binomial(c + 1, i) <= r) largestBelow(r, i, c + 1) else c
+        if (c - i + 1 < r and binomial(c + 1, i) <= r) largestBelow(r, i, c + 1) else c
 
     ///
     /// Rank an arrangement of `ntypes` labels over `n` slots, `k` copies of

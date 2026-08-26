@@ -174,6 +174,47 @@ def binomialValues(): Unit \ Assert =
     Assert.assertEq(expected = 1, Orbit64.Rank.binomial(4, 4));
     Assert.assertEq(expected = 0, Orbit64.Rank.binomial(3, 4))
 
+///
+/// `C(n, k) = C(n, n - k)`, and taking the smaller side is what keeps the
+/// running product from climbing through values far larger than the answer.
+/// `C(100, 99)` is 100; computed the long way round it overflows `Int32` many
+/// times over on the way.
+///
+@Test
+def binomialIsSymmetricAndSurvivesTheLongSide(): Unit \ Assert = {
+    Assert.assertEq(expected = 100, Orbit64.Rank.binomial(100, 99));
+    Assert.assertEq(expected = 1, Orbit64.Rank.binomial(100, 100));
+    List#{(24, 4), (30, 7), (52, 5)} |> List.forEach(match (n, k) ->
+        Assert.assertEqWithMsg(expected = Orbit64.Rank.binomial(n, k), Orbit64.Rank.binomial(n, n - k),
+            "C(${n}, ${k}) and C(${n}, ${n - k}) disagree"))
+}
+
+///
+/// A coefficient too large for the return type says so by being the largest
+/// thing it can be, never by wrapping. `combUnrank` climbs until this exceeds
+/// a rank, and a negative never would -- which is how an out-of-range rank
+/// used to send it climbing without end.
+///
+@Test
+def binomialSaturatesRatherThanWrapping(): Unit \ Assert = {
+    Assert.assertEq(expected = Int32.maxValue(), Orbit64.Rank.binomial(1000, 500));
+    List#{(1000, 500), (200, 60), (60, 30)} |> List.forEach(match (n, k) ->
+        Assert.assertTrueWithMsg(Orbit64.Rank.binomial(n, k) > 0,
+            "C(${n}, ${k}) came back negative"))
+}
+
+///
+/// And so an out-of-range rank terminates. It names no subset the caller asked
+/// about -- there is no `n` here to ask about -- but it returns, in order, and
+/// promptly.
+///
+@Test
+def combUnrankTerminatesOnARankFromNowhere(): Unit \ Assert = {
+    let got = Orbit64.Rank.combUnrank(2000000000, 4);
+    Assert.assertEq(expected = 4, Vector.length(got));
+    Assert.assertEq(expected = Vector.toList(got), List.sort(Vector.toList(got)))
+}
+
 @Test
 def permRankIsIdentityAtZero(): Unit \ Assert =
     Assert.assertEq(expected = 0ii, Orbit64.Rank.permRank(Vector.range(0, 24)))
