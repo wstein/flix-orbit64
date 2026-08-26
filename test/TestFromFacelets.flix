@@ -89,3 +89,95 @@ def aStateReadFromFaceletsEncodes(): Unit \ Assert =
                 |> Result.flatMap(orbits -> Orbit64.Net.toFacelets(n, orbits))
                 |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
                 |> Result.flatMap(orbits -> Orbit64.encode(n, orbits))))
+
+//
+// A seed matrix, to widen the round trip past the checked-in states.
+//
+// The vectors above are real scrambles, which is what makes them worth having,
+// but there are only a handful of them and every one came from the same
+// generator. These states come from `Coord.unrank` on spread-out coordinates
+// instead: arbitrary wing permutations, arbitrary centre colourings, arbitrary
+// twists, none of them reachable-looking and all of them valid, since `unrank`
+// is onto exactly the coordinates the format admits.
+//
+// Deterministic, so a failure is reproducible and a passing run is not luck.
+//
+
+///
+/// The `steps`-th term of a fixed linear congruential sequence, modulo 2^80.
+///
+/// Not random -- just spread out, and the same on every run and every machine.
+/// The modulus is above `24!`, so reducing a term by any orbit's radix still
+/// reaches the whole of it rather than a low corner.
+///
+def scatter(steps: Int32): BigInt =
+    List.range(0, steps) |> List.foldLeft((x, _) ->
+        BigInt.modulo(x * 6364136223846793005ii + 1442695040888963407ii,
+                      1208925819614629174706176ii), 12345ii)
+
+///
+/// State `s` of an `n x n x n`: one coordinate per orbit, each drawn from its
+/// own term of the sequence so that no two orbits move together.
+///
+def seededState(n: Int32, s: Int32): List[Orbit64.Coord.Coord] =
+    Orbit64.Orbit.layout(n) |> List.mapWithIndex((i, o) ->
+        Orbit64.Coord.unrank(o, BigInt.modulo(scatter(s * 8 + i + 1), Orbit64.Orbit.radix(o))))
+
+def seeds(): List[Int32] = List.range(0, 8)
+
+///
+/// Drawing a seeded state and reading it back gives the state again.
+///
+@Test
+def seededStatesReadBackFromTheirFacelets(): Unit \ Assert =
+    List#{2, 3, 4, 5} |> List.forEach(n ->
+        seeds() |> List.forEach(s -> {
+            let orbits = seededState(n, s);
+            Assert.assertTrueWithMsg(
+                Orbit64.Net.toFacelets(n, orbits)
+                    |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)) == Ok(orbits),
+                "seed ${s} of the ${n}x${n}x${n} did not read back")
+        }))
+
+///
+/// And reading a seeded state's facelets then drawing them gives the stickers
+/// again.
+///
+@Test
+def seededFaceletsSurviveBeingReadAndDrawn(): Unit \ Assert =
+    List#{2, 3, 4, 5} |> List.forEach(n ->
+        seeds() |> List.forEach(s ->
+            match Orbit64.Net.toFacelets(n, seededState(n, s)) {
+                case Err(why) => Assert.assertTrueWithMsg(false,
+                    "seed ${s} of the ${n}x${n}x${n} gave no facelets: ${why}")
+                case Ok(fs) => Assert.assertTrueWithMsg(
+                    Orbit64.Net.fromFacelets(n, fs)
+                        |> Result.flatMap(orbits -> Orbit64.Net.toFacelets(n, orbits)) == Ok(fs),
+                    "seed ${s} of the ${n}x${n}x${n} did not draw the same stickers twice")
+            }))
+
+///
+/// The seeds have to actually scatter.
+///
+/// A sequence that collapsed -- to zero, or to one value repeated -- would hand
+/// the two laws above eight copies of the same cube, and they would pass on it
+/// without having tested anything. Tokens stand in for the states here because
+/// a token is state equality made comparable, which is the whole claim the
+/// format makes.
+///
+@Test
+def theSeedsAreActuallyScattered(): Unit \ Assert =
+    List#{2, 3, 4, 5} |> List.forEach(n -> {
+        let states = seeds() |> List.map(s -> seededState(n, s));
+        let tokens = states |> List.filterMap(st -> Orbit64.encode(n, st) |> Result.toOption);
+        Assert.assertTrueWithMsg(
+            List.length(tokens) == List.length(states),
+            "a seeded ${n}x${n}x${n} did not encode at all");
+        Assert.assertTrueWithMsg(
+            not List.memberOf(Orbit64.encode(n, Orbit64.solved(n)) |> Result.toOption
+                                |> Option.getWithDefault(""), tokens),
+            "a seeded ${n}x${n}x${n} came out solved");
+        Assert.assertTrueWithMsg(
+            List.toSet(tokens) |> Set.size == List.length(tokens),
+            "two seeds gave the same ${n}x${n}x${n}")
+    })
