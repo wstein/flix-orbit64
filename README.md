@@ -17,8 +17,10 @@ one physical cube with two tokens. [Slot numbering](#slot-numbering) says what
 follows from that. No token is a character wider than the state count requires.
 
 ```
+2x2x2  AAAAA                                       (solved)
+2x2x2  AAAVW                                       (every corner twisted)
 3x3x3  AAAAAAAAAAf_                                (superflip)
-4x4x4  AAAAAUuBpX2gX8xOwj1jXaQ5qKw                 (checkerboard)
+4x4x4  BY7wv_SJswRfmIMk31HAKlByKg2                 (stripes)
 5x5x5  AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA  (superflip)
 ```
 
@@ -188,25 +190,23 @@ names beneath the net -- `kociemba-3x3x3` for the small cubes,
 `twizzle-4x4x4@baa0685` for the 4x4x4, `orbit64-5x5-draft@1` for the 5x5x5:
 
 ```
-$ ./flixw run --entrypoint Orbit64.Cli.main -- AAAAAUuBpX2gX8xOwj1jXaQ5qKw
+$ ./flixw run --entrypoint Orbit64.Cli.main -- BY7wv_SJswRfmIMk31HAKlByKg2
 4x4x4, 3 orbits:
   ...
-                U  D  D  U
-                D  U  U  D
-                D  U  U  D
-                U  D  D  U
+                U  D  U  D
+                U  D  U  D
+                U  D  U  D
+                U  D  U  D
 
- L  R  R  L     F  B  B  F     R  L  L  R     B  F  F  B
- R  L  L  R     B  F  F  B     L  R  R  L     F  B  B  F
- R  L  L  R     B  F  F  B     L  R  R  L     F  B  B  F
- L  R  R  L     F  B  B  F     R  L  L  R     B  F  F  B
+ R  R  R  R     B  F  B  F     L  L  L  L     B  F  B  F
+ L  L  L  L     B  F  B  F     R  R  R  R     B  F  B  F
+ R  R  R  R     B  F  B  F     L  L  L  L     B  F  B  F
+ L  L  L  L     B  F  B  F     R  R  R  R     B  F  B  F
 
-                D  U  U  D
-                U  D  D  U
-                U  D  D  U
-                D  U  U  D
-
-  drawn as twizzle-4x4x4@baa0685
+                U  D  U  D
+                U  D  U  D
+                U  D  U  D
+                U  D  U  D
 
   drawn as twizzle-4x4x4@baa0685
 ```
@@ -227,17 +227,22 @@ something traceable rather than merely noticeable. See
 
 Two larger cubes, which the examples at the top of this file use:
 
-| cube  | pattern      | token                                        | how |
-|-------|--------------|----------------------------------------------|-----|
-| 4x4x4 | Checkerboard | `AAAAAUuBpX2gX8xOwj1jXaQ5qKw`                 | `U2 D2 F2 B2 L2 R2`, the same algorithm as the 3x3x3 |
-| 5x5x5 | Superflip    | `AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA` | every midge flipped in place, everything else solved |
+| cube  | pattern              | token                                        | how |
+|-------|----------------------|----------------------------------------------|-----|
+| 2x2x2 | Solved               | `AAAAA`                                      | every coordinate zero, so every character is the padding one |
+| 2x2x2 | Every corner twisted | `AAAVW`                                      | identity permutation, twists `1 2 1 2 1 2 1 2` |
+| 4x4x4 | Stripes              | `BY7wv_SJswRfmIMk31HAKlByKg2`                | `L2 2R2 U2 2D2` |
+| 5x5x5 | Superflip            | `AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA` | every midge flipped in place, everything else solved |
 
-The 4x4x4 checkerboard is the classic `U D D U` face rather than a strict
-per-sticker alternation: turning only half turns cannot mix a face's corner
-stickers with its centre stickers, so the pattern respects the piece structure.
-The 5x5x5 superflip is given as a state rather than an algorithm, because it was
-built as a coordinate -- corners, wings and both centre orbits identity, every
-midge flip set -- which is the 3x3x3 superflip's analogue one size up.
+`L2 2R2 U2 2D2` turns alternate slices on two axes, which bands every face: the
+faces perpendicular to neither axis get stripes running one way and the rest the
+other, so adjacent faces disagree about which way their stripes run.
+
+The two 2x2x2 states are given as coordinates rather than algorithms, as is the
+5x5x5 superflip. A 2x2x2 has nothing but corners, so its recognisable states are
+about orientation -- and its whole token is five characters. The 5x5x5 superflip
+is corners, wings and both centre orbits identity with every midge flip set,
+which is the 3x3x3 superflip's analogue one size up.
 
 The two built from half turns alone, Checkerboard and Four Spots, leave every
 corner twist and edge flip at zero -- a half turn applies its orientation change
