@@ -16,20 +16,24 @@
 /// that numbers its slots differently will draw a different picture from the
 /// same token, and neither picture is wrong.
 ///
-/// Only the 2x2x2 and 3x3x3 are drawn. Corners and edges have Kociemba's
-/// numbering to borrow; from the 4x4x4 up, every wing and centre orbit needs a
-/// mapping of its own -- two wing and six centre orbits on a 7x7x7 -- or one
-/// mapping parameterised by `n`.
+/// One caveat applies at every size, the two drawn here included: the picture
+/// assumes whoever produced the token numbered their slots the way Kociemba
+/// does. A token does not say. Neither can the checked-in test vectors settle
+/// it -- relabelling slots and pieces by any bijection conjugates every
+/// permutation, and conjugation preserves cycle structure, permutation parity
+/// and the orientation sums, so no property of the arrays tells one labelling
+/// from another. The vectors pin this codec's arithmetic exactly and carry no
+/// geometry at all.
 ///
-/// Such conventions do exist: KPuzzle describes named orbits as indexed
-/// permutations and orientations, and Twizzle Search publishes concrete
-/// definitions whose 4x4x4 orbits (`CORNERS`, `WINGS`, `CENTERS`) match this
-/// codec's structurally. What does not exist is one *guaranteed to agree with
-/// the slot order these vectors already use*, and the checked-in test vectors
-/// carry no geometry that could settle it either way. Adopting a convention
-/// therefore means first obtaining the reference generator's mapping, or
-/// writing an explicit conversion into the adopted one -- not merely picking
-/// a table.
+/// Only the 2x2x2 and 3x3x3 are drawn. From the 4x4x4 up every wing and centre
+/// orbit needs a mapping of its own -- two wing and six centre orbits on a
+/// 7x7x7 -- or one mapping parameterised by `n`. Such conventions do exist:
+/// KPuzzle describes named orbits as indexed permutations and orientations, and
+/// Twizzle Search publishes definitions whose 4x4x4 orbits (`CORNERS`, `WINGS`,
+/// `CENTERS`) match this codec's structurally. Adopting one would either
+/// reinterpret what existing 4x4x4 and 5x5x5 tokens mean, or need the reference
+/// generator's slot mapping in order to convert into it. Neither is a matter of
+/// picking a table.
 ///
 mod Orbit64.Net {
 

@@ -138,10 +138,10 @@ and the piece arrays pay index width for permutations whose ranks are much
 smaller than their alphabets.
 
 One caveat on reading the tables across: the piece arrays use Kociemba's slot
-numbering and orbit64 uses its own layout order. For these two states that makes
+numbering, and the format itself prescribes none. For these two states that makes
 no difference -- both are the same under any consistent labelling -- but for a
 general state the convention has to be agreed before the arrays can be compared
-entry by entry.
+entry by entry. [Slot numbering](#slot-numbering) says what follows from that.
 
 ## Patterns
 
@@ -170,10 +170,9 @@ above. Note that the six fixed centres are not in the token at all -- the format
 leaves them out because they fix the frame rather than carry information -- so
 the renderer supplies them before drawing anything.
 
-Only the 2x2x2 and 3x3x3 are drawn. Corners and edges have Kociemba's numbering
-to borrow; from the 4x4x4 up, every wing and centre orbit needs a slot-to-facelet
-mapping of its own, and while such conventions exist (see [References](#references))
-none is guaranteed to agree with the slot order these vectors already use.
+Only the 2x2x2 and 3x3x3 are drawn, and the picture assumes Kociemba's slot
+numbering -- which the tokens themselves do not carry, and which the checked-in
+vectors cannot confirm. See [Slot numbering](#slot-numbering).
 
 | pattern | token | algorithm |
 |---------|-------|-----------|
@@ -193,8 +192,49 @@ orientation digits sit at the bottom of the number and both are zero.
 
 These tokens are computed with the piece indexing from Kociemba's `cornerFacelet`
 and `edgeFacelet` tables, the same convention as the arrays in the previous
-section. A model that numbers its slots differently will produce different tokens
-for the same picture.
+section and as the nets the command line draws, so all three agree with each
+other. A model that numbers its slots differently will produce different tokens
+for the same picture -- see [Slot numbering](#slot-numbering).
+
+## Slot numbering
+
+The format stores ordinals. Entry 17 of a wing vector says "wing slot 17 holds
+wing piece 4", and *which physical sticker pair* slot 17 is, and *which physical
+wing* piece 4 is, are not in the format and never were. That absence is the
+point: it is what lets `layout` be arithmetic in `n` and cover every size. Both
+halves must be agreed out of band before a token can be drawn, or compared entry
+by entry against another implementation's arrays.
+
+The pattern tokens above, the piece arrays beside them, and the nets the command
+line draws all use Kociemba's corner and edge numbering, so they agree with one
+another.
+
+What is *not* established is that the reference implementation behind
+`test/TestVectors.flix` used that same numbering -- and it cannot be established
+from the vectors. Relabelling slots and pieces by any bijection conjugates every
+permutation, and conjugation preserves everything the arrays can be asked: cycle
+structure, permutation parity, the orientation sums, and so reachability.
+Relabelling a checked-in 3x3x3 vector leaves every invariant identical and
+changes only the token:
+
+```
+             sgn(cp)  sgn(ep)  sum(co)%3  sum(eo)%2  token
+original          -1       -1          0          0  AWMmIry_APKe
+relabelled        -1       -1          0          0  ARk53HQPqynD
+```
+
+So the vectors pin this codec's arithmetic exactly, which is what they are for,
+and carry no geometry whatsoever. Drawing a checked-in token therefore assumes a
+correspondence that nothing here verifies. Settling it needs something the
+vectors do not contain -- the generator's slot table, or the move sequences that
+produced them, from which the relabelling could be solved for and then checked
+against every vector at once.
+
+That same gap is why the nets stop at the 3x3x3. Conventions for larger cubes do
+exist, and one of them is a close structural match (see
+[References](#references)); adopting it would either reinterpret what existing
+4x4x4 and 5x5x5 tokens mean, or require exactly the mapping that is missing in
+order to convert into it.
 
 ## Design decisions
 
