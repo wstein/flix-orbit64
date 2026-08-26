@@ -127,15 +127,25 @@ mod Orbit64 {
     /// Fixed width rather than stripped leading zeros: it keeps length a
     /// reliable signal of which puzzle a token describes.
     ///
+    /// `acc` is expected below `64^w`. Anything above it has nowhere to go and
+    /// is dropped from the top, which is only ever a caller's error: `encode`
+    /// takes `w` from `width(n)`, which is by definition wide enough.
+    ///
     pub def toBase64(acc: BigInt, w: Int32): String =
-        emit(acc, w, "")
+        emit(acc, w, alphabet(), "")
 
-    def emit(acc: BigInt, remaining: Int32, out: String): String =
+    ///
+    /// The alphabet is carried down rather than fetched per digit, and the
+    /// quotient is taken once and the remainder derived from it, rather than
+    /// dividing twice.
+    ///
+    def emit(acc: BigInt, remaining: Int32, table: String, out: String): String =
         if (remaining == 0) out
         else
-            let d = BigInt.modulo(acc, 64ii) |> BigInt.tryToInt32 |> Option.getWithDefault(0);
-            let c = String.charAt(d, alphabet());
-            emit(acc / 64ii, remaining - 1, String.concat(Char.toString(c), out))
+            let q = acc / 64ii;
+            let d = BigInt.tryToInt32(acc - q * 64ii) |> Option.getWithDefault(0);
+            let c = String.charAt(d, table);
+            emit(q, remaining - 1, table, String.concat(Char.toString(c), out))
 
     ///
     /// Read a base64url token as an integer. `None` if any character is not in
