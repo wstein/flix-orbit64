@@ -241,7 +241,8 @@ produced them, from which the relabelling could be solved for and then checked
 against every vector at once.
 
 The 4x4x4 net does have a named source. It reads the vectors as the twsearch
-4x4x4 KPuzzle definition orders them, pinned at commit `baa0685` -- but that
+4x4x4 KPuzzle definition orders them, pinned at exactly
+[this file at commit `baa0685`](https://github.com/cubing/twsearch/blob/baa0685f2e3c69c708b4b94be8600691511dd57c/src/lib/scramble/puzzles/definitions/4x4x4/4x4x4.kpuzzle.json) -- but that
 definition contains no facelets, because KPuzzle describes state and moves
 rather than stickers. So the mapping was not copied from it; it was solved for,
 as the one correspondence between its slot indices and a physical cube that
@@ -381,7 +382,8 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   orientations. It defines the representation rather than mandating one global
   slot order, and it is explicitly a draft.
 - Twizzle Search publishes concrete KPuzzle definitions, among them
-  [4x4x4](https://github.com/cubing/twsearch/blob/main/src/lib/scramble/puzzles/definitions/4x4x4/4x4x4.kpuzzle.json),
+  [4x4x4](https://github.com/cubing/twsearch/blob/baa0685f2e3c69c708b4b94be8600691511dd57c/src/lib/scramble/puzzles/definitions/4x4x4/4x4x4.kpuzzle.json) -- pinned here at commit `baa0685`, which is the exact file
+  `Orbit64.Net`'s 4x4x4 tables were derived from --
   whose `CORNERS`, `WINGS` and `CENTERS` orbits are a close structural match to
   this codec's, and
   [5x5x5](https://github.com/cubing/twsearch/blob/main/src/lib/scramble/puzzles/definitions/big_cubes/5x5x5.kpuzzle.json),
