@@ -27,6 +27,13 @@ The wrapper adds verbs of its own, ahead of the compiler's:
 - `./flixw doctor` — those checks plus the full picture, for bug reports
 - `./flixw pin <version>` — move to another compiler and rewrite the lock
 
+Releasing is a tag and nothing else. `flix.toml` states the version, a
+`v<version>` tag is pushed, and `release.yaml` builds the package from that tag
+and attaches it to a GitHub release. A `github:` dependency resolves through
+those release assets, so a tag without a release is a version nobody can depend
+on, and a tag whose name disagrees with `flix.toml` is refused before anything
+is published.
+
 ## Layout
 
 - `src/Orbit64.flix` — the package's public API
@@ -45,8 +52,10 @@ The wrapper adds verbs of its own, ahead of the compiler's:
 - `flixw`, `flixw.cmd`, `.flixw/flixw.java` — the wrapper itself. Generated;
   change it with `./flixw wrapper --upgrade`, never by hand
 - `.github/workflows/` — `build-and-test.yaml` on three platforms,
-  `update-flix.yaml` weekly, `docs.yaml` for the API documentation. All three
-  drive the wrapper; none of them install Flix
+  `update-flix.yaml` weekly, `docs.yaml` for the API documentation, and
+  `release.yaml` on a `v*.*.*` tag. All four drive the wrapper; none of them
+  install Flix. Only `release.yaml` and `update-flix.yaml` ask for write
+  access, and only in the one job that needs it
 - `build/`, `artifact/`, `lib/` — generated; do not edit and do not commit
 
 `CLAUDE.md` and `.github/copilot-instructions.md` both point at this file
