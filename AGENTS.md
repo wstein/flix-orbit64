@@ -17,8 +17,9 @@ use `.\flixw.cmd` wherever these say `./flixw`.
 - `./flixw build-pkg` — build the distributable `artifact/*.fpkg`
 - `./flixw format` — reformat sources in place; the pinned compiler has no
   check-only mode, so CI does not gate on formatting
-- `./flixw doc` — write API documentation for the standard library and this
-  project to `build/doc/`
+- `./flixw doc` — write this project's API documentation to `build/doc/`.
+  Standard library pages are not generated, so links into it dangle locally;
+  the docs workflow rewrites them to <https://api.flix.dev>
 
 The wrapper adds verbs of its own, ahead of the compiler's:
 
@@ -69,8 +70,8 @@ still reach `Orbit64.Rank`. It is documentation of intent, not a boundary.
 
 Your training data is probably older than this compiler. Read
 <https://doc.flix.dev/for-llms.html> before writing Flix: it lists what changed.
-For the standard library use <https://api.flix.dev>, or run `./flixw doc` and
-read `build/doc/`, which matches this project's compiler exactly.
+For the standard library use <https://api.flix.dev>. `./flixw doc` documents
+this project only, so it is no help there.
 
 The mistakes that show up most often:
 
