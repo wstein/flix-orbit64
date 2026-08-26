@@ -1,0 +1,9 @@
+[package]
+name        = "orbit64"
+description = "Canonical URL-safe minimal-width encoding for NxNxN twisty cube state"
+version     = "0.1.0"
+repository  = "github:wstein/orbit64"
+modules     = ["Orbit64"]
+flix        = "0.75.2"
+license     = "Apache-2.0"
+authors     = ["orbit64"]
