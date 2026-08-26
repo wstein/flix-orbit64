@@ -31,7 +31,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                          # 90 tests
+./flixw test                                          # 94 tests
 ./flixw run --entrypoint Orbit64.Cli.main             # size table, round-trip
 ./flixw run --entrypoint Orbit64.Cli.main -- <token>  # decode; length picks n
 ```
@@ -79,6 +79,12 @@ alignment, no type tag.
 | `Midges`  | 1 if `n` odd, `n>=3`| `12! * 2^11`  | 39.84 |
 | `Wings`   | `(n-2)/2`           | `24!`         | 79.04 |
 | `Centers` | `(n-2)^2/4`         | `24!/(4!)^6`  | 51.53 |
+
+Where a cube has more than one centre orbit, list position is the only thing
+telling them apart -- they are all `CenterCoord`. On a 5x5x5 the renderer's
+convention fixes the fourth entry as the **X-centres** (the four diagonal cells
+of a face's centre block) and the fifth as the **plus-centres** (the four
+edge-adjacent cells).
 
 Both counts truncate, so `layout` is pure arithmetic in `n` -- this codebase has
 no notion of a face, an axis, or a turn.
@@ -170,9 +176,9 @@ above. Note that the six fixed centres are not in the token at all -- the format
 leaves them out because they fix the frame rather than carry information -- so
 the renderer supplies them before drawing anything.
 
-The 2x2x2, 3x3x3 and 4x4x4 are drawn, each under a convention the command line
+The 2x2x2 through 5x5x5 are drawn, each under a convention the command line
 names beneath the net -- `kociemba-3x3x3` for the small cubes,
-`twizzle-4x4x4@baa0685` for the 4x4x4:
+`twizzle-4x4x4@baa0685` for the 4x4x4, `orbit64-5x5-draft@1` for the 5x5x5:
 
 ```
 $ ./flixw run --entrypoint Orbit64.Cli.main -- BJSsuyGPOiU06kIz-eqibqTP1th
@@ -256,7 +262,25 @@ implementation that produced a 4x4x4 token numbered its slots differently, the
 net will be a correct drawing of the wrong state -- which is why the command
 line prints the name it used.
 
-That same gap is why the nets stop at the 4x4x4. Conventions for larger cubes do
+The 5x5x5 is drawn under `orbit64-5x5-draft@1`, built the same way but named
+ours rather than Twizzle's, because nothing upstream speaks it. It keeps
+Kociemba's corner and midge numbering -- so a 5x5x5 reads as a 3x3x3 with more
+orbits -- and derives its wings and both centre orbits from the twsearch 5x5x5
+move model. That model's `SPEFFZ_1..5` turn out to be *sticker* orbits: 1 and 3
+the two wing sticker orbits, 2 the X-centres, 4 the plus-centres, 5 the midges.
+Which is also why it cannot be adopted wholesale -- it carries no midge flip and
+no wing piece identity, tracks the six fixed centres this format omits, and is
+named `5x5x5_temp` upstream.
+
+`draft` means the geometry is internally verified, not that anything else speaks
+it. What was checked: every one of the 150 facelets covered exactly once, a
+solved cube drawing six solid faces, moves behaving under an independent model
+over 18,000 stickers, fixtures from that model in `test/TestNet5x5.flix`, and
+tokens round-tripping. One of those fixtures is a wide turn, chosen because it
+leaves the X-centre and plus-centre vectors different from each other -- so
+swapping the two orbits fails rather than passing quietly.
+
+That same gap is why the nets stop at the 5x5x5. Conventions for larger cubes do
 exist, and one of them is a close structural match (see
 [References](#references)); adopting it would either reinterpret what existing
 4x4x4 and 5x5x5 tokens mean, or require exactly the mapping that is missing in
@@ -365,6 +389,8 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
 - `test/TestNet4x4.flix` -- fixtures for the 4x4x4 display convention: states
   built by a separate geometric model, with that model's own nets as the
   expected output.
+- `test/TestNet5x5.flix` -- the same for the 5x5x5, including a wide turn that
+  distinguishes the two centre orbits.
 - `test/TestOrbitDiscovery.flix` -- derives `Orbit.layout` a second time, from
   geometry instead of arithmetic. It builds a cube, turns it, and takes the
   connected components of the "one turn maps this piece to that one" graph,

@@ -96,12 +96,12 @@ mod Orbit64.Cli {
             // `draw` declines for two different reasons, and only the caller
             // knows which applies: it has the size, and the size is what
             // decides.
-            case None if n == 2 or n == 3 or n == 4 =>
+            case None if n >= 2 and n <= 5 =>
                 println("  (that state is not a cube, so there is nothing to draw)")
             case None =>
                 println("  (no net for the ${n}x${n}x${n}: every wing and centre orbit needs its");
-                println("   own slot-to-facelet mapping, and this module has one only for the");
-                println("   2x2x2, 3x3x3 and 4x4x4. See Orbit64.Net.)")
+                println("   own slot-to-facelet mapping, and this module has one only up to the");
+                println("   5x5x5. See Orbit64.Net.)")
         }
 
     ///
