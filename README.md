@@ -8,9 +8,9 @@ state equality -- and no token is a character wider than the state count
 requires.
 
 ```
-3x3x3  AAAAAAAAAAf_      (superflip)
-4x4x4  BSsBSsPRbVgsSHFWUCTywE38p
-5x5x5  A3UiAaGApElabDdxcnzIu3er7Hp9Gt8ImjcqtUDk
+3x3x3  AAAAAAAAAAf_                                (superflip)
+4x4x4  BJSsuyGPOiU06kIz-eqibqTP1th                 (scrambled)
+5x5x5  BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS  (scrambled)
 ```
 
 Built on [flix-template](https://github.com/wstein/flix-template), which
