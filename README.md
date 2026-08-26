@@ -166,7 +166,14 @@ $ ./flixw run --entrypoint Orbit64.Cli.main -- AEtgYICyPB1X
 ```
 
 The faces are coloured on a terminal; `NO_COLOR=1` gives the plain letters
-above. Only the 2x2x2 and 3x3x3 are drawn -- see `Orbit64.Net` for why.
+above. Note that the six fixed centres are not in the token at all -- the format
+leaves them out because they fix the frame rather than carry information -- so
+the renderer supplies them before drawing anything.
+
+Only the 2x2x2 and 3x3x3 are drawn. Corners and edges have Kociemba's numbering
+to borrow; from the 4x4x4 up, every wing and centre orbit needs a slot-to-facelet
+mapping of its own, and while such conventions exist (see [References](#references))
+none is guaranteed to agree with the slot order these vectors already use.
 
 | pattern | token | algorithm |
 |---------|-------|-----------|
@@ -219,6 +226,43 @@ colour pair look interchangeable but are not: the pair appears in opposite order
 depending on the slot's handedness, so `24!` is right and `24!/2^12` is not.
 `Orbit64.Rank.multisetRank` handles the first; a plain Lehmer rank handles the second.
 
+## Datalog, and where it stops paying
+
+Flix embeds Datalog, which here earns its keep in exactly one place and not in
+the place next door.
+
+`Orbit.layout(n)` is arithmetic -- one corner orbit, midges when `n` is odd,
+`(n-2)/2` wing orbits, `(n-2)^2/4` centre orbits -- and nothing inside the codec
+can check that, because the codec *is* that formula. So the tests derive the
+same answer from geometry instead: build the cubies of an `n`-cube, turn the
+layers a solver is allowed to turn, and take the connected components of the
+graph that says one turn carries this piece to that one. Two pieces share an
+orbit exactly when some sequence of turns connects them, which is a transitive
+closure, which is three rules:
+
+```
+Same(x, y) :- Turn(x, y).
+Same(x, y) :- Same(y, x).
+Same(x, z) :- Same(x, y), Same(y, z).
+```
+
+The two derivations share no code -- the library has no notion of a face, an
+axis or a turn -- so agreement between them means something. It is not
+decorative either: an extra wing orbit fails at the 2x2x2, and midges on even
+cubes fails at the 4x4x4. And it is cheap, because a 7x7x7 has only 218 surface
+pieces.
+
+The neighbouring idea does not pay. Distance-from-solved is a lattice rule of
+the same shape -- `Dist(t; d+1) :- Dist(s; d), Move(s, t)` under a minimum
+lattice -- and it does work: over the 2x2x2's 3,674,160 states and 11 million
+move facts it terminates and reports a depth of 22 quarter turns. It also dies
+of heap exhaustion at the JVM's 4 GB default after nearly five minutes, and
+needs 12 GB to finish in under three. Against graphs of increasing size the
+engine stays near-linear in facts to about a million and then degrades on
+allocation, so this is a memory ceiling and not bad asymptotics. But a distance
+table is a fact about solving cubes rather than encoding them, and neither the
+subject nor the budget belongs here. It stays out of the codec and out of CI.
+
 ## Layout
 
 - `src/Orbit64/Rank.flix` -- Lehmer codes, combination ranks in the
@@ -243,6 +287,27 @@ depending on the slot's handedness, so `24!` is right and `24!/2^12` is not.
   connected components of the "one turn maps this piece to that one" graph,
   which is three Datalog rules. The two derivations share no code, so an orbit
   count that is wrong at a size with no test vectors still fails.
+
+
+## References
+
+- [Kociemba's cube definition string](http://kociemba.org/cube.htm) -- the
+  `URFDLB` facelet order, and the `cornerFacelet` and `edgeFacelet` tables this
+  project borrows for its 3x3x3 pictures and its pattern tokens.
+- [KPuzzle](https://standards.cubing.net/draft/3/kpuzzle/) -- a Cubing Standards
+  draft describing a puzzle as named orbits of indexed permutations and
+  orientations. It defines the representation rather than mandating one global
+  slot order, and it is explicitly a draft.
+- Twizzle Search publishes concrete KPuzzle definitions, among them
+  [4x4x4](https://github.com/cubing/twsearch/blob/main/src/lib/scramble/puzzles/definitions/4x4x4/4x4x4.kpuzzle.json),
+  whose `CORNERS`, `WINGS` and `CENTERS` orbits are a close structural match to
+  this codec's, and
+  [5x5x5](https://github.com/cubing/twsearch/blob/main/src/lib/scramble/puzzles/definitions/big_cubes/5x5x5.kpuzzle.json),
+  whose orbit naming is more generic and would not line up with `Midges`,
+  `Wings` and two `Centers` without an explicit conversion.
+- [Twizzle Binary 3x3x3 Format](https://standards.cubing.net/draft/5/binary-3x3x3-encoding/)
+  -- 12 bytes, lexicographic permutation ranks, and deliberately not minimal so
+  that it can validate what it decodes. 3x3x3 only, by name and by design.
 
 See `AGENTS.md` for the toolchain, and
 <https://wstein.github.io/flix-orbit64/> for the generated API documentation.
