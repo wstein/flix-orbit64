@@ -157,27 +157,42 @@ def seededFaceletsSurviveBeingReadAndDrawn(): Unit \ Assert =
             }))
 
 ///
-/// The seeds have to actually scatter.
+/// The `i`-th orbit of a state, by position in `Orbit.layout`.
+///
+def orbitAt(i: Int32, st: List[Orbit64.Coord.Coord]): Option[Orbit64.Coord.Coord] =
+    List.drop(i, st) |> List.head
+
+///
+/// The seeds have to actually scatter, orbit by orbit.
 ///
 /// A sequence that collapsed -- to zero, or to one value repeated -- would hand
 /// the two laws above eight copies of the same cube, and they would pass on it
-/// without having tested anything. Tokens stand in for the states here because
-/// a token is state equality made comparable, which is the whole claim the
-/// format makes.
+/// without having tested anything. Distinct *states* are not enough to rule
+/// that out: a matrix that varied only the corners would still give eight
+/// distinct 4x4x4s while every wing and every centre stood still, and the
+/// readers for those orbits would go untested. So the claim is made where it
+/// is meant -- each orbit takes eight different values of its own.
+///
+/// Coordinates stand in for the orbits, because a coordinate is that orbit's
+/// state made comparable, and `0` is exactly its solved value.
 ///
 @Test
 def theSeedsAreActuallyScattered(): Unit \ Assert =
     List#{2, 3, 4, 5} |> List.forEach(n -> {
         let states = seeds() |> List.map(s -> seededState(n, s));
+        // Every seeded state is one the format admits, or `encode` refuses it.
         let tokens = states |> List.filterMap(st -> Orbit64.encode(n, st) |> Result.toOption);
         Assert.assertTrueWithMsg(
             List.length(tokens) == List.length(states),
             "a seeded ${n}x${n}x${n} did not encode at all");
-        Assert.assertTrueWithMsg(
-            not List.memberOf(Orbit64.encode(n, Orbit64.solved(n)) |> Result.toOption
-                                |> Option.getWithDefault(""), tokens),
-            "a seeded ${n}x${n}x${n} came out solved");
-        Assert.assertTrueWithMsg(
-            List.toSet(tokens) |> Set.size == List.length(tokens),
-            "two seeds gave the same ${n}x${n}x${n}")
+        List.range(0, List.length(Orbit64.Orbit.layout(n))) |> List.forEach(i -> {
+            let ranks = states
+                |> List.filterMap(st -> orbitAt(i, st) |> Option.map(Orbit64.Coord.rank));
+            Assert.assertTrueWithMsg(
+                List.toSet(ranks) |> Set.size == List.length(states),
+                "orbit ${i} of the ${n}x${n}x${n} took the same value in two samples");
+            Assert.assertTrueWithMsg(
+                not List.memberOf(0ii, ranks),
+                "orbit ${i} of the ${n}x${n}x${n} came out solved in a sample")
+        })
     })
