@@ -133,6 +133,33 @@ no difference -- both are the same under any consistent labelling -- but for a
 general state the convention has to be agreed before the arrays can be compared
 entry by entry.
 
+## Patterns
+
+Well-known 3x3x3 patterns as tokens -- each is the algorithm applied to a solved
+cube, then encoded. Paste one back in to get its orbits:
+`./flixw run --entrypoint Orbit64.Cli.main -- AEtgYICyPB1X`
+
+| pattern | token | algorithm |
+|---------|-------|-----------|
+| Solved         | `AAAAAAAAAAAA` | |
+| Superflip      | `AAAAAAAAAAf_` | `U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2` |
+| Checkerboard   | `AAAAAH1cCIAA` | `U2 D2 F2 B2 L2 R2` |
+| Four Spots     | `AVd4zWoSqIAA` | `F2 B2 U D' R2 L2 U D'` |
+| Six Spots      | `AEtgYICyPB1X` | `U D' R L' F B' U D'` |
+| Cube in a Cube | `AEtd1CzDOflC` | `F L F U' R U F2 L2 U' L' B D' B' L2 U` |
+| Tetris         | `AW622DQhY0VX` | `L R F B U' D' L' R'` |
+
+The two built from half turns alone, Checkerboard and Four Spots, leave every
+corner twist and edge flip at zero -- a half turn applies its orientation change
+twice -- so all that survives is permutation. Checkerboard's coordinate is small
+enough to leave five leading `A`s, which is the mixed radix showing through: the
+orientation digits sit at the bottom of the number and both are zero.
+
+These tokens are computed with the piece indexing from Kociemba's `cornerFacelet`
+and `edgeFacelet` tables, the same convention as the arrays in the previous
+section. A model that numbers its slots differently will produce different tokens
+for the same picture.
+
 ## Design decisions
 
 **Orientation is stored one entry short.** The last corner twist is forced by
