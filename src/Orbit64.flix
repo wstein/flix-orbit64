@@ -55,18 +55,34 @@ mod Orbit64 {
     ///
     /// Encode `orbits` -- given in `Orbit.layout` order -- as a token.
     ///
-    /// Fails if the orbits do not match the layout for `n`, which is the one
-    /// mistake a caller can make that would otherwise produce a token that
-    /// decodes to a different cube.
+    /// Fails if the orbits do not match the layout for `n`, and fails if any of
+    /// them is not a state a cube can be in.
+    ///
+    /// The second check is not politeness. A coordinate outside its own range
+    /// does not merely encode itself wrongly: the assembly below is Horner, so
+    /// the surplus carries into the *next* orbit and corrupts a coordinate that
+    /// was correct. And a coordinate inside its range but not a cube -- a
+    /// permutation with a repeat, say -- ranks as some other, legitimate state,
+    /// so nothing downstream can catch it either. `decode` bounds-checks the
+    /// whole token, which cannot see either case. This is the only place that
+    /// can.
     ///
     pub def encode(n: Int32, orbits: List[Coord]): Result[String, String] =
         let expected = Orbit.layout(n);
         if (List.map(Coord.kind, orbits) != expected)
             Err("expected orbits ${expected} for ${n}x${n}x${n}, got ${List.map(Coord.kind, orbits)}")
         else
-            let acc = orbits |> List.foldLeft((a, c) ->
-                a * Orbit.radix(Coord.kind(c)) + Coord.rank(c), 0ii);
-            Ok(toBase64(acc, width(n)))
+            // Every coordinate is checked before any of them is ranked, because
+            // ranking a malformed one is what would read off the end of it.
+            match orbits |> List.filterMap(c ->
+                    Coord.faultOf(c) |> Option.map(why -> (Coord.kind(c), why)))
+                    |> List.head {
+                case Some((o, why)) => Err("the ${o} coordinate is not a cube: ${why}")
+                case None =>
+                    let acc = orbits |> List.foldLeft((a, c) ->
+                        a * Orbit.radix(Coord.kind(c)) + Coord.rank(c), 0ii);
+                    Ok(toBase64(acc, width(n)))
+            }
 
     ///
     /// Decode a token back into the orbits of an `n x n x n` cube.

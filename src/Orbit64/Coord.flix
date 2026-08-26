@@ -18,7 +18,7 @@ mod Orbit64.Coord {
     /// slot `i`, with the solved cube being the identity. Orientations are
     /// given in the same slot order, and the redundant final entry is carried
     /// here even though `rank` drops it -- it is cheap to keep, and it lets
-    /// `isValid` check the constraint the format relies on.
+    /// `faultOf` check the constraint the format relies on.
     ///
     pub enum Coord with Eq, ToString {
         /// Corner permutation and per-corner twist in `0..2`, summing to `0 mod 3`.
@@ -42,24 +42,43 @@ mod Orbit64.Coord {
     }
 
     ///
+    /// Why `c` is not a state a cube can be in, or nothing when it is one.
+    ///
+    /// The constraints are stated once, here, and used twice: as the predicate
+    /// `isValid`, and as the reason `Orbit64.encode` gives when it refuses. A
+    /// caller building coordinates from its own model gets told which rule it
+    /// broke rather than that something, somewhere, was wrong.
+    ///
+    /// Every check is total on any vector it is handed, including one of the
+    /// wrong length -- which matters, because this runs *before* `rank`, and
+    /// `rank` would read off the end of a short orientation vector.
+    ///
+    pub def faultOf(c: Coord): Option[String] =
+        let checks = match c {
+            case CornerCoord(p, t) =>
+                (isPermutation(p, 8), "the corner permutation is not a permutation of 0..7") ::
+                (Vector.length(t) == 8, "there must be exactly 8 corner twists, one per slot") ::
+                (Vector.forAll(x -> x >= 0 and x < 3, t), "every corner twist must be 0, 1 or 2") ::
+                (Int32.modulo(Vector.sum(t), 3) == 0, "the corner twists must sum to 0 mod 3") :: Nil
+            case MidgeCoord(p, f) =>
+                (isPermutation(p, 12), "the midge permutation is not a permutation of 0..11") ::
+                (Vector.length(f) == 12, "there must be exactly 12 midge flips, one per slot") ::
+                (Vector.forAll(x -> x >= 0 and x < 2, f), "every midge flip must be 0 or 1") ::
+                (Int32.modulo(Vector.sum(f), 2) == 0, "the midge flips must sum to 0 mod 2") :: Nil
+            case WingCoord(p) =>
+                (isPermutation(p, 24), "the wing permutation is not a permutation of 0..23") :: Nil
+            case CenterCoord(cols) =>
+                (Vector.length(cols) == 24, "there must be exactly 24 centre slots") ::
+                (Vector.forAll(x -> x >= 0 and x < 6, cols), "every centre colour must be 0..5") ::
+                (List.range(0, 6) |> List.forAll(col -> Vector.count(x -> x == col, cols) == 4),
+                 "each of the six centre colours must appear exactly four times") :: Nil
+        };
+        List.filterMap(match (ok, why) -> if (ok) None else Some(why), checks) |> List.head
+
+    ///
     /// Whether `c` satisfies the constraints every reachable cube obeys.
     ///
-    /// Not called on the encode path -- a state read off a real cube always
-    /// passes, and the check costs more than the encoding does. It is here for
-    /// validating input that arrived from somewhere less trustworthy.
-    ///
-    pub def isValid(c: Coord): Bool = match c {
-        case CornerCoord(p, t) =>
-            isPermutation(p, 8) and Vector.forAll(x -> x >= 0 and x < 3, t) and
-            Vector.length(t) == 8 and Int32.modulo(Vector.sum(t), 3) == 0
-        case MidgeCoord(p, f) =>
-            isPermutation(p, 12) and Vector.forAll(x -> x >= 0 and x < 2, f) and
-            Vector.length(f) == 12 and Int32.modulo(Vector.sum(f), 2) == 0
-        case WingCoord(p) => isPermutation(p, 24)
-        case CenterCoord(cols) =>
-            Vector.length(cols) == 24 and
-            List.range(0, 6) |> List.forAll(col -> Vector.count(x -> x == col, cols) == 4)
-    }
+    pub def isValid(c: Coord): Bool = Option.isEmpty(faultOf(c))
 
     def isPermutation(p: Vector[Int32], n: Int32): Bool =
         Vector.length(p) == n and

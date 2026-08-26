@@ -200,6 +200,82 @@ def decodeRejectsOutOfRangeTokens(): Unit \ Assert =
 def encodeRejectsOrbitsThatDoNotMatchTheLayout(): Unit \ Assert =
     Assert.assertTrue(Orbit64.encode(3, List#{Orbit64.Coord.unrank(Corners, 0ii)}) |> Result.isErr)
 
+///
+/// A permutation with a repeat is not a cube, and ranks *inside* the
+/// coordinate's range -- `permRank` cannot exceed `n!` whatever it is handed.
+/// So nothing downstream can catch it: before this was refused, it encoded to
+/// `AAAAAAAAAAAA`, the token for a solved cube.
+///
+@Test
+def encodeRejectsAPermutationWithARepeat(): Unit \ Assert = {
+    let bogus = CornerCoord(Vector#{0, 0, 2, 3, 4, 5, 6, 7}, Vector.repeat(8, 0));
+    Assert.assertFalse(Orbit64.Coord.isValid(bogus));
+    Assert.assertTrue(
+        Orbit64.encode(3, List#{bogus, Orbit64.Coord.unrank(Midges, 0ii)}) |> Result.isErr)
+}
+
+///
+/// Centre colours in the wrong multiplicities rank *above* the coordinate's
+/// range, and the assembly is Horner -- so the surplus used to carry into the
+/// neighbouring wing coordinate and corrupt a state that was correct.
+///
+@Test
+def encodeRejectsCentresInTheWrongMultiplicities(): Unit \ Assert = {
+    // Twenty-four slots exactly, but five 0s and three 1s. The 0s sit high so
+    // the surplus combination term is large.
+    let cols = Vector#{2,2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 1,1,1, 0,0,0,0,0};
+    Assert.assertEq(expected = 24, Vector.length(cols));
+    let skewed = CenterCoord(cols);
+    Assert.assertTrue(Orbit64.Coord.rank(skewed) >= Orbit64.Orbit.radix(Centers));
+    Assert.assertTrue(Orbit64.encode(4, List#{
+        Orbit64.Coord.unrank(Corners, 0ii),
+        Orbit64.Coord.unrank(Wings, 0ii),
+        skewed}) |> Result.isErr)
+}
+
+///
+/// An orientation vector shorter than its orbit used to reach `rank`, which
+/// read off the end of it and threw out of a function that returns `Result`.
+///
+@Test
+def encodeRejectsAShortOrientationVectorRatherThanThrowing(): Unit \ Assert =
+    Assert.assertTrue(Orbit64.encode(3, List#{
+        CornerCoord(Vector.range(0, 8), Vector#{0, 0, 0}),
+        Orbit64.Coord.unrank(Midges, 0ii)}) |> Result.isErr)
+
+///
+/// Refusing says which rule was broken, so a caller building coordinates from
+/// its own model can find the mistake rather than only learn that it made one.
+///
+@Test
+def refusingNamesTheRuleThatWasBroken(): Unit \ Assert = {
+    let twisted = CornerCoord(Vector.range(0, 8), Vector#{1, 0, 0, 0, 0, 0, 0, 0});
+    match Orbit64.Coord.faultOf(twisted) {
+        case None      => Assert.assert(false, RichString.fromString("accepted a bad twist sum"))
+        case Some(why) => Assert.assertTrue(String.contains(substr = "sum to 0 mod 3", why))
+    };
+    match Orbit64.encode(3, List#{twisted, Orbit64.Coord.unrank(Midges, 0ii)}) {
+        case Ok(_)  => Assert.assert(false, RichString.fromString("encoded a bad twist sum"))
+        case Err(e) => Assert.assertTrue(String.contains(substr = "Corners", e))
+    }
+}
+
+///
+/// Every state the codec can produce is one the codec will take back, so the
+/// new check cannot refuse anything `decode` emits.
+///
+@Test
+def everyDecodedStateStillEncodes(): Unit \ Assert =
+    List.range(2, 8) |> List.forEach(n ->
+        List#{0ii, 1ii, 987654321ii} |> List.forEach(seed -> {
+            let orbits = Orbit64.Orbit.layout(n)
+                |> List.map(o -> Orbit64.Coord.unrank(o,
+                    BigInt.modulo(seed, Orbit64.Orbit.radix(o))));
+            List.forEach(c -> Assert.assertTrueWithMsg(Orbit64.Coord.isValid(c),
+                "unrank produced a coordinate encode would now refuse"), orbits);
+            Assert.assertTrue(Orbit64.encode(n, orbits) |> Result.isOk)
+        }))
+
 @Test
 def alphabetIsSixtyFourDistinctUrlSafeCharacters(): Unit \ Assert =
     let a = Orbit64.alphabet();

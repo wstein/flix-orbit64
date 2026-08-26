@@ -31,7 +31,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                          # 74 tests
+./flixw test                                          # 79 tests
 ./flixw run --entrypoint Orbit64.Cli.main             # size table, round-trip
 ./flixw run --entrypoint Orbit64.Cli.main -- <token>  # decode; length picks n
 ```
@@ -248,6 +248,20 @@ interleaving the two orbits' encodings. At 66.23 bits the token is 12
 characters either way. Dropped. The consequence is that a few tokens decode to
 states no sequence of turns can reach, which is a decoder's problem rather than
 a format's -- `Orbit64.Coord.isValid` is there for callers who care.
+
+**`encode` refuses coordinates that are not a cube.** That is a different
+question from the one above, and the two are worth keeping apart. Parity says
+whether a cube could have been *reached* by turning; this says whether it is a
+cube at all -- eight distinct corners, twists that sum to zero mod three, four
+centres of each colour. `encode` checks the second and not the first.
+
+It has to. A coordinate above its own range does not merely encode itself
+wrongly: the assembly is Horner, so the surplus carries into the next orbit and
+corrupts a coordinate that was correct. And a coordinate inside its range but
+not a cube -- a permutation with a repeat -- ranks as some other legitimate
+state, so it encodes silently to a token for a different cube. Neither is
+visible to `decode`, which can only bounds-check the token as a whole.
+`Orbit64.Coord.faultOf` names the rule that was broken.
 
 **Whole-cube rotation is not quotiented out.** Canonicalising orientation would
 save log2(24) ~ 4.6 bits but needs a canonical-form search, and "canonical" is
