@@ -32,7 +32,9 @@ The wrapper adds verbs of its own, ahead of the compiler's:
 - `src/Orbit64.flix` — the package's public API
 - `src/Orbit64/` — the rest of the library, all nested under the `Orbit64`
   module so that a consumer's own `Coord`, `Orbit`, or `Rank` cannot collide
-  with ours. `Orbit64/Cli.flix` holds the demo command line
+  with ours. `Orbit64/Cli.flix` holds the demo command line, and
+  `Orbit64/Net.flix` the only geometry in the package -- the codec itself has
+  none, which is what lets it cover every size
 - `test/` — `@Test` functions
 - `flix.toml` — package metadata, dependencies, and the *lowest* Flix version
   this project accepts. `name` sets the package name, but the `.fpkg` filename
