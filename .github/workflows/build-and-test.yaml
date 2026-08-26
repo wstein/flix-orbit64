@@ -130,7 +130,7 @@ jobs:
           normalised=$(sed 's/%2F/\//g' README.md)
 
           # Only self-referencing URLs count. A plain github.com/<owner>/<repo>
-          # link is not one -- this README links to wstein/flixw deliberately --
+          # link is not one -- this README links to wstein/flix-cube deliberately --
           # so the Actions pattern requires the /actions/ path that only this
           # repository's own workflow badge carries.
           #

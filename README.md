@@ -24,8 +24,8 @@ follows from that. No token is a character wider than the state count requires.
 5x5x5  AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA  (superflip)
 ```
 
-Built on [flix-template](https://github.com/wstein/flix-template), which
-carries its own compiler. Nothing to install but a JDK 21+.
+The project carries its own compiler, so there is nothing to install but a
+JDK 21+.
 
 [Flix](https://flix.dev) is an effect-oriented language on the JVM -- functional,
 imperative and logic in one, with traits, algebraic data types, and a type and
