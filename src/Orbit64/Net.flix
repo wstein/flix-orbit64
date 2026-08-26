@@ -25,21 +25,29 @@
 /// from another. The vectors pin this codec's arithmetic exactly and carry no
 /// geometry at all.
 ///
-/// The 2x2x2, 3x3x3 and 4x4x4 are drawn, each under a convention `convention`
-/// will name. Corners and edges use Kociemba's numbering; the 4x4x4 uses the
-/// twsearch 4x4x4 KPuzzle definition, pinned at commit `baa0685`.
+/// The 2x2x2 through 5x5x5 are drawn, each under a convention `convention`
+/// will name.
 ///
-/// That definition contains no facelets -- KPuzzle describes state and moves,
-/// not stickers -- so the 4x4x4 tables below were not transcribed from it. They
-/// were solved for: the one correspondence between its slot indices and a
-/// physical cube that reproduces its move permutations. The answer was checked
-/// three ways: it is unique, it survives moves the solver never saw, and it
-/// agrees with the definition's own default pattern, which groups centre slots
-/// by face.
+/// `kociemba-3x3x3` covers corners and edges. `twizzle-4x4x4@baa0685` covers
+/// the 4x4x4: that definition holds no facelets -- KPuzzle describes state and
+/// moves, not stickers -- so its tables were not transcribed but solved for, as
+/// the one correspondence between its slot indices and a physical cube that
+/// reproduces its move permutations. The answer is unique, survives moves the
+/// solver never saw, and agrees with the definition's own default pattern.
 ///
-/// The 5x5x5 and up are not drawn. Twizzle's 5x5x5 definition decomposes its
-/// orbits differently from this codec's midges, wings and two centre orbits, so
-/// there is nothing there to adopt without designing a convention first.
+/// `orbit64-5x5-draft@1` covers the 5x5x5. It keeps Kociemba's corner and midge
+/// numbering, so a 5x5x5 reads as a 3x3x3 with more orbits, and derives its
+/// wings and both centre orbits the same way from the twsearch 5x5x5 move
+/// model -- whose SPEFFZ orbits turn out to be sticker orbits: 1 and 3 the two
+/// wing sticker orbits, 2 the X-centres, 4 the plus-centres, 5 the midges.
+///
+/// `draft` says the geometry is internally verified, not that anything else
+/// speaks it. Nothing upstream uses this numbering, because nothing upstream
+/// carries midge flip or wing piece identity for a 5x5x5 at all: Twizzle's own
+/// 5x5x5 is named `5x5x5_temp`, tracks the six fixed centres this format
+/// deliberately omits, and gives its other orbits no orientation.
+///
+/// The 6x6x6 and up are not drawn.
 ///
 ///
 mod Orbit64.Net {
@@ -202,6 +210,133 @@ mod Orbit64.Net {
 
     def centreColour4(): Vector[Int32] = Vector#{0, 4, 5, 1, 2, 3}
 
+    // ---------- the 5x5x5 tables ----------
+    //
+    // Corners and midges keep Kociemba's numbering, so a 5x5x5 reads as a
+    // 3x3x3 with more orbits. The wings and both centre orbits are derived
+    // from the twsearch 5x5x5 move model, whose SPEFFZ orbits turn out to be
+    // sticker orbits: 1 and 3 are the two wing sticker orbits, 2 the
+    // X-centres, 4 the plus-centres, 5 the midges.
+
+    def cornerFacelet5(): Vector[Vector[Int32]] = Vector#{
+            Vector#{24, 25, 54},
+            Vector#{20, 50, 104},
+            Vector#{0, 100, 129},
+            Vector#{4, 125, 29},
+            Vector#{79, 74, 45},
+            Vector#{75, 124, 70},
+            Vector#{95, 149, 120},
+            Vector#{99, 49, 145}
+        }
+
+    def cornerColour5(): Vector[Vector[Int32]] = Vector#{
+            Vector#{0, 1, 2},
+            Vector#{0, 2, 4},
+            Vector#{0, 4, 5},
+            Vector#{0, 5, 1},
+            Vector#{3, 2, 1},
+            Vector#{3, 4, 2},
+            Vector#{3, 5, 4},
+            Vector#{3, 1, 5}
+        }
+
+    def midgeFacelet5(): Vector[Vector[Int32]] = Vector#{
+            Vector#{14, 27},
+            Vector#{22, 52},
+            Vector#{10, 102},
+            Vector#{2, 127},
+            Vector#{89, 47},
+            Vector#{77, 72},
+            Vector#{85, 122},
+            Vector#{97, 147},
+            Vector#{64, 35},
+            Vector#{60, 114},
+            Vector#{139, 110},
+            Vector#{135, 39}
+        }
+
+    def midgeColour5(): Vector[Vector[Int32]] = Vector#{
+            Vector#{0, 1},
+            Vector#{0, 2},
+            Vector#{0, 4},
+            Vector#{0, 5},
+            Vector#{3, 1},
+            Vector#{3, 2},
+            Vector#{3, 4},
+            Vector#{3, 5},
+            Vector#{2, 1},
+            Vector#{2, 4},
+            Vector#{5, 4},
+            Vector#{5, 1}
+        }
+
+    def wingFacelet5(): Vector[Vector[Int32]] = Vector#{
+            Vector#{9, 28},
+            Vector#{1, 128},
+            Vector#{15, 103},
+            Vector#{23, 53},
+            Vector#{34, 130},
+            Vector#{26, 19},
+            Vector#{40, 69},
+            Vector#{48, 94},
+            Vector#{59, 30},
+            Vector#{51, 21},
+            Vector#{65, 119},
+            Vector#{73, 78},
+            Vector#{109, 55},
+            Vector#{101, 5},
+            Vector#{115, 144},
+            Vector#{123, 80},
+            Vector#{134, 105},
+            Vector#{126, 3},
+            Vector#{140, 44},
+            Vector#{148, 96},
+            Vector#{84, 46},
+            Vector#{76, 71},
+            Vector#{90, 121},
+            Vector#{98, 146}
+        }
+
+    def wingColour5(): Vector[Vector[Int32]] = Vector#{
+            Vector#{0, 1},
+            Vector#{0, 5},
+            Vector#{0, 4},
+            Vector#{0, 2},
+            Vector#{1, 5},
+            Vector#{1, 0},
+            Vector#{1, 2},
+            Vector#{1, 3},
+            Vector#{2, 1},
+            Vector#{2, 0},
+            Vector#{2, 4},
+            Vector#{2, 3},
+            Vector#{4, 2},
+            Vector#{4, 0},
+            Vector#{4, 5},
+            Vector#{4, 3},
+            Vector#{5, 4},
+            Vector#{5, 0},
+            Vector#{5, 1},
+            Vector#{5, 3},
+            Vector#{3, 1},
+            Vector#{3, 2},
+            Vector#{3, 4},
+            Vector#{3, 5}
+        }
+
+    /// The X-centres -- the four diagonal cells of each face's centre block.
+    def xFacelet5(): Vector[Int32] = Vector#{8, 6, 16, 18, 33, 31, 41, 43, 58, 56, 66, 68, 108, 106, 116, 118, 133, 131, 141, 143, 83, 81, 91, 93}
+
+    /// The plus-centres -- the four edge-adjacent cells.
+    def plusFacelet5(): Vector[Int32] = Vector#{7, 11, 17, 13, 32, 36, 42, 38, 57, 61, 67, 63, 107, 111, 117, 113, 132, 136, 142, 138, 82, 86, 92, 88}
+
+    /// Both centre orbits share one colour-to-face map.
+    def centreColour5(): Vector[Int32] = Vector#{0, 1, 2, 4, 5, 3}
+
+    /// The six single centres, which the format leaves out because they fix the
+    /// frame of reference rather than carry information.
+    def fixedFacelet5(): Vector[Int32] = Vector#{12, 37, 62, 87, 112, 137}
+
     ///
     /// The name of the slot convention `draw` assumes at size `n`.
     ///
@@ -214,6 +349,7 @@ mod Orbit64.Net {
         case 2 => "kociemba-corners"
         case 3 => "kociemba-3x3x3"
         case 4 => "twizzle-4x4x4@baa0685"
+        case 5 => "orbit64-5x5-draft@1"
         case _ => "none for the ${n}x${n}x${n}"
     }
 
@@ -224,7 +360,7 @@ mod Orbit64.Net {
     /// `colour` false gives plain letters, for pipes and for `NO_COLOR`.
     ///
     pub def draw(n: Int32, orbits: List[Coord], colour: Bool): Option[String] =
-        if (n != 2 and n != 3 and n != 4) None
+        if (n != 2 and n != 3 and n != 4 and n != 5) None
         // A slot-to-facelet table is indexed by the piece sitting in a slot, so
         // a permutation with an entry outside its orbit reads off the end of
         // one. Everything `decode` produces is a genuine permutation, but this
@@ -233,6 +369,7 @@ mod Orbit64.Net {
         else if (List.exists(c -> not Orbit64.Coord.isValid(c), orbits)) None
         else
             if (n == 4) draw4(orbits, colour)
+            else if (n == 5) draw5(orbits, colour)
             else
                 region rc {
                     // Centres never move, so they are the frame the rest is drawn in.
@@ -245,6 +382,55 @@ mod Orbit64.Net {
                     });
                     Some(render(3, n, Array.toVector(sticker), colour))
                 }
+
+    ///
+    /// A 5x5x5, drawn under `orbit64-5x5-draft@1`.
+    ///
+    /// The two `CenterCoord`s are told apart by list position, which is the
+    /// only thing that distinguishes them: `Orbit.layout` yields
+    /// `Corners, Midges, Wings, Centers, Centers`, and this convention fixes
+    /// the fourth as the X-centres and the fifth as the plus-centres. Matching
+    /// the whole list rather than each element is what makes that explicit.
+    ///
+    def draw5(orbits: List[Coord], colour: Bool): Option[String] =
+        match orbits {
+            case CornerCoord(cp, co) :: MidgeCoord(ep, eo) :: WingCoord(wp) ::
+                 CenterCoord(xs) :: CenterCoord(ps) :: Nil =>
+                region rc {
+                    let sticker = Array.repeat(rc, 150, 0);
+                    // The six single centres are not in the token; they are the frame.
+                    Vector.range(0, 6) |> Vector.forEach(f ->
+                        Array.put(f, Vector.get(f, fixedFacelet5()), sticker));
+                    Vector.range(0, 8) |> Vector.forEach(slot ->
+                        Vector.range(0, 3) |> Vector.forEach(k -> {
+                            let at  = Vector.get(k, Vector.get(slot, cornerFacelet5()));
+                            let col = Vector.get(Int32.modulo(k - Vector.get(slot, co) + 3, 3),
+                                                 Vector.get(Vector.get(slot, cp), cornerColour5()));
+                            Array.put(col, at, sticker)
+                        }));
+                    Vector.range(0, 12) |> Vector.forEach(slot ->
+                        Vector.range(0, 2) |> Vector.forEach(k -> {
+                            let at  = Vector.get(k, Vector.get(slot, midgeFacelet5()));
+                            let col = Vector.get(Int32.modulo(k - Vector.get(slot, eo) + 2, 2),
+                                                 Vector.get(Vector.get(slot, ep), midgeColour5()));
+                            Array.put(col, at, sticker)
+                        }));
+                    Vector.range(0, 24) |> Vector.forEach(slot ->
+                        Vector.range(0, 2) |> Vector.forEach(k -> {
+                            let at  = Vector.get(k, Vector.get(slot, wingFacelet5()));
+                            let col = Vector.get(k, Vector.get(Vector.get(slot, wp), wingColour5()));
+                            Array.put(col, at, sticker)
+                        }));
+                    Vector.range(0, 24) |> Vector.forEach(slot -> {
+                        Array.put(Vector.get(Vector.get(slot, xs), centreColour5()),
+                                  Vector.get(slot, xFacelet5()), sticker);
+                        Array.put(Vector.get(Vector.get(slot, ps), centreColour5()),
+                                  Vector.get(slot, plusFacelet5()), sticker)
+                    });
+                    Some(render(5, 5, Array.toVector(sticker), colour))
+                }
+            case _ => None
+        }
 
     ///
     /// A 4x4x4 has no piece that never moves, so every one of its 96 stickers
