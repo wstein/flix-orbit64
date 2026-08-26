@@ -7,8 +7,8 @@
 // compared directly.
 //
 // The expected strings were produced by `BigCube.showFacelets` after applying
-// the named turn to a solved cube, in that project, by an engine sharing no
-// code with this one. They pass only if this project's slot tables and that
+// the named turn -- or, in the last fixture, the named sequence -- to a solved
+// cube, in that project, by an engine sharing no code with this one. They pass only if this project's slot tables and that
 // project's turn arithmetic describe the same cube. Because facelets cannot see
 // slot numbering, these survived Orbit64 renumbering its own orbits -- which is
 // the property that makes them worth having.
@@ -131,3 +131,27 @@ def faceletsOfFiveByFive2R(): Unit \ Assert =
     let orbits = List#{CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), MidgeCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
                        WingCoord(Vector#{0, 1, 2, 11, 4, 5, 6, 7, 8, 9, 10, 15, 12, 13, 14, 20, 16, 17, 18, 19, 3, 21, 22, 23}), CenterCoord(Vector#{0, 2, 0, 2, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5}), CenterCoord(Vector#{0, 0, 2, 0, 1, 1, 1, 1, 2, 2, 3, 2, 3, 3, 5, 3, 4, 4, 4, 4, 5, 0, 5, 5})};
     bothWays(5, orbits, "UUUFUUUUFUUUUFUUUUFUUUUFURRRRRRRRRRRRRRRRRRRRRRRRRFFFDFFFFDFFFFDFFFFDFFFFDFDDDBDDDDBDDDDBDDDDBDDDDBDLLLLLLLLLLLLLLLLLLLLLLLLLBUBBBBUBBBBUBBBBUBBBBUBBB")
+
+///
+/// One sequence rather than one turn: `R U Rw Uw 2R F`, an outer turn, a wide
+/// turn and an inner slice together.
+///
+/// The single turns above each disturb one kind of thing at a time, and a
+/// reader can agree with a writer about every one of them while still getting
+/// a compound state wrong -- wings and centres arriving from two different
+/// layers at once is what a single turn never asks of either side. This state
+/// permutes both centre orbits and the wings heavily, twists corners and flips
+/// midges, and leaves the fixed centres alone, which is what makes it readable
+/// at all: `2R` is the deepest slice that misses them, and `3R` would not.
+///
+/// The stickers come from `flix-cube` as the rest do. The orbits were derived
+/// from cube geometry against this project's own slot tables, by a derivation
+/// checked first against every single-turn fixture above -- so agreement here
+/// is two independent accounts of what those six moves do, not one account
+/// read back to itself.
+///
+@Test
+def faceletsOfFiveByFiveOuterWideAndSlice(): Unit \ Assert =
+    let orbits = List#{CornerCoord(Vector#{7, 5, 4, 1, 0, 3, 6, 2}, Vector#{1, 2, 2, 0, 1, 1, 0, 2}), MidgeCoord(Vector#{2, 9, 8, 1, 0, 11, 6, 7, 4, 5, 10, 3}, Vector#{0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0}),
+                       WingCoord(Vector#{3, 2, 11, 22, 9, 21, 15, 4, 10, 7, 16, 20, 5, 1, 14, 8, 6, 12, 18, 19, 13, 17, 0, 23}), CenterCoord(Vector#{0, 1, 2, 3, 0, 5, 1, 1, 2, 1, 5, 5, 3, 0, 3, 4, 2, 3, 4, 4, 2, 4, 0, 5}), CenterCoord(Vector#{0, 0, 3, 2, 5, 1, 1, 1, 2, 2, 1, 5, 3, 3, 0, 3, 2, 4, 4, 4, 4, 0, 5, 5})};
+    bothWays(5, orbits, "FUURUFUURUFUUDUFFFDRLLLBBDFLLLDUBBBDRRRBDRRRBRRRRBFFFRRFFFRRFFFRRLBBBBBBBBURRRUFDDDUUDDDUUDDDLUDDDFLRRRDDFFFDDLLLLDLLLLULLLLUFDFFDLFLLLUUBBBUUBBBUUBBB")
