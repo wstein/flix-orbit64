@@ -27,6 +27,10 @@ jobs:
   build:
     name: Build the documentation
     runs-on: ubuntu-latest
+    # A wedged runner is not a build failure, but without a cap it looks like
+    # one for six hours: GitHub's default. This job takes about a minute, so
+    # anything near this number is a hung runner rather than slow work.
+    timeout-minutes: 15
 
     permissions:
       contents: read
@@ -230,6 +234,7 @@ jobs:
     needs: build
     if: needs.build.outputs.pages == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     permissions:
       pages: write

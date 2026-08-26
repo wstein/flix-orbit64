@@ -24,6 +24,11 @@ jobs:
   update-flix:
     name: Re-pin the compiler
     runs-on: ubuntu-latest
+    # A wedged runner is not a failure, but without a cap it occupies one for
+    # six hours: GitHub's default. This job fetches a compiler, runs the suite
+    # and opens a pull request, so it is allowed more room than the others --
+    # but not a working day.
+    timeout-minutes: 20
 
     permissions:
       contents: write
