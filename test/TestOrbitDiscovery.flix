@@ -112,7 +112,14 @@ mod OrbitDiscovery {
     ///
     /// Which kind of orbit a component of `size` pieces each showing `faces`
     /// stickers is. `None` for the fixed centres, which the format leaves out
-    /// because they never move relative to one another.
+    /// because they never move relative to one another, and `None` again for
+    /// anything this does not recognise.
+    ///
+    /// That second `None` is why `unrecognised` exists. Dropping a component
+    /// silently would let a shape nobody expected disappear from
+    /// `derivedLayout` and leave it agreeing with `Orbit.layout` anyway -- so
+    /// the derivation would confirm the arithmetic by discarding whatever
+    /// disagreed with it, which is the one thing it must not do.
     ///
     def classify(faces: Int32, size: Int32): Option[Orbit] =
         match (faces, size) {
@@ -120,9 +127,32 @@ mod OrbitDiscovery {
             case (2, 12) => Some(Midges)
             case (2, 24) => Some(Wings)
             case (1, 24) => Some(Centers)
-            case (1, 1)  => None          // a fixed centre, on an odd cube
             case _       => None
         }
+
+    ///
+    /// Whether a component of `size` pieces each showing `faces` stickers is a
+    /// shape this file expects to see at all.
+    ///
+    /// The four orbits, plus the single fixed centre of an odd cube, which is
+    /// left out of the format on purpose rather than unrecognised.
+    ///
+    def known(faces: Int32, size: Int32): Bool =
+        not Option.isEmpty(classify(faces, size)) or (faces == 1 and size == 1)
+
+    ///
+    /// Every component whose shape this file does not know, as `(faces, size)`.
+    ///
+    /// Empty is the only answer that means anything: a component here is one
+    /// `derivedLayout` threw away without saying so.
+    ///
+    pub def unrecognised(n: Int32): List[(Int32, Int32)] =
+        components(n)
+            |> List.filterMap(match (r, size) -> {
+                let (x, y, z) = decode(n, r);
+                let faces = visible(n, x, y, z);
+                if (known(faces, size)) None else Some((faces, size))
+            })
 
     ///
     /// The layout of an `n`-cube as geometry says it is, sorted so it can be
@@ -156,6 +186,22 @@ def derivedLayoutAgreesWithArithmetic(): Unit \ Assert =
         Assert.assertEq(
             expected = List.sort(Orbit64.Orbit.layout(n)),
             OrbitDiscovery.derivedLayout(n)))
+
+///
+/// Nothing the geometry finds is quietly discarded.
+///
+/// `derivedLayout` maps components through `classify`, which answers `None`
+/// both for the fixed centres it means to skip and for any shape it does not
+/// know. Without this, a component of an unexpected size would vanish and
+/// `derivedLayout` would still match `Orbit.layout` -- confirming the
+/// arithmetic by throwing away the evidence against it.
+///
+@Test
+def everyComponentIsAShapeTheFormatKnows(): Unit \ Assert =
+    List.range(2, 8) |> List.forEach(n ->
+        Assert.assertEqWithMsg(expected = (Nil: List[(Int32, Int32)]),
+            OrbitDiscovery.unrecognised(n),
+            "the ${n}x${n}x${n} has components derivedLayout drops without saying so"))
 
 @Test
 def everySurfacePieceLandsInSomeComponent(): Unit \ Assert =
