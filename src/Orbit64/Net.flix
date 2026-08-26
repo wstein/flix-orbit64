@@ -1,5 +1,5 @@
 ///
-/// Draws a decoded cube as a net.
+/// Draws a decoded cube as a net, and reads one back out of its facelets.
 ///
 /// A token carries every *movable* piece and nothing besides. An odd cube's six
 /// fixed centres are deliberately outside the format -- they never move
@@ -12,6 +12,12 @@
 /// exactly what lets it cover every size from the 2x2x2 up. A picture needs to
 /// know which slot sits where, so this module supplies a convention and
 /// `convention` names it.
+///
+/// One set of tables serves both directions. `toFacelets` writes a state out as
+/// stickers and `fromFacelets` reads one back in, which is what lets a project
+/// carrying a cube engine of its own both consume and produce tokens without
+/// ever restating the slot convention -- the one thing it could not restate
+/// correctly without copying these tables.
 ///
 /// Every table below is derived from cube geometry alone. No other project's
 /// puzzle definition is read, which keeps this Apache-2.0 package clear of the
@@ -48,7 +54,7 @@
 /// preserves cycle structure, permutation parity and the orientation sums, so
 /// no property of the arrays tells one labelling from another.
 ///
-/// The 6x6x6 and up are not drawn.
+/// The 6x6x6 and up are neither drawn nor read.
 ///
 ///
 mod Orbit64.Net {
@@ -440,6 +446,41 @@ mod Orbit64.Net {
             |> Result.map(fs -> render(n, fs, colour))
 
     ///
+    /// The orbits `facelets` describes, or why it describes no cube.
+    ///
+    /// The exact inverse of `toFacelets`, and the direction a project with a
+    /// cube engine of its own needs in order to *produce* a token rather than
+    /// merely draw one. Both directions read the same private tables, so an
+    /// adapter never has to restate this package's slot convention -- the one
+    /// thing it could not restate correctly without copying it.
+    ///
+    /// Facelets carry colours and no slot numbers, so this recovers the state
+    /// as `convention(n)` numbers it. A project whose own slot order differs
+    /// still gets the same cube, described in Orbit64's terms, which is exactly
+    /// what makes the facelet layer the place two such projects can meet.
+    ///
+    /// It refuses a state whose fixed centres have moved. An odd cube's six
+    /// single centres are the frame this format is written in rather than state
+    /// it carries, so a slice turn or a whole-cube rotation leaves something a
+    /// token has nowhere to record. Normalising it silently would return a
+    /// different state than the caller handed over; saying so is the honest
+    /// answer, and the caller knows which turn to undo.
+    ///
+    pub def fromFacelets(n: Int32, facelets: Vector[Int32]): Result[String, List[Coord]] =
+        if (not canDraw(n))
+            Err("no slot convention for the ${n}x${n}x${n}: this module has one "
+                + "only up to the 5x5x5")
+        else if (Vector.length(facelets) != 6 * n * n)
+            Err("expected ${6 * n * n} facelets for the ${n}x${n}x${n}, "
+                + "got ${Vector.length(facelets)}")
+        else if (not Vector.forAll(f -> f >= 0 and f < 6, facelets))
+            Err("every facelet must name a face, 0 to 5")
+        else
+            checkFrame(n, facelets)
+                |> Result.flatMap(_ -> readOrbits(n, facelets))
+                |> Result.flatMap(allCubes)
+
+    ///
     /// The 2x2x2 and 3x3x3.
     ///
     /// A 2x2x2 is built on the 3x3x3's grid and then thinned to its corner
@@ -567,6 +608,223 @@ mod Orbit64.Net {
                 let col  = Vector.get(k, Vector.get(Vector.get(slot, ep), edgeColor()));
                 Array.put(col, at, sticker)
             }))
+
+    ///
+    /// Dispatch to the reader for `n`, once `fromFacelets` has established that
+    /// the input is the right length and made of face indices.
+    ///
+    def readOrbits(n: Int32, fs: Vector[Int32]): Result[String, List[Coord]] =
+        if (n == 4) orbits4(fs)
+        else if (n == 5) orbits5(fs)
+        else orbits3(n, fs)
+
+    ///
+    /// A 2x2x2 or 3x3x3, read off the 3x3x3 grid the tables are written for.
+    ///
+    def orbits3(n: Int32, fs: Vector[Int32]): Result[String, List[Coord]] =
+        let grid = if (n == 2) inflate2(fs) else fs;
+        if (n == 2)
+            forM ((cp, co) <- readOriented("corner", cornerFacelet(), cornerColor(), grid))
+                yield CornerCoord(cp, co) :: Nil
+        else
+            forM (
+                (cp, co) <- readOriented("corner", cornerFacelet(), cornerColor(), grid);
+                (ep, eo) <- readOriented("edge", edgeFacelet(), edgeColor(), grid)
+            ) yield CornerCoord(cp, co) :: MidgeCoord(ep, eo) :: Nil
+
+    ///
+    /// A 4x4x4, read under `orbit64-4x4-draft@1`.
+    ///
+    def orbits4(fs: Vector[Int32]): Result[String, List[Coord]] =
+        forM (
+            (cp, co) <- readOriented("corner", cornerFacelet4(), cornerColour4(), fs);
+            wp       <- readUnoriented("wing", wingFacelet4(), wingColour4(), fs);
+            cols     <- readCentres("centre", centreFacelet4(), centreColour4(), fs)
+        ) yield CornerCoord(cp, co) :: WingCoord(wp) :: CenterCoord(cols) :: Nil
+
+    ///
+    /// A 5x5x5, read under `orbit64-5x5-draft@1`.
+    ///
+    /// The two centre orbits come back in the order that convention fixes --
+    /// the X-centres fourth and the plus-centres fifth -- which is the same
+    /// order `facelets5` writes them in, and the only thing that tells two
+    /// `CenterCoord`s apart.
+    ///
+    def orbits5(fs: Vector[Int32]): Result[String, List[Coord]] =
+        forM (
+            (cp, co) <- readOriented("corner", cornerFacelet5(), cornerColour5(), fs);
+            (ep, eo) <- readOriented("midge", midgeFacelet5(), midgeColour5(), fs);
+            wp       <- readUnoriented("wing", wingFacelet5(), wingColour5(), fs);
+            xs       <- readCentres("X-centre", xFacelet5(), centreColour5(), fs);
+            ps       <- readCentres("plus-centre", plusFacelet5(), centreColour5(), fs)
+        ) yield CornerCoord(cp, co) :: MidgeCoord(ep, eo) :: WingCoord(wp)
+                    :: CenterCoord(xs) :: CenterCoord(ps) :: Nil
+
+    ///
+    /// A 2x2x2's 24 stickers, spread back over the 3x3x3 grid its tables index.
+    ///
+    /// The inverse of the thinning `facelets3` ends with: a 2x2x2 sticker is a
+    /// corner cell of a 3x3x3 face, and the cells in between are ones no corner
+    /// table names. They are filled with their own face so the grid stays a
+    /// picture of something rather than a heap of zeroes; nothing reads them.
+    ///
+    def inflate2(fs: Vector[Int32]): Vector[Int32] =
+        Vector.init(i -> {
+            let face = i / 9;
+            let r = Int32.modulo(i / 3, 3);
+            let c = Int32.modulo(i, 3);
+            if (Int32.modulo(r, 2) == 0 and Int32.modulo(c, 2) == 0)
+                Vector.get(face * 4 + (r / 2) * 2 + c / 2, fs)
+            else face
+        }, 54)
+
+    ///
+    /// The stickers sitting on `slot`'s facelets, in table order.
+    ///
+    def stickersAt(table: Vector[Vector[Int32]], slot: Int32, fs: Vector[Int32]): Vector[Int32] =
+        Vector.get(slot, table) |> Vector.map(at -> Vector.get(at, fs))
+
+    ///
+    /// The permutation and orientation of an orbit whose pieces can be turned
+    /// in place: corners, and the midges of an odd cube.
+    ///
+    def readOriented(
+        what: String,
+        table: Vector[Vector[Int32]],
+        colours: Vector[Vector[Int32]],
+        fs: Vector[Int32]
+    ): Result[String, (Vector[Int32], Vector[Int32])] =
+        List.range(0, Vector.length(table))
+            |> Result.traverse(slot ->
+                let seen = stickersAt(table, slot, fs);
+                match readPiece(colours, seen) {
+                    case Some(po) => Ok(po)
+                    case None     => Err(noSuchPiece(what, slot, seen))
+                })
+            |> Result.map(ps ->
+                (List.toVector(List.map(fst, ps)), List.toVector(List.map(snd, ps))))
+
+    ///
+    /// The permutation of an orbit whose pieces carry no orientation: wings.
+    ///
+    def readUnoriented(
+        what: String,
+        table: Vector[Vector[Int32]],
+        colours: Vector[Vector[Int32]],
+        fs: Vector[Int32]
+    ): Result[String, Vector[Int32]] =
+        List.range(0, Vector.length(table))
+            |> Result.traverse(slot ->
+                let seen = stickersAt(table, slot, fs);
+                match List.range(0, Vector.length(colours))
+                        |> List.find(p -> Vector.get(p, colours) == seen) {
+                    case Some(p) => Ok(p)
+                    case None    => Err(noSuchPiece(what, slot, seen))
+                })
+            |> Result.map(List.toVector)
+
+    ///
+    /// The colours of a centre orbit, one per slot.
+    ///
+    /// A centre is a single sticker and the four of a colour are alike, so
+    /// there is nothing to identify -- only the colour to look up, which the
+    /// convention makes the face index itself. The lookup stays in place
+    /// regardless, so the table is what says so rather than this line.
+    ///
+    def readCentres(
+        what: String,
+        table: Vector[Int32],
+        colours: Vector[Int32],
+        fs: Vector[Int32]
+    ): Result[String, Vector[Int32]] =
+        List.range(0, Vector.length(table))
+            |> Result.traverse(slot ->
+                let seen = Vector.get(Vector.get(slot, table), fs);
+                match Vector.indexOf(seen, colours) {
+                    case Some(col) => Ok(col)
+                    case None      => Err(noSuchPiece(what, slot, Vector#{seen}))
+                })
+            |> Result.map(List.toVector)
+
+    ///
+    /// The piece and orientation whose colours are `seen`, or nothing when no
+    /// piece of that orbit carries those colours in that cyclic order.
+    ///
+    /// `toFacelets` writes the sticker on `table[slot][j]` as
+    /// `colours[piece][(j - orientation) mod m]`, and this inverts exactly
+    /// that. The answer is unique because no two pieces of an orbit share a
+    /// colour set, and no piece's colours are cyclically symmetric.
+    ///
+    def readPiece(colours: Vector[Vector[Int32]], seen: Vector[Int32]): Option[(Int32, Int32)] =
+        let m = Vector.length(seen);
+        List.range(0, Vector.length(colours)) |> List.findMap(p ->
+            List.range(0, m)
+                |> List.find(o -> List.range(0, m) |> List.forAll(j ->
+                    Vector.get(j, seen)
+                        == Vector.get(Int32.modulo(j - o + m, m), Vector.get(p, colours))))
+                |> Option.map(o -> (p, o)))
+
+    ///
+    /// An odd cube's six single centres are the frame this format is written
+    /// in, not state it carries. A slice turn or a whole-cube rotation moves
+    /// them, and a token has nowhere to record where they went, so such a state
+    /// can be drawn but not read back. Turning it back into the frame is the
+    /// caller's to do: doing it here would hand back a different state than the
+    /// one that arrived, without saying so.
+    ///
+    def checkFrame(n: Int32, fs: Vector[Int32]): Result[String, Unit] =
+        match fixedFacelets(n) {
+            case None => Ok(())
+            case Some(centres) =>
+                match List.range(0, 6)
+                        |> List.find(f -> Vector.get(Vector.get(f, centres), fs) != f) {
+                    case None    => Ok(())
+                    case Some(f) =>
+                        let shows = Vector.get(Vector.get(Vector.get(f, centres), fs), faces());
+                        Err("the ${Vector.get(f, faces())} centre shows ${shows}: the six fixed "
+                            + "centres are the frame this format is written in, so a state whose "
+                            + "centres have moved has to be turned back into that frame before it "
+                            + "can be read")
+                }
+        }
+
+    ///
+    /// Where the six fixed centres sit at size `n`, or `None` for an even cube,
+    /// which has none.
+    ///
+    def fixedFacelets(n: Int32): Option[Vector[Int32]] = match n {
+        case 3 => Some(Vector.range(0, 6) |> Vector.map(f -> f * 9 + 4))
+        case 5 => Some(fixedFacelet5())
+        case _ => None
+    }
+
+    ///
+    /// Every coordinate read back has to be a cube in its own right.
+    ///
+    /// Reading is slot by slot, so nothing above notices two slots claiming the
+    /// same piece, or a colour turning up five times where four is the whole
+    /// supply. `Coord.faultOf` states those constraints once, and this is where
+    /// the facelet direction leans on them -- the same check, and the same
+    /// wording, that `Orbit64.encode` gives a caller building coordinates by
+    /// hand.
+    ///
+    def allCubes(orbits: List[Coord]): Result[String, List[Coord]] =
+        match orbits
+                |> List.filterMap(c -> Orbit64.Coord.faultOf(c)
+                    |> Option.map(why -> (Orbit64.Coord.kind(c), why)))
+                |> List.head {
+            case Some((o, why)) => Err("the ${o} these facelets show are not a cube: ${why}")
+            case None           => Ok(orbits)
+        }
+
+    ///
+    /// Name the stickers a slot shows, for a reader that has to say what it
+    /// could not identify. Face letters rather than indices: the caller is
+    /// looking at a cube, not at a table.
+    ///
+    def noSuchPiece(what: String, slot: Int32, seen: Vector[Int32]): String =
+        let letters = seen |> Vector.map(f -> Vector.get(f, faces())) |> Vector.join("");
+        "${what} slot ${slot} shows ${letters}, which is no ${what} of this cube"
 
     ///
     /// Lay the six faces out flat, `U` above `L F R B` above `D`.
