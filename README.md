@@ -160,15 +160,19 @@ $ ./flixw run --entrypoint Orbit64.Cli.main -- AEtgYICyPB1X
   Corners: CornerCoord(Vector#{0, 4, 5, 1, 3, 7, 6, 2}, ...)
   Midges: MidgeCoord(Vector#{1, 8, 5, 9, 3, 11, 7, 10, 0, 4, 6, 2}, ...)
 
-          F  F  F
-          F  U  F
-          F  F  F
- D  D  D  R  R  R  U  U  U  L  L  L
- D  L  D  R  F  R  U  R  U  L  B  L
- D  D  D  R  R  R  U  U  U  L  L  L
-          B  B  B
-          B  D  B
-          B  B  B
+             F  F  F 
+             F  U  F 
+             F  F  F 
+
+ D  D  D     R  R  R     U  U  U     L  L  L 
+ D  L  D     R  F  R     U  R  U     L  B  L 
+ D  D  D     R  R  R     U  U  U     L  L  L 
+
+             B  B  B 
+             B  D  B 
+             B  B  B 
+
+  drawn as kociemba-3x3x3
 ```
 
 The faces are coloured on a terminal; `NO_COLOR=1` gives the plain letters

@@ -16,6 +16,7 @@
 
 use Orbit64.Coord.Coord.{CornerCoord, MidgeCoord, WingCoord, CenterCoord}
 
+
 ///
 /// `(solved)`
 ///
@@ -28,7 +29,7 @@ def fiveByFiveSolvedDrawsSixSolidFaces(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    let expected = "                U  U  U  U  U \n                U  U  U  U  U \n                U  U  U  U  U \n                U  U  U  U  U \n                U  U  U  U  U \n L  L  L  L  L  F  F  F  F  F  R  R  R  R  R  B  B  B  B  B \n L  L  L  L  L  F  F  F  F  F  R  R  R  R  R  B  B  B  B  B \n L  L  L  L  L  F  F  F  F  F  R  R  R  R  R  B  B  B  B  B \n L  L  L  L  L  F  F  F  F  F  R  R  R  R  R  B  B  B  B  B \n L  L  L  L  L  F  F  F  F  F  R  R  R  R  R  B  B  B  B  B \n                D  D  D  D  D \n                D  D  D  D  D \n                D  D  D  D  D \n                D  D  D  D  D \n                D  D  D  D  D ";
+    let expected = "                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n\n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n\n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D ";
     Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(5, orbits, false));
     match Orbit64.encode(5, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
@@ -47,7 +48,7 @@ def fiveByFiveAWideTurnTellsTheCentreOrbitsApart(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 4, 4, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5, 5, 5}),
         CenterCoord(Vector#{0, 0, 0, 0, 4, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5})
     };
-    let expected = "                U  U  U  U  U \n                U  U  U  U  U \n                U  U  U  U  U \n                U  U  U  U  U \n                U  U  U  U  U \n F  F  F  F  F  R  R  R  R  R  B  B  B  B  B  L  L  L  L  L \n F  F  F  F  F  R  R  R  R  R  B  B  B  B  B  L  L  L  L  L \n L  L  L  L  L  F  F  F  F  F  R  R  R  R  R  B  B  B  B  B \n L  L  L  L  L  F  F  F  F  F  R  R  R  R  R  B  B  B  B  B \n L  L  L  L  L  F  F  F  F  F  R  R  R  R  R  B  B  B  B  B \n                D  D  D  D  D \n                D  D  D  D  D \n                D  D  D  D  D \n                D  D  D  D  D \n                D  D  D  D  D ";
+    let expected = "                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n\n F  F  F  F  F     R  R  R  R  R     B  B  B  B  B     L  L  L  L  L \n F  F  F  F  F     R  R  R  R  R     B  B  B  B  B     L  L  L  L  L \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n\n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D ";
     Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(5, orbits, false));
     match Orbit64.encode(5, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
@@ -66,7 +67,7 @@ def fiveByFiveAShortScramble(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 2, 2, 4, 0, 1, 1, 5, 1, 1, 2, 5, 2, 3, 3, 3, 3, 0, 4, 4, 5, 5, 4}),
         CenterCoord(Vector#{0, 0, 2, 0, 4, 1, 1, 1, 5, 1, 2, 2, 2, 3, 3, 3, 3, 0, 4, 4, 5, 5, 5, 4})
     };
-    let expected = "                U  U  U  U  U \n                U  U  U  U  U \n                U  U  U  U  U \n                F  F  F  F  F \n                B  B  R  R  R \n F  F  F  D  U  R  R  F  F  F  D  U  B  B  B  L  L  L  L  L \n F  F  F  D  U  R  R  D  D  D  B  U  B  B  B  L  L  L  L  L \n L  L  L  L  U  R  R  F  F  F  D  R  R  R  R  B  U  B  B  B \n L  L  L  L  U  R  R  F  F  F  D  R  R  R  R  B  U  B  B  B \n L  L  L  L  U  R  R  F  F  F  D  R  R  R  R  B  U  B  B  B \n                F  F  L  L  L \n                D  D  D  B  D \n                D  D  D  B  D \n                D  D  D  B  D \n                D  D  D  B  D ";
+    let expected = "                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   F  F  F  F  F \n                   B  B  R  R  R \n\n F  F  F  D  U     R  R  F  F  F     D  U  B  B  B     L  L  L  L  L \n F  F  F  D  U     R  R  D  D  D     B  U  B  B  B     L  L  L  L  L \n L  L  L  L  U     R  R  F  F  F     D  R  R  R  R     B  U  B  B  B \n L  L  L  L  U     R  R  F  F  F     D  R  R  R  R     B  U  B  B  B \n L  L  L  L  U     R  R  F  F  F     D  R  R  R  R     B  U  B  B  B \n\n                   F  F  L  L  L \n                   D  D  D  B  D \n                   D  D  D  B  D \n                   D  D  D  B  D \n                   D  D  D  B  D ";
     Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(5, orbits, false));
     match Orbit64.encode(5, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
@@ -85,7 +86,7 @@ def fiveByFiveALongerScramble(): Unit \ Assert =
         CenterCoord(Vector#{1, 4, 2, 1, 0, 0, 3, 4, 2, 0, 5, 3, 1, 0, 2, 2, 5, 4, 5, 5, 4, 1, 3, 3}),
         CenterCoord(Vector#{1, 2, 2, 0, 0, 1, 4, 4, 0, 5, 1, 0, 2, 4, 3, 2, 3, 4, 5, 3, 1, 5, 3, 5})
     };
-    let expected = "                D  B  R  R  B \n                D  B  R  R  R \n                L  F  U  U  R \n                D  F  F  R  D \n                R  F  F  B  R \n B  B  F  R  D  B  U  U  U  F  D  F  F  F  L  U  U  U  L  L \n U  U  F  R  D  B  U  U  F  L  F  U  U  U  L  B  B  L  D  F \n B  B  L  F  F  D  D  F  U  B  U  R  R  B  L  U  B  B  L  L \n R  F  L  F  F  D  D  R  L  B  U  L  B  B  U  R  D  D  D  D \n L  L  B  F  R  U  U  R  F  F  D  B  B  B  U  R  D  D  D  F \n                B  L  D  R  L \n                L  R  R  B  R \n                D  D  D  D  R \n                U  L  L  L  R \n                U  L  L  L  F ";
+    let expected = "                   D  B  R  R  B \n                   D  B  R  R  R \n                   L  F  U  U  R \n                   D  F  F  R  D \n                   R  F  F  B  R \n\n B  B  F  R  D     B  U  U  U  F     D  F  F  F  L     U  U  U  L  L \n U  U  F  R  D     B  U  U  F  L     F  U  U  U  L     B  B  L  D  F \n B  B  L  F  F     D  D  F  U  B     U  R  R  B  L     U  B  B  L  L \n R  F  L  F  F     D  D  R  L  B     U  L  B  B  U     R  D  D  D  D \n L  L  B  F  R     U  U  R  F  F     D  B  B  B  U     R  D  D  D  F \n\n                   B  L  D  R  L \n                   L  R  R  B  R \n                   D  D  D  D  R \n                   U  L  L  L  R \n                   U  L  L  L  F ";
     Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(5, orbits, false));
     match Orbit64.encode(5, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)

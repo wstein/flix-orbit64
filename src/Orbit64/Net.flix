@@ -501,12 +501,18 @@ mod Orbit64.Net {
         let band = (face, row) -> Vector.range(0, n)
             |> Vector.map(col -> paint(cell(face, row, col), colour))
             |> Vector.join("");
-        let pad = String.repeat(n * 3, " ");
+        // One sticker of gutter between faces, and a blank row between the
+        // bands. Without it the six blocks read as one dense rectangle and the
+        // face boundaries have to be counted rather than seen.
+        let gap = "   ";
+        let pad = String.repeat(n * 3 + 3, " ");
+        let blank = Vector#{""};
         let top = Vector.range(0, n) |> Vector.map(r -> "${pad}${band(0, r)}");
         let mid = Vector.range(0, n) |> Vector.map(r ->
-            "${band(4, r)}${band(2, r)}${band(1, r)}${band(5, r)}");
+            "${band(4, r)}${gap}${band(2, r)}${gap}${band(1, r)}${gap}${band(5, r)}");
         let bot = Vector.range(0, n) |> Vector.map(r -> "${pad}${band(3, r)}");
-        Vector.append(top, Vector.append(mid, bot)) |> Vector.join("\n")
+        Vector.append(top, Vector.append(blank, Vector.append(mid,
+            Vector.append(blank, bot)))) |> Vector.join("\n")
 
     def paint(face: Int32, colour: Bool): String =
         let letter = Vector.get(face, faces());
