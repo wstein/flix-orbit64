@@ -1,0 +1,13 @@
+*.fpkg
+*.jar
+.GITHUB_TOKEN
+artifact/
+build/
+lib/
+site/
+crash_report_*.txt
+
+# macOS finder droppings and local assistant session state; neither is
+# project content.
+.DS_Store
+.remember/
