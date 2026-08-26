@@ -20,7 +20,7 @@ follows from that. No token is a character wider than the state count requires.
 2x2x2  AAAAA                                       (solved)
 2x2x2  AAAVW                                       (every corner twisted)
 3x3x3  AAAAAAAAAAf_                                (superflip)
-4x4x4  BY7wv_SJswRfmIMk31HAKlByKg2                 (stripes)
+4x4x4  BUt6SRL-hJFWEmpUa2zYHsiSLJb                 (stripes)
 5x5x5  AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA  (superflip)
 ```
 
@@ -110,7 +110,7 @@ a solved cube of any size is a run of `A`s.
 ## The same cube, three ways
 
 The two 3x3x3 states below, in the notations you are most likely to meet them in.
-Facelet strings are in Kociemba's `URFDLB` order, nine stickers per face; the
+Facelet strings are in the standard `URFDLB` order, nine stickers per face; the
 piece arrays are corner permutation and orientation, then edge permutation and
 orientation.
 
@@ -148,7 +148,7 @@ stickers rather than pieces, so most 54-character strings are not cubes at all,
 and the piece arrays pay index width for permutations whose ranks are much
 smaller than their alphabets.
 
-One caveat on reading the tables across: the piece arrays use Kociemba's slot
+One caveat on reading the tables across: the piece arrays use the standard slot
 numbering, and the format itself prescribes none. For these two states that makes
 no difference -- both are the same under any consistent labelling -- but for a
 general state the convention has to be agreed before the arrays can be compared
@@ -177,7 +177,7 @@ $ ./flixw run --entrypoint Orbit64.Cli.main -- AEtgYICyPB1X
              B  D  B 
              B  B  B 
 
-  drawn as kociemba-3x3x3
+  drawn as orbit64-3x3-draft@1
 ```
 
 The faces are coloured on a terminal; `NO_COLOR=1` gives the plain letters
@@ -186,11 +186,11 @@ leaves them out because they fix the frame rather than carry information -- so
 the renderer supplies them before drawing anything.
 
 The 2x2x2 through 5x5x5 are drawn, each under a convention the command line
-names beneath the net -- `kociemba-3x3x3` for the small cubes,
-`twizzle-4x4x4@baa0685` for the 4x4x4, `orbit64-5x5-draft@1` for the 5x5x5:
+names beneath the net -- `orbit64-3x3-draft@1`, `orbit64-4x4-draft@1`,
+`orbit64-5x5-draft@1` and so on:
 
 ```
-$ ./flixw run --entrypoint Orbit64.Cli.main -- BY7wv_SJswRfmIMk31HAKlByKg2
+$ ./flixw run --entrypoint Orbit64.Cli.main -- BUt6SRL-hJFWEmpUa2zYHsiSLJb
 4x4x4, 3 orbits:
   ...
                 U  D  U  D
@@ -208,7 +208,7 @@ $ ./flixw run --entrypoint Orbit64.Cli.main -- BY7wv_SJswRfmIMk31HAKlByKg2
                 U  D  U  D
                 U  D  U  D
 
-  drawn as twizzle-4x4x4@baa0685
+  drawn as orbit64-4x4-draft@1
 ```
 
 A token carries no geometry, so that name is what turns a disagreement into
@@ -231,7 +231,7 @@ Two larger cubes, which the examples at the top of this file use:
 |-------|----------------------|----------------------------------------------|-----|
 | 2x2x2 | Solved               | `AAAAA`                                      | every coordinate zero, so every character is the padding one |
 | 2x2x2 | Every corner twisted | `AAAVW`                                      | identity permutation, twists `1 2 1 2 1 2 1 2` |
-| 4x4x4 | Stripes              | `BY7wv_SJswRfmIMk31HAKlByKg2`                | `L2 2R2 U2 2D2` |
+| 4x4x4 | Stripes              | `BUt6SRL-hJFWEmpUa2zYHsiSLJb`                | `L2 2R2 U2 2D2` |
 | 5x5x5 | Superflip            | `AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA` | every midge flipped in place, everything else solved |
 
 `L2 2R2 U2 2D2` turns alternate slices on two axes, which bands every face: the
@@ -250,10 +250,8 @@ twice -- so all that survives is permutation. Checkerboard's coordinate is small
 enough to leave five leading `A`s, which is the mixed radix showing through: the
 orientation digits sit at the bottom of the number and both are zero.
 
-These tokens are computed with the piece indexing from Kociemba's `cornerFacelet`
-and `edgeFacelet` tables, the same convention as the arrays in the previous
-section and as the nets the command line draws, so all three agree with each
-other. A model that numbers its slots differently will produce different tokens
+These tokens use the same slot numbering as the arrays in the previous section
+and as the nets the command line draws, so all three agree with each other. A model that numbers its slots differently will produce different tokens
 for the same picture -- see [Slot numbering](#slot-numbering).
 
 ## Slot numbering
@@ -266,8 +264,7 @@ halves must be agreed out of band before a token can be drawn, or compared entry
 by entry against another implementation's arrays.
 
 The pattern tokens above, the piece arrays beside them, and the nets the command
-line draws all use Kociemba's corner and edge numbering, so they agree with one
-another.
+line draws all use the same numbering, so they agree with one another.
 
 What is *not* established is that the reference implementation behind
 `test/TestVectors.flix` used that same numbering -- and it cannot be established
@@ -290,48 +287,28 @@ vectors do not contain -- the generator's slot table, or the move sequences that
 produced them, from which the relabelling could be solved for and then checked
 against every vector at once.
 
-The 4x4x4 net does have a named source. It reads the vectors as the twsearch
-4x4x4 KPuzzle definition orders them, pinned at exactly
-[this file at commit `baa0685`](https://github.com/cubing/twsearch/blob/baa0685f2e3c69c708b4b94be8600691511dd57c/src/lib/scramble/puzzles/definitions/4x4x4/4x4x4.kpuzzle.json) -- but that
-definition contains no facelets, because KPuzzle describes state and moves
-rather than stickers. So the mapping was not copied from it; it was solved for,
-as the one correspondence between its slot indices and a physical cube that
-reproduces its move permutations, then checked three ways: it is unique, it
-survives moves the solver never saw, and it agrees with the definition's own
-default pattern. `test/TestNet4x4.flix` pins the result against nets rendered by
-that separate model.
+The nets are drawn under conventions of Orbit64's own -- `orbit64-3x3-draft@1`
+through `orbit64-5x5-draft@1` -- and every table behind them is derived from
+cube geometry alone. Nothing is read from another project's puzzle definition,
+which is deliberate: the projects that describe these same shapes are GPL, and
+this package is Apache-2.0.
 
-What naming a convention does *not* do is make existing tokens obey it. If the
+The derivation needs three things. A cube is `n^3` cubies. A face turn rotates a
+layer. A facelet is `face * n * n + row * n + col` over `U R F D L B`. From
+those, corners and midges take the standard names in their standard order, and
+wings and centres are ordered by the facelet index of each piece's reference
+sticker -- which makes slot order a consequence of the facelet layout rather
+than a second thing to agree on, and makes a centre's colour index simply its
+face index.
+
+That the 3x3x3 tables come out as the ones in wide use is not borrowing. Given
+the standard facelet numbering and the standard piece names there is exactly one
+right answer, and deriving it from geometry reproduces those values bit for bit.
+
+Naming a convention still does not make existing tokens obey it. If the
 implementation that produced a 4x4x4 token numbered its slots differently, the
 net will be a correct drawing of the wrong state -- which is why the command
 line prints the name it used.
-
-The 5x5x5 is drawn under `orbit64-5x5-draft@1`, built the same way but named
-ours rather than Twizzle's, because nothing upstream speaks it. It keeps
-Kociemba's corner and midge numbering -- so a 5x5x5 reads as a 3x3x3 with more
-orbits -- and derives its wings and both centre orbits from the twsearch 5x5x5
-move model. That model's `SPEFFZ_1..5` turn out to be *sticker* orbits: 1 and 3
-the two wing sticker orbits, 2 the X-centres, 4 the plus-centres, 5 the midges.
-Which is also why it cannot be adopted wholesale -- it carries no midge flip and
-no wing piece identity, tracks the six fixed centres this format omits, and is
-named `5x5x5_temp` upstream.
-
-Twizzle not having that decomposition is not the same as nobody having it.
-`cube-solvers`' cube555 engine carries an oriented `mEdge[12]`, a distinct
-`wEdge[24]`, and `xCenter[24]` and `tCenter[24]` -- the same decomposition,
-arrived at independently, with facelet tables for each. It orders its slots
-differently and lists the plus-centres before the X-centres, so the two models
-agree about what a 5x5x5 *is* while disagreeing about what to call slot 7. That
-makes it a good independent check and a poor drop-in: the meeting point is
-facelets, not raw arrays.
-
-`draft` means the geometry is internally verified, not that anything else speaks
-it. What was checked: every one of the 150 facelets covered exactly once, a
-solved cube drawing six solid faces, moves behaving under an independent model
-over 18,000 stickers, fixtures from that model in `test/TestNet5x5.flix`, and
-tokens round-tripping. One of those fixtures is a wide turn, chosen because it
-leaves the X-centre and plus-centre vectors different from each other -- so
-swapping the two orbits fails rather than passing quietly.
 
 That same gap is why the nets stop at the 5x5x5. Conventions for larger cubes do
 exist, and one of them is a close structural match (see
@@ -461,7 +438,7 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   way so that it does not define a top-level `main`.
 - `src/Orbit64/Net.flix` -- draws a decoded 2x2x2 or 3x3x3 as a coloured net.
   The only module that knows a cube has faces: the codec defines no geometry,
-  so a picture has to borrow a convention, and this one borrows Kociemba's.
+  so a picture needs one, and this derives its own from cube geometry.
 - `test/TestVectors.flix` -- conformance vectors generated by an independent
   reference implementation that drives a geometric cube model: real turns on a
   3D facelet representation, orbits found by connected components, every state
@@ -486,24 +463,22 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
 
 ## References
 
-- [Kociemba's cube definition string](http://kociemba.org/cube.htm) -- the
-  `URFDLB` facelet order, and the `cornerFacelet` and `edgeFacelet` tables this
-  project borrows for its 3x3x3 pictures and its pattern tokens.
+- [`flix-cube`](https://github.com/wstein/flix-cube) -- the same facelet layout,
+  and the independent turn engine `test/TestFacelets.flix` checks against.
 - [KPuzzle](https://standards.cubing.net/draft/3/kpuzzle/) -- a Cubing Standards
   draft describing a puzzle as named orbits of indexed permutations and
-  orientations. It defines the representation rather than mandating one global
-  slot order, and it is explicitly a draft.
-- Twizzle Search publishes concrete KPuzzle definitions, among them
-  [4x4x4](https://github.com/cubing/twsearch/blob/baa0685f2e3c69c708b4b94be8600691511dd57c/src/lib/scramble/puzzles/definitions/4x4x4/4x4x4.kpuzzle.json) -- pinned here at commit `baa0685`, which is the exact file
-  `Orbit64.Net`'s 4x4x4 tables were derived from --
-  whose `CORNERS`, `WINGS` and `CENTERS` orbits are a close structural match to
-  this codec's, and
-  [5x5x5](https://github.com/cubing/twsearch/blob/main/src/lib/scramble/puzzles/definitions/big_cubes/5x5x5.kpuzzle.json),
-  whose orbit naming is more generic and would not line up with `Midges`,
-  `Wings` and two `Centers` without an explicit conversion.
+  orientations. Close in spirit to this format's coordinates, and explicitly a
+  draft.
 - [Twizzle Binary 3x3x3 Format](https://standards.cubing.net/draft/5/binary-3x3x3-encoding/)
-  -- 12 bytes, lexicographic permutation ranks, and deliberately not minimal so
-  that it can validate what it decodes. 3x3x3 only, by name and by design.
+  -- 12 bytes, lexicographic permutation ranks, deliberately not minimal so that
+  it can validate what it decodes. 3x3x3 only, by name and by design.
+- Twizzle Search and `cube-solvers` both model these puzzles at the piece level,
+  the latter with an oriented `mEdge`, a distinct `wEdge`, and `xCenter` and
+  `tCenter` for a 5x5x5 -- this same decomposition, arrived at independently.
+  Both are worth reading and neither is a source for anything here: they are
+  GPL, this package is Apache-2.0, and its tables are derived from geometry for
+  that reason as much as any other. Comparison happens at the facelet layer,
+  where no licence question arises because nobody owns what colour a sticker is.
 
 See `AGENTS.md` for the toolchain, and
 <https://wstein.github.io/flix-orbit64/> for the generated API documentation.

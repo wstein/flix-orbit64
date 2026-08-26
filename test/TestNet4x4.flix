@@ -1,69 +1,58 @@
 //
 // The 4x4x4 display convention, checked against an independent model.
 //
-// `Orbit64.Net` draws a 4x4x4 by declaring that its vectors are ordered the way
-// the twsearch 4x4x4 KPuzzle definition orders them. These fixtures are the
-// evidence that the declaration is implemented faithfully: the states below are
-// produced by applying move sequences to a solved cube in a separate geometric
-// model, and the nets are that model's own output, not this one's.
-//
-// The mapping itself was not transcribed. It is the unique correspondence that
-// reproduces the twsearch definition's move permutations, and it was checked
-// against moves that were not used to find it.
+// `Orbit64.Net` draws a 4x4x4 under `orbit64-4x4-draft@1`: corners in the
+// standard URF UFL ULB UBR DFR DLF DBL DRB order, wings and centres ordered by
+// the facelet index of each piece's reference sticker. Every table below is
+// derived from cube geometry -- no external puzzle definition is read -- and
+// the states here were produced by applying moves in a separate model.
 //
 
 use Orbit64.Coord.Coord.{CornerCoord, WingCoord, CenterCoord}
 
-
 ///
-/// `(solved)` applied to a solved cube.
+/// `solved`
 ///
 @Test
-def fourByFourSolvedDrawsSixSolidFaces(): Unit \ Assert =
+def fourByFourSolved(): Unit \ Assert =
     let orbits = List#{
         CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
         WingCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    let expected = "                U  U  U  U \n                U  U  U  U \n                U  U  U  U \n                U  U  U  U \n\n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n\n                D  D  D  D \n                D  D  D  D \n                D  D  D  D \n                D  D  D  D ";
-    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(4, orbits, false));
-    // and the same state must survive a round trip through the codec
+    Assert.assertEq(expected = Ok("                U  U  U  U \n                U  U  U  U \n                U  U  U  U \n                U  U  U  U \n\n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n\n                D  D  D  D \n                D  D  D  D \n                D  D  D  D \n                D  D  D  D "), Orbit64.Net.draw(4, orbits, false));
     match Orbit64.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
         case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, t))
     }
 
 ///
-/// `R 2R U U L L L` applied to a solved cube.
+/// `Rw U2`
 ///
 @Test
-def fourByFourWideTurnAndRotation(): Unit \ Assert =
+def fourByFourRwU2(): Unit \ Assert =
     let orbits = List#{
-        CornerCoord(Vector#{2, 3, 6, 1, 0, 7, 5, 4}, Vector#{0, 0, 1, 0, 2, 0, 2, 1}),
-        WingCoord(Vector#{16, 3, 0, 17, 7, 13, 5, 6, 22, 1, 2, 19, 4, 14, 15, 12, 8, 23, 18, 21, 20, 9, 10, 11}),
-        CenterCoord(Vector#{4, 0, 0, 4, 1, 1, 1, 1, 2, 0, 0, 2, 3, 3, 3, 3, 5, 4, 4, 5, 5, 2, 2, 5})
+        CornerCoord(Vector#{2, 0, 4, 1, 7, 5, 6, 3}, Vector#{0, 1, 2, 0, 1, 0, 0, 2}),
+        WingCoord(Vector#{11, 2, 9, 0, 16, 4, 7, 5, 3, 13, 10, 15, 12, 22, 14, 20, 6, 17, 18, 19, 8, 21, 1, 23}),
+        CenterCoord(Vector#{2, 0, 2, 0, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5})
     };
-    let expected = "                U  F  U  U \n                F  F  U  U \n                F  F  U  U \n                F  F  U  U \n\n R  L  L  L     D  U  B  B     L  L  L  L     F  F  D  F \n R  L  L  L     D  F  D  D     R  R  R  R     U  U  B  F \n R  L  L  L     D  F  D  D     R  R  R  R     U  U  B  F \n R  L  L  L     D  F  D  D     R  R  R  R     U  U  B  F \n\n                B  D  B  B \n                B  D  B  B \n                B  D  B  B \n                D  D  B  B ";
-    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(4, orbits, false));
-    // and the same state must survive a round trip through the codec
+    Assert.assertEq(expected = Ok("                F  F  U  U \n                F  F  U  U \n                F  F  U  U \n                F  F  U  U \n\n R  R  R  R     U  U  B  B     L  L  L  L     F  F  D  D \n L  L  L  L     F  F  D  D     R  R  R  R     U  U  B  B \n L  L  L  L     F  F  D  D     R  R  R  R     U  U  B  B \n L  L  L  L     F  F  D  D     R  R  R  R     U  U  B  B \n\n                D  D  B  B \n                D  D  B  B \n                D  D  B  B \n                D  D  B  B "), Orbit64.Net.draw(4, orbits, false));
     match Orbit64.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
         case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, t))
     }
 
 ///
-/// `R U 2R F L D B U R 2R F U` applied to a solved cube.
+/// `R U 2R F D 2F U 3R`
 ///
 @Test
-def fourByFourATwelveMoveScramble(): Unit \ Assert =
+def fourByFourRU2RFD2FU3R(): Unit \ Assert =
     let orbits = List#{
-        CornerCoord(Vector#{2, 1, 7, 4, 3, 5, 0, 6}, Vector#{1, 0, 1, 2, 0, 1, 2, 2}),
-        WingCoord(Vector#{22, 8, 7, 16, 0, 13, 3, 23, 17, 12, 11, 4, 5, 2, 9, 1, 19, 10, 14, 18, 6, 15, 21, 20}),
-        CenterCoord(Vector#{5, 4, 0, 4, 1, 1, 1, 1, 0, 4, 0, 2, 3, 3, 3, 3, 4, 5, 2, 5, 2, 0, 2, 5})
+        CornerCoord(Vector#{2, 4, 5, 1, 7, 6, 3, 0}, Vector#{0, 0, 2, 0, 2, 0, 2, 0}),
+        WingCoord(Vector#{3, 2, 17, 0, 9, 4, 11, 13, 14, 6, 15, 19, 5, 20, 16, 22, 10, 12, 18, 7, 8, 21, 1, 23}),
+        CenterCoord(Vector#{2, 0, 3, 2, 0, 1, 2, 1, 1, 2, 5, 3, 5, 1, 5, 5, 4, 3, 4, 3, 0, 4, 0, 4})
     };
-    let expected = "                R  L  L  L \n                F  F  U  B \n                F  D  F  B \n                R  D  R  U \n\n B  U  U  F     D  F  F  F     R  U  L  F     U  F  F  D \n R  L  L  D     B  D  F  B     U  R  R  U     R  F  U  F \n U  L  L  D     L  B  D  F     D  R  R  U     R  U  B  L \n B  U  B  R     U  R  R  F     D  B  B  L     B  B  D  D \n\n                B  D  D  L \n                D  D  B  R \n                L  B  U  R \n                L  L  L  U ";
-    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(4, orbits, false));
-    // and the same state must survive a round trip through the codec
+    Assert.assertEq(expected = Ok("                L  U  U  U \n                L  F  U  U \n                L  D  F  R \n                D  L  U  U \n\n F  F  F  R     F  D  B  B     L  F  L  L     F  F  F  D \n L  L  D  D     F  R  F  R     F  U  R  R     U  U  L  B \n L  L  D  B     D  B  D  D     F  F  R  R     U  U  L  B \n U  U  R  B     L  B  L  B     D  U  D  R     F  R  B  R \n\n                D  R  D  R \n                D  B  R  B \n                L  B  B  R \n                B  D  B  U "), Orbit64.Net.draw(4, orbits, false));
     match Orbit64.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
         case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, t))

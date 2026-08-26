@@ -4,52 +4,49 @@
 /// A token carries every *movable* piece and nothing besides. An odd cube's six
 /// fixed centres are deliberately outside the format -- they never move
 /// relative to one another, so they fix the frame of reference rather than
-/// carry information -- which means this module has to supply them itself
-/// before it can draw anything. They are the first thing `draw` puts down.
+/// carry information -- which means this module supplies them itself before it
+/// can draw anything. They are the first thing `draw` puts down.
 ///
 /// This is the only module in the package that knows a cube has faces. The
 /// codec is pure arithmetic in `n` and defines no geometry whatsoever, which is
-/// exactly what lets it cover every size from the 2x2x2 up -- but a picture
-/// needs to know which slot sits where, so this module supplies a convention
-/// rather than inventing one: the corner and edge numbering from Kociemba's
-/// solver, the same convention the pattern tokens in the README use. A model
-/// that numbers its slots differently will draw a different picture from the
-/// same token, and neither picture is wrong.
+/// exactly what lets it cover every size from the 2x2x2 up. A picture needs to
+/// know which slot sits where, so this module supplies a convention and
+/// `convention` names it.
 ///
-/// One caveat applies at every size, the two drawn here included: the picture
-/// assumes whoever produced the token numbered their slots the way Kociemba
-/// does. A token does not say. Neither can the checked-in test vectors settle
-/// it -- relabelling slots and pieces by any bijection conjugates every
-/// permutation, and conjugation preserves cycle structure, permutation parity
-/// and the orientation sums, so no property of the arrays tells one labelling
-/// from another. The vectors pin this codec's arithmetic exactly and carry no
-/// geometry at all.
+/// Every table below is derived from cube geometry alone. No other project's
+/// puzzle definition is read, which keeps this Apache-2.0 package clear of the
+/// GPL sources that describe the same shapes. The derivation takes three
+/// inputs -- a cube is n^3 cubies, a face turn rotates a layer, and a facelet is
+/// `face * n * n + row * n + col` over `U R F D L B` -- and the rest follows:
 ///
-/// The 2x2x2 through 5x5x5 are drawn, each under a convention `convention`
-/// will name.
+///   corners   the standard URF UFL ULB UBR DFR DLF DBL DRB
+///   midges    the standard UR UF UL UB DR DF DL DB FR FL BL BR
+///   wings     by the facelet index of the piece's reference sticker
+///   centres   by facelet index, each orbit separately
 ///
-/// `kociemba-3x3x3` covers corners and edges. `twizzle-4x4x4@baa0685` covers
-/// the 4x4x4: that definition holds no facelets -- KPuzzle describes state and
-/// moves, not stickers -- so its tables were not transcribed but solved for, as
-/// the one correspondence between its slot indices and a physical cube that
-/// reproduces its move permutations. The answer is unique, survives moves the
-/// solver never saw, and agrees with the definition's own default pattern.
+/// Orientation counts clockwise seen from outside: for a corner from its U or D
+/// facelet, for a midge from U or D where it has one and F or B otherwise. A
+/// wing carries no orientation, and its reference sticker is the one in the
+/// first chirality class -- a wing cannot be flipped in place, so its 48
+/// stickers fall into two orbits of 24, and that picks the reference without
+/// anyone choosing.
 ///
-/// `orbit64-5x5-draft@1` covers the 5x5x5. It keeps Kociemba's corner and midge
-/// numbering, so a 5x5x5 reads as a 3x3x3 with more orbits, and derives its
-/// wings and both centre orbits the same way from the twsearch 5x5x5 move
-/// model -- whose SPEFFZ orbits turn out to be sticker orbits: 1 and 3 the two
-/// wing sticker orbits, 2 the X-centres, 4 the plus-centres, 5 the midges.
+/// Ordering wings and centres by facelet index makes slot order a consequence
+/// of the facelet layout rather than a second thing to agree on. It also makes
+/// a centre's colour index its face index, so a solved cube is
+/// `0 0 0 0 1 1 1 1 ...` with no lookup in between.
 ///
-/// `draft` says the geometry is internally verified, not that anything else
-/// speaks it. Twizzle cannot: its 5x5x5 is named `5x5x5_temp`, decomposes at
-/// sticker level with no orientation anywhere, and tracks the six fixed centres
-/// this format omits. But it is not true that nothing does -- `cube-solvers`'
-/// cube555 engine carries an oriented `mEdge[12]`, a distinct `wEdge[24]`, and
-/// `xCenter[24]` and `tCenter[24]`, which is this same decomposition arrived at
-/// independently. Its slot order differs from this one, and it lists the
-/// plus-centres before the X-centres, so the two are not interchangeable
-/// array for array. Facelets are the layer where they meet.
+/// The 3x3x3 tables come out as the ones in wide use. That is not borrowing:
+/// given the standard facelet numbering and the standard piece names there is
+/// exactly one right answer, and deriving it from geometry reproduces those
+/// values bit for bit.
+///
+/// One caveat applies at every size: the picture assumes whoever produced the
+/// token numbered their slots the way `convention(n)` says. A token does not
+/// say, and the checked-in test vectors cannot settle it -- relabelling slots
+/// and pieces by any bijection conjugates every permutation, and conjugation
+/// preserves cycle structure, permutation parity and the orientation sums, so
+/// no property of the arrays tells one labelling from another.
 ///
 /// The 6x6x6 and up are not drawn.
 ///
@@ -127,100 +124,94 @@ mod Orbit64.Net {
             Vector#{5, 1}
         }
 
-    // ---------- the 4x4x4 tables, derived rather than transcribed ----------
+    // ---------- the 4x4x4 tables ----------
     //
-    // Generated by solving for the correspondence between the twsearch
-    // 4x4x4 KPuzzle definition and a physical model: the mapping is the
-    // unique one reproducing that definition's own move permutations, and
-    // it was checked against moves the solver never saw.
+    // Corners in the standard order; wings and centres by facelet index.
 
     def cornerFacelet4(): Vector[Vector[Int32]] = Vector#{
-            Vector#{3, 80, 19},
             Vector#{15, 16, 35},
             Vector#{12, 32, 67},
             Vector#{0, 64, 83},
-            Vector#{63, 31, 92},
-            Vector#{60, 95, 76},
+            Vector#{3, 80, 19},
+            Vector#{51, 47, 28},
             Vector#{48, 79, 44},
-            Vector#{51, 47, 28}
+            Vector#{60, 95, 76},
+            Vector#{63, 31, 92}
         }
 
     def wingFacelet4(): Vector[Vector[Int32]] = Vector#{
-            Vector#{33, 13},
-            Vector#{17, 11},
-            Vector#{81, 2},
-            Vector#{65, 4},
-            Vector#{8, 66},
-            Vector#{87, 68},
-            Vector#{56, 77},
-            Vector#{40, 75},
             Vector#{1, 82},
-            Vector#{23, 84},
-            Vector#{62, 93},
-            Vector#{72, 91},
             Vector#{7, 18},
-            Vector#{39, 20},
-            Vector#{55, 29},
-            Vector#{88, 27},
+            Vector#{8, 66},
             Vector#{14, 34},
-            Vector#{71, 36},
-            Vector#{49, 45},
+            Vector#{17, 11},
+            Vector#{23, 84},
             Vector#{24, 43},
-            Vector#{94, 61},
             Vector#{30, 59},
+            Vector#{33, 13},
+            Vector#{39, 20},
+            Vector#{40, 75},
             Vector#{46, 50},
-            Vector#{78, 52}
+            Vector#{49, 45},
+            Vector#{55, 29},
+            Vector#{56, 77},
+            Vector#{62, 93},
+            Vector#{65, 4},
+            Vector#{71, 36},
+            Vector#{72, 91},
+            Vector#{78, 52},
+            Vector#{81, 2},
+            Vector#{87, 68},
+            Vector#{88, 27},
+            Vector#{94, 61}
         }
 
-    def centreFacelet4(): Vector[Int32] = Vector#{9, 10, 6, 5, 70, 69, 73, 74, 86, 85, 89, 90, 22, 21, 25, 26, 38, 37, 41, 42, 57, 58, 54, 53}
+    def centreFacelet4(): Vector[Int32] = Vector#{5, 6, 9, 10, 21, 22, 25, 26, 37, 38, 41, 42, 53, 54, 57, 58, 69, 70, 73, 74, 85, 86, 89, 90}
 
     def cornerColour4(): Vector[Vector[Int32]] = Vector#{
-            Vector#{0, 5, 1},
             Vector#{0, 1, 2},
             Vector#{0, 2, 4},
             Vector#{0, 4, 5},
-            Vector#{3, 1, 5},
-            Vector#{3, 5, 4},
+            Vector#{0, 5, 1},
+            Vector#{3, 2, 1},
             Vector#{3, 4, 2},
-            Vector#{3, 2, 1}
+            Vector#{3, 5, 4},
+            Vector#{3, 1, 5}
         }
 
     def wingColour4(): Vector[Vector[Int32]] = Vector#{
-            Vector#{2, 0},
-            Vector#{1, 0},
-            Vector#{5, 0},
-            Vector#{4, 0},
-            Vector#{0, 4},
-            Vector#{5, 4},
-            Vector#{3, 4},
-            Vector#{2, 4},
             Vector#{0, 5},
-            Vector#{1, 5},
-            Vector#{3, 5},
-            Vector#{4, 5},
             Vector#{0, 1},
-            Vector#{2, 1},
-            Vector#{3, 1},
-            Vector#{5, 1},
+            Vector#{0, 4},
             Vector#{0, 2},
-            Vector#{4, 2},
-            Vector#{3, 2},
+            Vector#{1, 0},
+            Vector#{1, 5},
             Vector#{1, 2},
-            Vector#{5, 3},
             Vector#{1, 3},
+            Vector#{2, 0},
+            Vector#{2, 1},
+            Vector#{2, 4},
             Vector#{2, 3},
-            Vector#{4, 3}
+            Vector#{3, 2},
+            Vector#{3, 1},
+            Vector#{3, 4},
+            Vector#{3, 5},
+            Vector#{4, 0},
+            Vector#{4, 2},
+            Vector#{4, 5},
+            Vector#{4, 3},
+            Vector#{5, 0},
+            Vector#{5, 4},
+            Vector#{5, 1},
+            Vector#{5, 3}
         }
 
-    def centreColour4(): Vector[Int32] = Vector#{0, 4, 5, 1, 2, 3}
+    def centreColour4(): Vector[Int32] = Vector#{0, 1, 2, 3, 4, 5}
 
     // ---------- the 5x5x5 tables ----------
     //
-    // Corners and midges keep Kociemba's numbering, so a 5x5x5 reads as a
-    // 3x3x3 with more orbits. The wings and both centre orbits are derived
-    // from the twsearch 5x5x5 move model, whose SPEFFZ orbits turn out to be
-    // sticker orbits: 1 and 3 are the two wing sticker orbits, 2 the
-    // X-centres, 4 the plus-centres, 5 the midges.
+    // Corners and midges in the standard orders, so a 5x5x5 reads as a 3x3x3
+    // with more orbits. Wings, X-centres and plus-centres by facelet index.
 
     def cornerFacelet5(): Vector[Vector[Int32]] = Vector#{
             Vector#{24, 25, 54},
@@ -275,67 +266,67 @@ mod Orbit64.Net {
         }
 
     def wingFacelet5(): Vector[Vector[Int32]] = Vector#{
-            Vector#{9, 28},
             Vector#{1, 128},
+            Vector#{9, 28},
             Vector#{15, 103},
             Vector#{23, 53},
-            Vector#{34, 130},
             Vector#{26, 19},
+            Vector#{34, 130},
             Vector#{40, 69},
             Vector#{48, 94},
-            Vector#{59, 30},
             Vector#{51, 21},
+            Vector#{59, 30},
             Vector#{65, 119},
             Vector#{73, 78},
-            Vector#{109, 55},
+            Vector#{76, 71},
+            Vector#{84, 46},
+            Vector#{90, 121},
+            Vector#{98, 146},
             Vector#{101, 5},
+            Vector#{109, 55},
             Vector#{115, 144},
             Vector#{123, 80},
-            Vector#{134, 105},
             Vector#{126, 3},
+            Vector#{134, 105},
             Vector#{140, 44},
-            Vector#{148, 96},
-            Vector#{84, 46},
-            Vector#{76, 71},
-            Vector#{90, 121},
-            Vector#{98, 146}
+            Vector#{148, 96}
         }
 
     def wingColour5(): Vector[Vector[Int32]] = Vector#{
-            Vector#{0, 1},
             Vector#{0, 5},
+            Vector#{0, 1},
             Vector#{0, 4},
             Vector#{0, 2},
-            Vector#{1, 5},
             Vector#{1, 0},
+            Vector#{1, 5},
             Vector#{1, 2},
             Vector#{1, 3},
-            Vector#{2, 1},
             Vector#{2, 0},
+            Vector#{2, 1},
             Vector#{2, 4},
             Vector#{2, 3},
-            Vector#{4, 2},
+            Vector#{3, 2},
+            Vector#{3, 1},
+            Vector#{3, 4},
+            Vector#{3, 5},
             Vector#{4, 0},
+            Vector#{4, 2},
             Vector#{4, 5},
             Vector#{4, 3},
-            Vector#{5, 4},
             Vector#{5, 0},
+            Vector#{5, 4},
             Vector#{5, 1},
-            Vector#{5, 3},
-            Vector#{3, 1},
-            Vector#{3, 2},
-            Vector#{3, 4},
-            Vector#{3, 5}
+            Vector#{5, 3}
         }
 
     /// The X-centres -- the four diagonal cells of each face's centre block.
-    def xFacelet5(): Vector[Int32] = Vector#{8, 6, 16, 18, 33, 31, 41, 43, 58, 56, 66, 68, 108, 106, 116, 118, 133, 131, 141, 143, 83, 81, 91, 93}
+    def xFacelet5(): Vector[Int32] = Vector#{6, 8, 16, 18, 31, 33, 41, 43, 56, 58, 66, 68, 81, 83, 91, 93, 106, 108, 116, 118, 131, 133, 141, 143}
 
     /// The plus-centres -- the four edge-adjacent cells.
-    def plusFacelet5(): Vector[Int32] = Vector#{7, 11, 17, 13, 32, 36, 42, 38, 57, 61, 67, 63, 107, 111, 117, 113, 132, 136, 142, 138, 82, 86, 92, 88}
+    def plusFacelet5(): Vector[Int32] = Vector#{7, 11, 13, 17, 32, 36, 38, 42, 57, 61, 63, 67, 82, 86, 88, 92, 107, 111, 113, 117, 132, 136, 138, 142}
 
     /// Both centre orbits share one colour-to-face map.
-    def centreColour5(): Vector[Int32] = Vector#{0, 1, 2, 4, 5, 3}
+    def centreColour5(): Vector[Int32] = Vector#{0, 1, 2, 3, 4, 5}
 
     /// The six single centres, which the format leaves out because they fix the
     /// frame of reference rather than carry information.
@@ -350,9 +341,9 @@ mod Orbit64.Net {
     /// disagreement someone can trace.
     ///
     pub def convention(n: Int32): String = match n {
-        case 2 => "kociemba-corners"
-        case 3 => "kociemba-3x3x3"
-        case 4 => "twizzle-4x4x4@baa0685"
+        case 2 => "orbit64-2x2-draft@1"
+        case 3 => "orbit64-3x3-draft@1"
+        case 4 => "orbit64-4x4-draft@1"
         case 5 => "orbit64-5x5-draft@1"
         case _ => "none for the ${n}x${n}x${n}"
     }
@@ -449,7 +440,7 @@ mod Orbit64.Net {
             |> Result.map(fs -> render(n, fs, colour))
 
     ///
-    /// The 2x2x2 and 3x3x3, whose tables are Kociemba's.
+    /// The 2x2x2 and 3x3x3.
     ///
     /// A 2x2x2 is built on the 3x3x3's grid and then thinned to its corner
     /// cells, which are exactly its four stickers per face.
