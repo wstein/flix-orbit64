@@ -15,8 +15,8 @@ requires.
 
 ```
 3x3x3  AAAAAAAAAAf_                                (superflip)
-4x4x4  BJSsuyGPOiU06kIz-eqibqTP1th                 (scrambled)
-5x5x5  BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS  (scrambled)
+4x4x4  AAAAAUuBpX2gX8xOwj1jXaQ5qKw                 (checkerboard)
+5x5x5  AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA  (superflip)
 ```
 
 Built on [flix-template](https://github.com/wstein/flix-template), which
@@ -185,8 +185,26 @@ names beneath the net -- `kociemba-3x3x3` for the small cubes,
 `twizzle-4x4x4@baa0685` for the 4x4x4, `orbit64-5x5-draft@1` for the 5x5x5:
 
 ```
-$ ./flixw run --entrypoint Orbit64.Cli.main -- BJSsuyGPOiU06kIz-eqibqTP1th
-...
+$ ./flixw run --entrypoint Orbit64.Cli.main -- AAAAAUuBpX2gX8xOwj1jXaQ5qKw
+4x4x4, 3 orbits:
+  ...
+                U  D  D  U
+                D  U  U  D
+                D  U  U  D
+                U  D  D  U
+
+ L  R  R  L     F  B  B  F     R  L  L  R     B  F  F  B
+ R  L  L  R     B  F  F  B     L  R  R  L     F  B  B  F
+ R  L  L  R     B  F  F  B     L  R  R  L     F  B  B  F
+ L  R  R  L     F  B  B  F     R  L  L  R     B  F  F  B
+
+                D  U  U  D
+                U  D  D  U
+                U  D  D  U
+                D  U  U  D
+
+  drawn as twizzle-4x4x4@baa0685
+
   drawn as twizzle-4x4x4@baa0685
 ```
 
@@ -203,6 +221,20 @@ something traceable rather than merely noticeable. See
 | Six Spots      | `AEtgYICyPB1X` | `U D' R L' F B' U D'` |
 | Cube in a Cube | `AEtd1CzDOflC` | `F L F U' R U F2 L2 U' L' B D' B' L2 U` |
 | Tetris         | `AW622DQhY0VX` | `L R F B U' D' L' R'` |
+
+Two larger cubes, which the examples at the top of this file use:
+
+| cube  | pattern      | token                                        | how |
+|-------|--------------|----------------------------------------------|-----|
+| 4x4x4 | Checkerboard | `AAAAAUuBpX2gX8xOwj1jXaQ5qKw`                 | `U2 D2 F2 B2 L2 R2`, the same algorithm as the 3x3x3 |
+| 5x5x5 | Superflip    | `AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA` | every midge flipped in place, everything else solved |
+
+The 4x4x4 checkerboard is the classic `U D D U` face rather than a strict
+per-sticker alternation: turning only half turns cannot mix a face's corner
+stickers with its centre stickers, so the pattern respects the piece structure.
+The 5x5x5 superflip is given as a state rather than an algorithm, because it was
+built as a coordinate -- corners, wings and both centre orbits identity, every
+midge flip set -- which is the 3x3x3 superflip's analogue one size up.
 
 The two built from half turns alone, Checkerboard and Four Spots, leave every
 corner twist and edge flip at zero -- a half turn applies its orientation change
