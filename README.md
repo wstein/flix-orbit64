@@ -26,7 +26,7 @@ carries its own compiler. Nothing to install but a JDK 21+.
 
 ```toml
 [dependencies]
-"github:wstein/orbit64" = "0.1.0"
+"github:wstein/flix-orbit64" = "0.1.0"
 ```
 
 ```flix
