@@ -727,9 +727,11 @@ mod Orbit64.Net {
     /// The colours of a centre orbit, one per slot.
     ///
     /// A centre is a single sticker and the four of a colour are alike, so
-    /// there is nothing to identify -- only the colour to look up, which the
-    /// convention makes the face index itself. The lookup stays in place
-    /// regardless, so the table is what says so rather than this line.
+    /// there is no piece to identify -- only a colour to look up. Under this
+    /// convention that lookup is the identity, because ordering centres by
+    /// facelet index makes a centre's colour index its face index. The table is
+    /// consulted anyway rather than the sticker being taken for the answer, so
+    /// that the convention stays stated in one place.
     ///
     def readCentres(
         what: String,
@@ -742,6 +744,10 @@ mod Orbit64.Net {
                 let seen = Vector.get(Vector.get(slot, table), fs);
                 match Vector.indexOf(seen, colours) {
                     case Some(col) => Ok(col)
+                    // Unreachable while the colour table is a permutation of
+                    // the six faces, which `fromFacelets` has already bounded
+                    // the sticker to. It is the table's property, not this
+                    // reader's, so the reader still answers rather than trusts.
                     case None      => Err(noSuchPiece(what, slot, Vector#{seen}))
                 })
             |> Result.map(List.toVector)
