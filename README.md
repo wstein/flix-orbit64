@@ -1,4 +1,4 @@
-# orbit64
+# flix-orbit64
 
 A canonical, URL-safe, minimal-width encoding for `n x n x n` twisty cube
 state, for every size from the 2x2x2 to the 7x7x7.
