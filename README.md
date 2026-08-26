@@ -31,7 +31,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                          # 87 tests
+./flixw test                                          # 90 tests
 ./flixw run --entrypoint Orbit64.Cli.main             # size table, round-trip
 ./flixw run --entrypoint Orbit64.Cli.main -- <token>  # decode; length picks n
 ```
@@ -170,9 +170,19 @@ above. Note that the six fixed centres are not in the token at all -- the format
 leaves them out because they fix the frame rather than carry information -- so
 the renderer supplies them before drawing anything.
 
-Only the 2x2x2 and 3x3x3 are drawn, and the picture assumes Kociemba's slot
-numbering -- which the tokens themselves do not carry, and which the checked-in
-vectors cannot confirm. See [Slot numbering](#slot-numbering).
+The 2x2x2, 3x3x3 and 4x4x4 are drawn, each under a convention the command line
+names beneath the net -- `kociemba-3x3x3` for the small cubes,
+`twizzle-4x4x4@baa0685` for the 4x4x4:
+
+```
+$ ./flixw run --entrypoint Orbit64.Cli.main -- BJSsuyGPOiU06kIz-eqibqTP1th
+...
+  drawn as twizzle-4x4x4@baa0685
+```
+
+A token carries no geometry, so that name is what turns a disagreement into
+something traceable rather than merely noticeable. See
+[Slot numbering](#slot-numbering).
 
 | pattern | token | algorithm |
 |---------|-------|-----------|
@@ -230,7 +240,22 @@ vectors do not contain -- the generator's slot table, or the move sequences that
 produced them, from which the relabelling could be solved for and then checked
 against every vector at once.
 
-That same gap is why the nets stop at the 3x3x3. Conventions for larger cubes do
+The 4x4x4 net does have a named source. It reads the vectors as the twsearch
+4x4x4 KPuzzle definition orders them, pinned at commit `baa0685` -- but that
+definition contains no facelets, because KPuzzle describes state and moves
+rather than stickers. So the mapping was not copied from it; it was solved for,
+as the one correspondence between its slot indices and a physical cube that
+reproduces its move permutations, then checked three ways: it is unique, it
+survives moves the solver never saw, and it agrees with the definition's own
+default pattern. `test/TestNet4x4.flix` pins the result against nets rendered by
+that separate model.
+
+What naming a convention does *not* do is make existing tokens obey it. If the
+implementation that produced a 4x4x4 token numbered its slots differently, the
+net will be a correct drawing of the wrong state -- which is why the command
+line prints the name it used.
+
+That same gap is why the nets stop at the 4x4x4. Conventions for larger cubes do
 exist, and one of them is a close structural match (see
 [References](#references)); adopting it would either reinterpret what existing
 4x4x4 and 5x5x5 tokens mean, or require exactly the mapping that is missing in
@@ -336,6 +361,9 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   3D facelet representation, orbits found by connected components, every state
   verified to round-trip at sticker level.
 - `test/TestOrbit64.flix` -- sizes, round-trips, and error handling.
+- `test/TestNet4x4.flix` -- fixtures for the 4x4x4 display convention: states
+  built by a separate geometric model, with that model's own nets as the
+  expected output.
 - `test/TestOrbitDiscovery.flix` -- derives `Orbit.layout` a second time, from
   geometry instead of arithmetic. It builds a cube, turns it, and takes the
   connected components of the "one turn maps this piece to that one" graph,
