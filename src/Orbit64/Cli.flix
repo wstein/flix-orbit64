@@ -88,7 +88,10 @@ mod Orbit64.Cli {
         println("");
         match Orbit64.Net.draw(n, orbits, colour) {
             case Some(net) => println(net)
-            case None      => println("  (no picture for the ${n}x${n}x${n}: see Orbit64.Net)")
+            case None      =>
+                println("  (no net for the ${n}x${n}x${n}: every wing and centre orbit needs its own");
+                println("   slot-to-facelet mapping, and only corners and edges have one here.");
+                println("   See Orbit64.Net.)")
         }
 
     ///

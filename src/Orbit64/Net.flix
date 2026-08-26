@@ -1,6 +1,12 @@
 ///
 /// Draws a decoded cube as a net.
 ///
+/// A token carries every *movable* piece and nothing besides. An odd cube's six
+/// fixed centres are deliberately outside the format -- they never move
+/// relative to one another, so they fix the frame of reference rather than
+/// carry information -- which means this module has to supply them itself
+/// before it can draw anything. They are the first thing `draw` puts down.
+///
 /// This is the only module in the package that knows a cube has faces. The
 /// codec is pure arithmetic in `n` and defines no geometry whatsoever, which is
 /// exactly what lets it cover every size from the 2x2x2 up -- but a picture
@@ -10,9 +16,20 @@
 /// that numbers its slots differently will draw a different picture from the
 /// same token, and neither picture is wrong.
 ///
-/// Only the 2x2x2 and 3x3x3 are drawn. Wings and centres would each need a
-/// slot-to-facelet table of their own, and there is no published convention to
-/// borrow for those the way there is for corners and edges.
+/// Only the 2x2x2 and 3x3x3 are drawn. Corners and edges have Kociemba's
+/// numbering to borrow; from the 4x4x4 up, every wing and centre orbit needs a
+/// mapping of its own -- two wing and six centre orbits on a 7x7x7 -- or one
+/// mapping parameterised by `n`.
+///
+/// Such conventions do exist: KPuzzle describes named orbits as indexed
+/// permutations and orientations, and Twizzle Search publishes concrete
+/// definitions whose 4x4x4 orbits (`CORNERS`, `WINGS`, `CENTERS`) match this
+/// codec's structurally. What does not exist is one *guaranteed to agree with
+/// the slot order these vectors already use*, and the checked-in test vectors
+/// carry no geometry that could settle it either way. Adopting a convention
+/// therefore means first obtaining the reference generator's mapping, or
+/// writing an explicit conversion into the adopted one -- not merely picking
+/// a table.
 ///
 mod Orbit64.Net {
 
