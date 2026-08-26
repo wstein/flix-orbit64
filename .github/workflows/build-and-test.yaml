@@ -139,8 +139,11 @@ jobs:
                 sed -E 's#^github\.com/##; s#/actions/$##' || true
               grep -oE 'raw\.githubusercontent\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/' <<<"$normalised" |
                 sed -E 's#^raw\.githubusercontent\.com/##; s#/$##' || true
-              grep -oE 'shields\.io/github/[a-z-]+/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+' <<<"$normalised" |
-                sed -E 's#^shields\.io/github/[a-z-]+/##' || true
+              # The label part is one segment for github/license/<o>/<r> but two
+              # for github/v/release/<o>/<r>, so match a run of segments and keep
+              # the last two rather than counting them.
+              grep -oE 'shields\.io/github/[a-z/-]+/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+' <<<"$normalised" |
+                sed -E 's#.*/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)$#\1#' || true
               grep -oE '[A-Za-z0-9-]+\.github\.io/[A-Za-z0-9_.-]+' <<<"$normalised" |
                 sed -E 's#^([A-Za-z0-9-]+)\.github\.io/#\1/#' || true
             } | sort -u
