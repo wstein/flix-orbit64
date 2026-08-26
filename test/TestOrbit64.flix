@@ -3,7 +3,7 @@
 // sizes, round-trips, and the invariants the format is built on.
 //
 
-use Orbit64.Coord.Coord.{CornerCoord, WingCoord, CenterCoord}
+use Orbit64.Coord.Coord.{CornerCoord, MidgeCoord, WingCoord, CenterCoord}
 use Orbit64.Orbit.Orbit.{Corners, Midges, Wings, Centers}
 
 // ---------- layout ----------
@@ -206,3 +206,45 @@ def alphabetIsSixtyFourDistinctUrlSafeCharacters(): Unit \ Assert =
     Assert.assertEq(expected = 64, String.length(a));
     Assert.assertEq(expected = 64, String.toList(a) |> List.toSet |> Set.size);
     Assert.assertEq(expected = 'A', String.charAt(0, a))
+
+// ---------- the net renderer ----------
+
+///
+/// The expected nets are produced by an independent model of the same
+/// convention, so these pin `Orbit64.Net`'s facelet tables rather than merely
+/// restating them.
+///
+
+@Test
+def solvedCubeDrawsSixSolidFaces(): Unit \ Assert =
+    let expected = "          U  U  U \n          U  U  U \n          U  U  U \n L  L  L  F  F  F  R  R  R  B  B  B \n L  L  L  F  F  F  R  R  R  B  B  B \n L  L  L  F  F  F  R  R  R  B  B  B \n          D  D  D \n          D  D  D \n          D  D  D ";
+    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(3, Orbit64.solved(3), false))
+
+@Test
+def superflipDrawsSolvedCornersAndFlippedEdges(): Unit \ Assert =
+    let expected = "          U  B  U \n          L  U  R \n          U  F  U \n L  U  L  F  U  F  R  U  R  B  U  B \n B  L  F  L  F  R  F  R  B  R  B  L \n L  D  L  F  D  F  R  D  R  B  D  B \n          D  F  D \n          L  D  R \n          D  B  D ";
+    let orbits = List#{
+        CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
+        MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
+    };
+    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(3, orbits, false))
+
+@Test
+def solved2x2DrawsFourStickersPerFace(): Unit \ Assert =
+    let expected = "       U  U \n       U  U \n L  L  F  F  R  R  B  B \n L  L  F  F  R  R  B  B \n       D  D \n       D  D ";
+    Assert.assertEq(expected = Some(expected), Orbit64.Net.draw(2, Orbit64.solved(2), false))
+
+@Test
+def sizesWithoutAConventionAreNotDrawn(): Unit \ Assert =
+    List.range(4, 8) |> List.forEach(n ->
+        Assert.assertEq(expected = None, Orbit64.Net.draw(n, Orbit64.solved(n), false)))
+
+@Test
+def colourWrapsEveryStickerAndResetsIt(): Unit \ Assert =
+    match Orbit64.Net.draw(3, Orbit64.solved(3), true) {
+        case None      => Assert.assertEq(expected = "a net", "nothing")
+        case Some(net) =>
+            // 54 stickers, each opened with a background and closed with a reset.
+            Assert.assertEq(expected = 54, String.countSubstring(substr = "[48;5;", net));
+            Assert.assertEq(expected = 54, String.countSubstring(substr = "[0m", net))
+    }
