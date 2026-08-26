@@ -16,6 +16,14 @@ requires.
 Built on [flix-template](https://github.com/wstein/flix-template), which
 carries its own compiler. Nothing to install but a JDK 21+.
 
+[Flix](https://flix.dev) is an effect-oriented language on the JVM -- functional,
+imperative and logic in one, with traits, algebraic data types, and a type and
+effect system that tracks every side effect in the signature. That earns its keep
+in a codec: `encode` and `decode` are pure by construction and the compiler says
+so, rather than a reader having to take a comment's word for it. Region-based
+local mutation lets the one routine that scatters into an array still type as
+pure, and Java interop is one `import` away on the rare occasion it is wanted.
+
 ```
 ./flixw test                                          # 67 tests
 ./flixw run --entrypoint Orbit64.Cli.main             # size table, round-trip
@@ -77,6 +85,53 @@ no notion of a face, an axis, or a turn.
 Widths are distinct and grow as `n^2`, so a token's length identifies its
 puzzle. Tokens are fixed-width and left-padded with `A`, and index 0 is `A`, so
 a solved cube of any size is a run of `A`s.
+
+## The same cube, three ways
+
+The two 3x3x3 states below, in the notations you are most likely to meet them in.
+Facelet strings are in Kociemba's `URFDLB` order, nine stickers per face; the
+piece arrays are corner permutation and orientation, then edge permutation and
+orientation.
+
+**Solved**
+
+```
+facelets  UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
+pieces    cp 0 1 2 3 4 5 6 7           co 0 0 0 0 0 0 0 0
+          ep 0 1 2 3 4 5 6 7 8 9 10 11 eo 0 0 0 0 0 0 0 0 0 0 0 0
+orbit64   AAAAAAAAAAAA
+```
+
+**Superflip** -- every corner solved, every edge in place but flipped
+
+```
+facelets  UBULURUFURURFRBRDRFUFLFRFDFDFDLDRDBDLULBLFLDLBUBRBLBDB
+pieces    cp 0 1 2 3 4 5 6 7           co 0 0 0 0 0 0 0 0
+          ep 0 1 2 3 4 5 6 7 8 9 10 11 eo 1 1 1 1 1 1 1 1 1 1 1 1
+orbit64   AAAAAAAAAAf_
+```
+
+The superflip's coordinate is exactly 2047 -- the eleven free flip bits all set
+and nothing else -- which is why ten `A`s are followed by `f_`. It is a fair
+advertisement for what mixed-radix packing buys over fixed-width fields.
+
+| representation | size | bits | over the floor |
+|----------------|------|------|----------------|
+| facelets, `URFDLB`         | 54 characters over a 6-letter alphabet | 139.6 | 2.11x |
+| pieces, `cp` `co` `ep` `eo`| 40 values, packed at 3, 2, 4 and 1 bits | 100.0 | 1.51x |
+| orbit64                    | 12 base64url characters | 72.0 | 1.09x |
+
+The floor is 66.23 bits, and no base64url encoding can spend fewer than 12
+characters on it. The other two are not wasteful by accident: facelets describe
+stickers rather than pieces, so most 54-character strings are not cubes at all,
+and the piece arrays pay index width for permutations whose ranks are much
+smaller than their alphabets.
+
+One caveat on reading the tables across: the piece arrays use Kociemba's slot
+numbering and orbit64 uses its own layout order. For these two states that makes
+no difference -- both are the same under any consistent labelling -- but for a
+general state the convention has to be agreed before the arrays can be compared
+entry by entry.
 
 ## Design decisions
 
