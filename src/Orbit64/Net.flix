@@ -109,12 +109,19 @@ mod Orbit64.Net {
         }
 
     ///
-    /// The net for `orbits`, or `None` for a size this module cannot draw.
+    /// The net for `orbits`, or `None` for a size this module cannot draw or a
+    /// state that is not a cube.
     ///
     /// `colour` false gives plain letters, for pipes and for `NO_COLOR`.
     ///
     pub def draw(n: Int32, orbits: List[Coord], colour: Bool): Option[String] =
         if (n != 2 and n != 3) None
+        // A slot-to-facelet table is indexed by the piece sitting in a slot, so
+        // a permutation with an entry outside its orbit reads off the end of
+        // one. Everything `decode` produces is a genuine permutation, but this
+        // is public and a hand-built coordinate is not, and declining to draw
+        // is a better answer than an exception out of an `Option`.
+        else if (List.exists(c -> not Orbit64.Coord.isValid(c), orbits)) None
         else
             region rc {
                 // Centres never move, so they are the frame the rest is drawn in.

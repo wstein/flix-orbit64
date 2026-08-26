@@ -276,6 +276,35 @@ def everyDecodedStateStillEncodes(): Unit \ Assert =
             Assert.assertTrue(Orbit64.encode(n, orbits) |> Result.isOk)
         }))
 
+///
+/// The facelet tables are indexed by the piece in a slot, so a permutation
+/// entry outside its orbit used to read off the end of one and throw out of a
+/// function that returns `Option`.
+///
+@Test
+def netDeclinesAStateThatIsNotACube(): Unit \ Assert = {
+    let outOfRange = CornerCoord(Vector#{9, 1, 2, 3, 4, 5, 6, 7}, Vector.repeat(8, 0));
+    Assert.assertEq(expected = None, Orbit64.Net.draw(2, List#{outOfRange}, false));
+    let repeated = CornerCoord(Vector#{0, 0, 2, 3, 4, 5, 6, 7}, Vector.repeat(8, 0));
+    Assert.assertEq(expected = None, Orbit64.Net.draw(2, List#{repeated}, false))
+}
+
+///
+/// And still draws everything it drew before, so declining has not become the
+/// answer to a question it can answer.
+///
+@Test
+def netStillDrawsEveryDecodableSmallCube(): Unit \ Assert =
+    List#{2, 3} |> List.forEach(n ->
+        List#{0ii, 1ii, 987654321ii} |> List.forEach(seed -> {
+            let orbits = Orbit64.Orbit.layout(n)
+                |> List.map(o -> Orbit64.Coord.unrank(o,
+                    BigInt.modulo(seed, Orbit64.Orbit.radix(o))));
+            Assert.assertTrueWithMsg(
+                not Option.isEmpty(Orbit64.Net.draw(n, orbits, false)),
+                "declined to draw a ${n}x${n} state it decoded")
+        }))
+
 @Test
 def alphabetIsSixtyFourDistinctUrlSafeCharacters(): Unit \ Assert =
     let a = Orbit64.alphabet();

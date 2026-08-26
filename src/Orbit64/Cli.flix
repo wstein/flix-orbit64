@@ -88,7 +88,12 @@ mod Orbit64.Cli {
         println("");
         match Orbit64.Net.draw(n, orbits, colour) {
             case Some(net) => println(net)
-            case None      =>
+            // `draw` declines for two different reasons, and only the caller
+            // knows which applies: it has the size, and the size is what
+            // decides.
+            case None if n == 2 or n == 3 =>
+                println("  (that state is not a cube, so there is nothing to draw)")
+            case None =>
                 println("  (no net for the ${n}x${n}x${n}: every wing and centre orbit needs its own");
                 println("   slot-to-facelet mapping, and only corners and edges have one here.");
                 println("   See Orbit64.Net.)")
