@@ -31,7 +31,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                          # 81 tests
+./flixw test                                          # 83 tests
 ./flixw run --entrypoint Orbit64.Cli.main             # size table, round-trip
 ./flixw run --entrypoint Orbit64.Cli.main -- <token>  # decode; length picks n
 ```

@@ -83,6 +83,28 @@ def widthsAreDistinct(): Unit \ Assert =
     Assert.assertEq(expected = List.length(ws), List.toSet(ws) |> Set.size)
 
 ///
+/// And nothing below the smallest cube borrows a real cube's width.
+///
+/// The arithmetic in `layout` does not stop on its own -- `(0-2)^2/4` is 1 --
+/// so a 1x1x1 used to claim a corner orbit, match the 2x2x2's state count
+/// exactly, and take the same five characters. A token's length is what says
+/// which puzzle it belongs to, so that had to be a coincidence nobody could
+/// hit rather than one that happened to be out of range.
+///
+@Test
+def noSizeBelowTwoBorrowsARealWidth(): Unit \ Assert =
+    let real = List.range(2, 8) |> List.map(Orbit64.width) |> List.toSet;
+    List.range(-1, 2) |> List.forEach(n ->
+        Assert.assertFalseWithMsg(Set.memberOf(Orbit64.width(n), real),
+            "a ${n}x${n}x${n} takes the same width as a real cube"))
+
+@Test
+def nothingBelowTheSmallestCubeHasAnOrbit(): Unit \ Assert =
+    List.range(-1, 2) |> List.forEach(n ->
+        Assert.assertEqWithMsg(expected = (Nil: List[Orbit64.Orbit.Orbit]),
+            Orbit64.Orbit.layout(n), "a ${n}x${n}x${n} claims an orbit"))
+
+///
 /// A width must actually address every state, and never be wider than needed.
 ///
 @Test

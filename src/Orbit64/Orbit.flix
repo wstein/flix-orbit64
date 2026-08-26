@@ -36,7 +36,16 @@ mod Orbit64.Orbit {
     /// `n` is odd. So `layout` needs no geometry -- which is why this module
     /// carries no notion of a face, an axis, or a turn.
     ///
+    /// Nothing below the 2x2x2 has an orbit. A 1x1x1 is one cubie with nothing
+    /// to permute, and there is no such thing as a 0x0x0. Without that floor
+    /// the arithmetic keeps going and answers anyway: `(0-2)^2/4` is 1, so a
+    /// 0x0x0 came back with a centre orbit, and a 1x1x1 came back with corners
+    /// -- which gave it the same state count as a 2x2x2 and therefore the same
+    /// token width, breaking the one property the format leans on, that a
+    /// token's length says which puzzle it is.
+    ///
     pub def layout(n: Int32): List[Orbit] =
+        if (n < 2) Nil else
         let midges = if (Int32.modulo(n, 2) == 1 and n >= 3) Corners :: Midges :: Nil else Corners :: Nil;
         let wings = List.repeat((n - 2) / 2, Wings);
         let centers = List.repeat(((n - 2) * (n - 2)) / 4, Centers);
