@@ -1,5 +1,11 @@
 # flix-orbit64
 
+[![Build and Test](https://github.com/wstein/flix-orbit64/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/wstein/flix-orbit64/actions/workflows/build-and-test.yaml)
+[![Docs](https://github.com/wstein/flix-orbit64/actions/workflows/docs.yaml/badge.svg)](https://wstein.github.io/flix-orbit64/)
+[![Release](https://img.shields.io/github/v/release/wstein/flix-orbit64)](https://github.com/wstein/flix-orbit64/releases/latest)
+[![Flix](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fwstein%2Fflix-orbit64%2Fmain%2F.flixw%2Flock.toml&query=%24.compiler.version&label=Flix&color=blue)](https://flix.dev)
+[![License](https://img.shields.io/github/license/wstein/flix-orbit64)](LICENSE)
+
 A canonical, URL-safe, minimal-width encoding for `n x n x n` twisty cube
 state, for every size from the 2x2x2 to the 7x7x7.
 
@@ -50,6 +56,10 @@ def demo(): Unit \ IO =
         case Err(e)    => println("nope: ${e}")
     }
 ```
+
+The API documentation is published at
+<https://wstein.github.io/flix-orbit64/>, rendered by `flix doc` from the
+compiler this project pins.
 
 `Orbit64.decode(n, token)` is the exact inverse. Everything the package defines
 nests under the `Orbit64` module, so nothing it ships can collide with names of
@@ -207,4 +217,5 @@ depending on the slot's handedness, so `24!` is right and `24!/2^12` is not.
   verified to round-trip at sticker level.
 - `test/TestOrbit64.flix` -- sizes, round-trips, and error handling.
 
-See `AGENTS.md` for the toolchain.
+See `AGENTS.md` for the toolchain, and
+<https://wstein.github.io/flix-orbit64/> for the generated API documentation.
