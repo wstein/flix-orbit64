@@ -42,10 +42,14 @@
 /// wing sticker orbits, 2 the X-centres, 4 the plus-centres, 5 the midges.
 ///
 /// `draft` says the geometry is internally verified, not that anything else
-/// speaks it. Nothing upstream uses this numbering, because nothing upstream
-/// carries midge flip or wing piece identity for a 5x5x5 at all: Twizzle's own
-/// 5x5x5 is named `5x5x5_temp`, tracks the six fixed centres this format
-/// deliberately omits, and gives its other orbits no orientation.
+/// speaks it. Twizzle cannot: its 5x5x5 is named `5x5x5_temp`, decomposes at
+/// sticker level with no orientation anywhere, and tracks the six fixed centres
+/// this format omits. But it is not true that nothing does -- `cube-solvers`'
+/// cube555 engine carries an oriented `mEdge[12]`, a distinct `wEdge[24]`, and
+/// `xCenter[24]` and `tCenter[24]`, which is this same decomposition arrived at
+/// independently. Its slot order differs from this one, and it lists the
+/// plus-centres before the X-centres, so the two are not interchangeable
+/// array for array. Facelets are the layer where they meet.
 ///
 /// The 6x6x6 and up are not drawn.
 ///
@@ -397,12 +401,25 @@ mod Orbit64.Net {
     ///
     pub def canDraw(n: Int32): Bool = n >= 2 and n <= 5
 
-    pub def draw(n: Int32, orbits: List[Coord], colour: Bool): Result[String, String] =
+    ///
+    /// The cube's stickers, as `6 * n * n` face indices.
+    ///
+    /// Facelet `face * n * n + row * n + col`, faces `U R F D L B` numbered 0
+    /// to 5, row-major within a face -- the layout `flix-cube`'s `BigCube` and
+    /// `cube-solvers`' `Facelets` both use, which is what makes this the layer
+    /// those projects and this one can meet at. Slot orders differ between
+    /// implementations and always will; sticker colours do not.
+    ///
+    /// Subject to the same convention `draw` names, and the same caveat: this
+    /// says what the state looks like *if* its producer numbered slots the way
+    /// `convention(n)` says. It is a rendering, not a proof of agreement.
+    ///
+    pub def toFacelets(n: Int32, orbits: List[Coord]): Result[String, Vector[Int32]] =
         let expected = Orbit64.Orbit.layout(n);
         let got = List.map(Orbit64.Coord.kind, orbits);
         if (not canDraw(n))
-            Err("no net for the ${n}x${n}x${n}: every wing and centre orbit needs its own "
-                + "slot-to-facelet mapping, and this module has one only up to the 5x5x5")
+            Err("no slot convention for the ${n}x${n}x${n}: this module has one "
+                + "only up to the 5x5x5")
         // Each orbit being individually valid is not enough. A list that is
         // short, reordered, or carries an orbit this size does not have leaves
         // stickers nothing ever writes to, and the result would be a tidy
@@ -415,26 +432,47 @@ mod Orbit64.Net {
         // is public and a hand-built coordinate is not.
         else if (List.exists(c -> not Orbit64.Coord.isValid(c), orbits))
             Err("that state is not a cube")
-        else
-            if (n == 4) Ok(draw4(orbits, colour))
-            else if (n == 5)
-                match draw5(orbits, colour) {
-                    case Some(net) => Ok(net)
-                    // Unreachable: the layout check above already fixed the shape.
-                    case None      => Err("expected orbits ${expected} for the ${n}x${n}x${n}")
-                }
-            else
-                region rc {
-                    // Centres never move, so they are the frame the rest is drawn in.
-                    let sticker = Array.repeat(rc, 54, 0);
-                    Vector.range(0, 6) |> Vector.forEach(i -> Array.put(i, i * 9 + 4, sticker));
-                    orbits |> List.forEach(c -> match c {
-                        case CornerCoord(cp, co) => placeCorners(sticker, cp, co)
-                        case MidgeCoord(ep, eo)  => placeEdges(sticker, ep, eo)
-                        case _                   => ()
-                    });
-                    Ok(render(3, n, Array.toVector(sticker), colour))
-                }
+        else if (n == 4) Ok(facelets4(orbits))
+        else if (n == 5)
+            match facelets5(orbits) {
+                case Some(fs) => Ok(fs)
+                // Unreachable: the layout check above already fixed the shape.
+                case None     => Err("expected orbits ${expected} for the ${n}x${n}x${n}")
+            }
+        else Ok(facelets3(n, orbits))
+
+    ///
+    /// The net for `orbits`, or why there isn't one.
+    ///
+    pub def draw(n: Int32, orbits: List[Coord], colour: Bool): Result[String, String] =
+        toFacelets(n, orbits)
+            |> Result.map(fs -> render(n, fs, colour))
+
+    ///
+    /// The 2x2x2 and 3x3x3, whose tables are Kociemba's.
+    ///
+    /// A 2x2x2 is built on the 3x3x3's grid and then thinned to its corner
+    /// cells, which are exactly its four stickers per face.
+    ///
+    def facelets3(n: Int32, orbits: List[Coord]): Vector[Int32] =
+        region rc {
+            // Centres never move, so they are the frame the rest is drawn in.
+            let sticker = Array.repeat(rc, 54, 0);
+            Vector.range(0, 6) |> Vector.forEach(i -> Array.put(i, i * 9 + 4, sticker));
+            orbits |> List.forEach(c -> match c {
+                case CornerCoord(cp, co) => placeCorners(sticker, cp, co)
+                case MidgeCoord(ep, eo)  => placeEdges(sticker, ep, eo)
+                case _                   => ()
+            });
+            let full = Array.toVector(sticker);
+            if (n == 3) full
+            else Vector.init(i -> {
+                let face = i / 4;
+                let r = Int32.modulo(i / 2, 2);
+                let c = Int32.modulo(i, 2);
+                Vector.get(face * 9 + (r * 2) * 3 + c * 2, full)
+            }, 24)
+        }
 
     ///
     /// A 5x5x5, drawn under `orbit64-5x5-draft@1`.
@@ -445,7 +483,7 @@ mod Orbit64.Net {
     /// the fourth as the X-centres and the fifth as the plus-centres. Matching
     /// the whole list rather than each element is what makes that explicit.
     ///
-    def draw5(orbits: List[Coord], colour: Bool): Option[String] =
+    def facelets5(orbits: List[Coord]): Option[Vector[Int32]] =
         match orbits {
             case CornerCoord(cp, co) :: MidgeCoord(ep, eo) :: WingCoord(wp) ::
                  CenterCoord(xs) :: CenterCoord(ps) :: Nil =>
@@ -480,7 +518,7 @@ mod Orbit64.Net {
                         Array.put(Vector.get(Vector.get(slot, ps), centreColour5()),
                                   Vector.get(slot, plusFacelet5()), sticker)
                     });
-                    Some(render(5, 5, Array.toVector(sticker), colour))
+                    Some(Array.toVector(sticker))
                 }
             case _ => None
         }
@@ -490,7 +528,7 @@ mod Orbit64.Net {
     /// comes from the token. An orbit this convention has no table for is left
     /// alone rather than guessed at.
     ///
-    def draw4(orbits: List[Coord], colour: Bool): String =
+    def facelets4(orbits: List[Coord]): Vector[Int32] =
         region rc {
             let sticker = Array.repeat(rc, 96, 0);
             orbits |> List.forEach(c -> match c {
@@ -518,7 +556,7 @@ mod Orbit64.Net {
                     })
                 case _ => ()
             });
-            render(4, 4, Array.toVector(sticker), colour)
+            Array.toVector(sticker)
         }
 
     def placeCorners(sticker: Array[Int32, r], cp: Vector[Int32], co: Vector[Int32]): Unit \ r =
@@ -547,10 +585,8 @@ mod Orbit64.Net {
     /// taking every other cell -- its four stickers are exactly the corner
     /// cells of a 3x3x3 face.
     ///
-    def render(side: Int32, n: Int32, sticker: Vector[Int32], colour: Bool): String =
-        let step = if (side == n) 1 else 2;
-        let cell = (face, row, col) ->
-            Vector.get(face * side * side + (row * step) * side + col * step, sticker);
+    def render(n: Int32, sticker: Vector[Int32], colour: Bool): String =
+        let cell = (face, row, col) -> Vector.get(face * n * n + row * n + col, sticker);
         let band = (face, row) -> Vector.range(0, n)
             |> Vector.map(col -> paint(cell(face, row, col), colour))
             |> Vector.join("");
