@@ -12,7 +12,6 @@ use `.\flixw.cmd` wherever these say `./flixw`.
 
 - `./flixw check` — type-check without generating code; the fast feedback loop
 - `./flixw test` — run every `@Test` function under `test/`
-- `./flixw run --entrypoint Orbit64.Cli.main` — run the demo command line
 - `./flixw build` — compile to `build/class`
 - `./flixw build-pkg` — build the distributable `artifact/*.fpkg`
 - `./flixw format` — reformat sources in place; the pinned compiler has no
@@ -20,6 +19,19 @@ use `.\flixw.cmd` wherever these say `./flixw`.
 - `./flixw doc` — write this project's API documentation to `build/doc/`.
   Standard library pages are not generated, so links into it dangle locally;
   the docs workflow rewrites them to <https://api.flix.dev>
+
+The demo command line is not here: a package with a top-level `main` cannot be
+depended on, so it lives in [`examples/cli-tool`](examples/cli-tool), a
+separate package that depends on this one exactly the way any other consumer
+would. It is sample source, not a project this wrapper drives — it has no
+`.flixw/lock.toml` of its own, and this repository's `flixw` looks for a
+project's lock relative to the caller's working directory, not relative to
+the project it's pointed at, so it cannot run something outside its own tree.
+Run the example with your own Flix install instead:
+
+    cd examples/cli-tool
+    flix run                 # size table, round-trip
+    flix run -- <token>      # decode; length picks the cube size
 
 The wrapper adds verbs of its own, ahead of the compiler's:
 
@@ -39,10 +51,11 @@ is published.
 - `src/Orbit64.flix` — the package's public API
 - `src/Orbit64/` — the rest of the library, all nested under the `Orbit64`
   module so that a consumer's own `Coord`, `Orbit`, or `Rank` cannot collide
-  with ours. `Orbit64/Cli.flix` holds the demo command line, and
-  `Orbit64/Net.flix` the only geometry in the package -- the codec itself has
-  none, which is what lets it cover every size
+  with ours. `Orbit64/Net.flix` is the only geometry in the package -- the
+  codec itself has none, which is what lets it cover every size
 - `test/` — `@Test` functions
+- `examples/cli-tool/` — the demo command line, a separate Flix package that
+  depends on this one the same way any other consumer would
 - `flix.toml` — package metadata, dependencies, and the *lowest* Flix version
   this project accepts. `name` sets the package name, but the `.fpkg` filename
   comes from the *directory* name, so the two must agree
@@ -69,8 +82,9 @@ are easy to undo by accident:
 
 - **No top-level `main`.** `build-pkg` ships everything under `src/`, so a
   top-level `main` becomes a duplicate definition in any consumer that has one
-  of its own. The demo lives in `Orbit64.Cli` and is reached with
-  `--entrypoint`.
+  of its own. The demo needs a top-level `main` to run as a CLI, which is why
+  it lives in its own package, [`examples/cli-tool`](examples/cli-tool),
+  rather than here.
 - **No top-level modules but `Orbit64`.** Everything nests under it. Names as
   common as `Coord` or `Rank` would otherwise collide with the consumer's.
 

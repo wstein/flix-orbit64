@@ -1,9 +1,11 @@
 [package]
-name        = "cli-tool"
-description = "test"
+name        = "orbit64-cli"
+description = "Demo command line for orbit64: a size table, a round-trip demo, and a token decoder"
 version     = "0.1.0"
-flix        = "0.75.3"
-authors     = ["John Doe <john@example.com>"]
+repository  = "github:wstein/flix-orbit64"
+flix        = "0.75.2"
+license     = "Apache-2.0"
+authors     = ["Werner Stein"]
 
 [dependencies]
 "github:wstein/flix-orbit64" = "0.3.0"
