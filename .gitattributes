@@ -7,10 +7,10 @@ flixw.cmd        linguist-generated
 .flixw/flixw.java linguist-generated
 
 # >>> flixw >>>
-/flixw text eol=lf linguist-generated
-/.flixw/flixw.java text eol=lf linguist-generated
+/flixw text eol=lf linguist-vendored
+/.flixw/flixw.java text eol=lf linguist-vendored
 /.flixw/lock.toml text eol=lf
 /.flixw/.gitignore text eol=lf
 /.flixw/.sccignore text eol=lf
-/flixw.cmd text eol=crlf linguist-generated
+/flixw.cmd text eol=crlf linguist-vendored
 # <<< flixw <<<

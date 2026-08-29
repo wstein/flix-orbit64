@@ -1,4 +1,4 @@
-// flixw 0.25.11 -- stage 0. GENERATED: this is the documented source with its
+// flixw 0.26.0 -- stage 0. GENERATED: this is the documented source with its
 // comments removed, which is why it reads as bare mechanism.
 //
 // The commentary is the security story -- why each check exists, and which
@@ -8,7 +8,7 @@
 //   https://wstein.github.io/flixw/          docs, and the lock schema
 //   https://github.com/wstein/flixw          the source this was made from
 //
-// Reproducible on purpose: `java tests/strip.java 0.25.11` at tag vsrc/flixw.java <version> regenerates
+// Reproducible on purpose: `java tests/strip.java 0.26.0` at tag vsrc/flixw.java <version> regenerates
 // this file byte for byte, so the readable source and the running one can be
 // checked against each other rather than taken on trust.
 import java.io.ByteArrayOutputStream;
@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 
 public final class flixw {
 
-  static final String WRAPPER_VERSION = "0.25.11";
+  static final String WRAPPER_VERSION = "0.26.0";
   static final String WRAPPER_DIR = ".flixw";
   static final int MIN_JAVA = 21;
 
@@ -56,7 +56,7 @@ public final class flixw {
   static final int HELP_CAP = 1 << 20;
 
   static final List<String> WRAPPER_VERBS =
-    List.of("pin", "info", "doctor", "validate", "help", "plugin", "task");
+    List.of("pin", "info", "doctor", "validate", "help", "plugin", "task", "examples");
 
   static final List<String> BUILTIN_VERBS = List.of(
     "init", "check", "build", "build-jar", "build-fatjar", "build-pkg", "clean",
@@ -709,6 +709,19 @@ public final class flixw {
      "usage: ./flixw pin [<owner>/<repo>] [<version>] [--java <version>]"
     + "\n          or: ./flixw pin <owner>/<repo>@<version>   (one token, a fork)"
     + "\n          or: ./flixw pin --refresh   (rewrite the lock in this release's shape)";
+
+  static final String INFO_USAGE = "usage: ./flixw info [--verbose | -v]";
+  static final String DOCTOR_USAGE = "usage: ./flixw doctor [--fix]";
+  static final String VALIDATE_USAGE = "usage: ./flixw validate";
+  static final String EXAMPLES_USAGE =
+     "usage: ./flixw examples list"
+    + "\n          or: ./flixw examples run|check|build|test <name> [-- args]";
+
+  static boolean wantsHelp(List<String> rest) {
+    int dd = rest.indexOf("--");
+    List<String> scanned = dd < 0 ? rest : rest.subList(0, dd);
+    return scanned.contains("--help") || scanned.contains("-h");
+  }
 
   static final String PLUGIN_NAME_PATTERN = "[a-z][a-z0-9-]*";
 
@@ -1780,6 +1793,7 @@ public final class flixw {
               Jvm jvm, List<String> compilerVerbs) {
     switch (verb) {
       case "pin" -> {
+        if (wantsHelp(rest)) { System.out.println(PIN_USAGE); return; }
         if (rest.isEmpty())
           throw w009(PIN_USAGE);
         pin(root, parsePin(rest, lock));
@@ -1793,24 +1807,29 @@ public final class flixw {
       }
 
       case "info" -> {
+        if (wantsHelp(rest)) { System.out.println(INFO_USAGE); return; }
         boolean verbose = rest.contains("--verbose") || rest.contains("-v");
         for (String a : rest)
           if (!a.equals("--verbose") && !a.equals("-v"))
-            throw w008("./flixw info: unknown option " + q(a)
-                + "\n       usage: ./flixw info [--verbose | -v]");
+            throw w008("./flixw info: unknown option " + q(a) + "\n       " + INFO_USAGE);
         report(root, lock, jar, jvm, compilerVerbs, askedVersion(lock));
         if (verbose) { System.out.println(); listCache(lock, jvm); }
       }
       case "validate" -> {
+        if (wantsHelp(rest)) { System.out.println(VALIDATE_USAGE); return; }
+
+        if (!rest.isEmpty())
+          throw w008("./flixw validate: unknown argument " + q(rest.get(0))
+              + "\n       " + VALIDATE_USAGE);
         int bad = check(root, lock, jar, jvm);
         if (bad > 0) throw w009(bad + " validation failure(s)");
       }
       case "doctor" -> {
+        if (wantsHelp(rest)) { System.out.println(DOCTOR_USAGE); return; }
         boolean fix = rest.contains("--fix");
         for (String a : rest)
           if (!a.equals("--fix"))
-            throw w008("./flixw doctor: unknown option " + q(a)
-                + "\n       usage: ./flixw doctor [--fix]");
+            throw w008("./flixw doctor: unknown option " + q(a) + "\n       " + DOCTOR_USAGE);
         if (fix) { updateWrapper(root); System.out.println(); }
         report(root, lock, jar, jvm, compilerVerbs, askedVersion(lock));
         System.out.println();
@@ -1823,6 +1842,11 @@ public final class flixw {
       case "plugin" -> {
         if (rest.isEmpty()) throw w009(PLUGIN_USAGE);
         String sub = rest.get(0);
+
+        if (sub.equals("--help") || sub.equals("-h")) {
+          System.out.println(PLUGIN_USAGE);
+          return;
+        }
         List<String> args = rest.subList(1, rest.size());
         switch (sub) {
           case "install" -> pluginInstall(root, args);
@@ -1844,7 +1868,8 @@ public final class flixw {
 
       case "task" -> {
         Map<String, String> tasks = readTasks(root);
-        if (rest.isEmpty()) {
+
+        if (rest.isEmpty() || rest.get(0).equals("--help") || rest.get(0).equals("-h")) {
           if (tasks.isEmpty()) System.out.println("(no tasks in " + tasksPath(root) + ")");
           else tasks.keySet().forEach(System.out::println);
           return;
@@ -1856,6 +1881,22 @@ public final class flixw {
               + (tasks.isEmpty() ? "" : "\n       known tasks: "
                + String.join(", ", tasks.keySet())));
         runTask(cmd, rest.subList(1, rest.size()));
+      }
+
+      case "examples" -> {
+        if (wantsHelp(rest)) { System.out.println(EXAMPLES_USAGE); return; }
+
+        if (jar == null || jvm == null)
+          throw w009("examples needs a pinned, reachable compiler"
+              + "\n       run: ./flixw pin <version>");
+        Path asset = ensureAsset(EXAMPLES_ASSET);
+
+        List<String> opts = jvmOpts();
+        List<String> a = new ArrayList<>(List.of(root.toString(), jvm.exe().toString(),
+                            jar.toString(), String.valueOf(opts.size())));
+        a.addAll(opts);
+        a.addAll(rest.isEmpty() ? List.of("list") : rest);
+        System.exit(runAsset(asset, null, a));
       }
       default -> throw w009("no wrapper implementation for " + q(verb));
     }
@@ -2440,9 +2481,38 @@ public final class flixw {
     return shipped.equals("flixw.cmd") ? "text eol=crlf" : "text eol=lf";
   }
 
+  static boolean changesEndings(String attrs, String shipped, Map<String, String> macros) {
+    String pinned = " " + canonicalAttrs(shipped) + " ";
+    for (String token : attrs.split("\\s+")) {
+      String name = token.replaceFirst("^[-!]", "").replaceFirst("=.*", "");
+      String macro = macros.get(name);
+      if (macro != null) {
+        if (changesEndings(macro, shipped, Map.of())) return true;
+        continue;
+      }
+      if (!name.equals("text") && !name.equals("eol")) continue;
+
+      if (token.equals("text=auto") && pinned.contains(" text ")) continue;
+      if (!pinned.contains(" " + token + " ")) return true;
+    }
+    return false;
+  }
+
+  static Map<String, String> attrMacros(String text) {
+    Map<String, String> macros = new LinkedHashMap<>();
+    macros.put("binary", "-diff -merge -text");
+    for (String line : text.split("\r?\n")) {
+      String t = line.trim();
+      if (!t.startsWith("[attr]")) continue;
+      String[] parts = t.substring("[attr]".length()).split("\\s+", 2);
+      if (parts.length == 2) macros.putIfAbsent(parts[0], parts[1]);
+    }
+    return macros;
+  }
+
   static final List<String> SHIPPED =
     List.of("flixw", "flixw.cmd", WRAPPER_DIR + "/flixw.java", WRAPPER_DIR + "/lock.toml",
-        WRAPPER_DIR + "/.gitignore");
+        WRAPPER_DIR + "/.gitignore", WRAPPER_DIR + "/.sccignore");
 
   static boolean patternMatches(String pattern, String path) {
     String p = pattern.startsWith("/") ? pattern.substring(1) : pattern;
@@ -2477,13 +2547,14 @@ public final class flixw {
     }
     int after = text.lastIndexOf(end);
     if (after < 0) return bad;
+    Map<String, String> macros = attrMacros(text);
     for (String line : text.substring(after).split("\r?\n")) {
       String t = line.trim();
       if (t.isEmpty() || t.startsWith("#")) continue;
       String pattern = t.split("\\s+")[0];
       String attrs = t.substring(pattern.length()).trim();
       for (String f : SHIPPED) {
-        if (patternMatches(pattern, f) && !attrs.equals(canonicalAttrs(f))) {
+        if (patternMatches(pattern, f) && changesEndings(attrs, f, macros)) {
           System.out.println("FAIL  .gitattributes rule " + q(t)
                   + " comes after the flixw block and changes " + f);
           bad++;
@@ -2630,14 +2701,12 @@ public final class flixw {
     }
     bad += checkGitattributes(root.resolve(".gitattributes"));
 
-    List<String> generated = List.of("flixw", "flixw.cmd",
-                    WRAPPER_DIR + "/flixw.java", WRAPPER_DIR + "/lock.toml",
-                    WRAPPER_DIR + "/.gitignore");
     Integer isRepo = git(root, "rev-parse", "--is-inside-work-tree");
     if (isRepo == null || isRepo != 0) {
       System.out.println("warn  not a git work tree; cannot check tracked status");
     } else {
-      for (String rel : generated) {
+      for (String rel : SHIPPED) {
+
         if (!Files.exists(root.resolve(rel))) continue;
         Integer ignored = git(root, "check-ignore", "-q", "--", rel);
         if (ignored != null && ignored == 0) {
@@ -3136,6 +3205,8 @@ public final class flixw {
 
   static final String HELP_ASSET = "flixw-help.java";
 
+  static final String EXAMPLES_ASSET = "flixw-examples.java";
+
   static final String PICOCLI_VERSION = "4.7.7";
   static final String PICOCLI_ASSET = "picocli-" + PICOCLI_VERSION + ".jar";
 
@@ -3402,7 +3473,9 @@ public final class flixw {
       if (drift != null) System.err.println("flixw: warning: " + drift.split("\n")[0]);
       routingNotice(first, lock == null ? "none" : lock.version());
       if (first.equals("pin")) {
-        pin(root, parsePin(argv.subList(1, argv.size()), lock));
+        List<String> rest = argv.subList(1, argv.size());
+        if (wantsHelp(rest)) System.out.println(PIN_USAGE);
+        else pin(root, parsePin(rest, lock));
       } else if (bareHelp) {
         wrapperVerb("help", List.of(), root, lock, null, null, null);
       }
@@ -3418,7 +3491,9 @@ public final class flixw {
 
     if ("pin".equals(first) && !forcedCompiler) {
       routingNotice("pin", lock.version());
-      pin(root, parsePin(argv.subList(1, argv.size()), lock));
+      List<String> rest = argv.subList(1, argv.size());
+      if (wantsHelp(rest)) System.out.println(PIN_USAGE);
+      else pin(root, parsePin(rest, lock));
       return;
     }
 
