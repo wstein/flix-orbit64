@@ -2,6 +2,7 @@ mod TestQr {
 
     use Orbit64.Qr
     use Orbit64.Qr.EcLevel
+    use Orbit64.Render
 
     ///
     /// QR code generation produces non-empty UTF-8 block graphic encoding orbit64 token.
@@ -27,5 +28,21 @@ mod TestQr {
             let qr = Qr.renderWith(lvl, true, "AFbO3qHtgRom");
             Assert.assertTrue(String.length(qr) > 0)
         })
+
+    /// The new rendering namespace offers the same pure QR contract.
+    @Test
+    def renderNamespaceKeepsTheTerminalQrContract(): Unit \ Assert =
+        let qr = Render.qrWith(Orbit64.Render.Qr.EcLevel.H, true, "AFbO3qHtgRom");
+        Assert.assertTrue(String.contains(substr = "█", qr) or String.contains(substr = "▀", qr))
+
+    /// PNG writers operate on Orbit64's size and facelet-vector interchange,
+    /// without depending on a solver-specific cube representation.
+    @Test
+    def renderersWriteQrAndCubeImages(): Unit \ { Assert, IO } =
+        let facelets = Vector.range(0, 54) |> Vector.map(i -> i / 9);
+        Assert.assertEq(expected = Ok(()),
+            Render.qrWritePng("build/test_qr_logo.png", 3, facelets, "AFbO3qHtgRom", true));
+        Assert.assertEq(expected = Ok(()),
+            Render.iconWritePng("build/test_cube_icon.png", 3, facelets, 256, true))
 
 }

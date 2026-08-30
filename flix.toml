@@ -1,7 +1,7 @@
 [package]
 name        = "orbit64"
 description = "Canonical URL-safe minimal-width encoding for NxNxN twisty cube state"
-version     = "0.3.0"
+version     = "0.4.0"
 repository  = "github:wstein/flix-orbit64"
 modules     = ["Orbit64"]
 flix        = "0.75.2"
