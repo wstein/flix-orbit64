@@ -8,10 +8,3 @@ version = "0.75.3"
 url     = "https://github.com/flix/flix/releases/download/v0.75.3/flix.jar"
 sha256  = "bf123cdb6494d6e0cbff6399bf185314d332bbe97bfd776e4abc03a5d39dd954"
 reported_version = "0.75.3"
-
-[plugins.metrics]
-version = "0.1.8"
-sha256  = "bd8707afb5a06a37d26f1bd9b9d3bc3b3892a73e1617b177328a4f5ff7d7c67f"
-source  = "https://github.com/wstein/flixw-metrics/releases/download/v0.1.8/plugin.jar"
-description = "code metrics, counted by the compiler not by reading text"
-command = "metrics"
