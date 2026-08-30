@@ -19,6 +19,21 @@ use `.\flixw.cmd` wherever these say `./flixw`.
 - `./flixw doc` — write this project's API documentation to `build/doc/`.
   Standard library pages are not generated, so links into it dangle locally;
   the docs workflow rewrites them to <https://api.flix.dev>
+- `./flixw metrics --format md` — code-smell report: over-long and crammed
+  lines, complexity, nesting, coupling, doc coverage. **Run it before every
+  commit and fix what it finds.** It needs the project to compile first, and
+  the `metrics` plugin installed once per machine:
+
+  ```console
+  ./flixw plugin install metrics 0.1.8 \
+    https://github.com/wstein/flixw-metrics/releases/download/v0.1.8/plugin.jar \
+    --sha256 bd8707afb5a06a37d26f1bd9b9d3bc3b3892a73e1617b177328a4f5ff7d7c67f
+  ```
+
+  This is a per-machine install, not a per-repository one — it is third-party,
+  unaffiliated code that runs as you; see
+  [flixw-metrics' own Safety section](https://github.com/wstein/flixw-metrics#safety)
+  before installing anything
 
 The demo command line is not here: a package with a top-level `main` cannot be
 depended on, so it lives in [`examples/cli-tool`](examples/cli-tool), a
