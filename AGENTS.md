@@ -111,3 +111,17 @@ The mistakes that show up most often:
 
 Prefer effects and handlers to callbacks or hand-written CPS, and standard
 library effects to Java interop.
+
+## Naming modules
+
+A module has one declaration site in the whole program, dependencies included,
+so never take a common top-level name.
+
+- one root namespace per package, named after it: `flix-orbit64` roots at
+  `Orbit64`
+- directories mirror module paths: `Orbit64.Rank` lives in
+  `src/Orbit64/Rank.flix`
+- two or three levels; `Internal` for what is not API
+- name a module for what is done there: `Orbit64.Rank` holds the
+  permutation and combination ranking primitives
+- spell names out; tests flat, one `TestX` per subject
