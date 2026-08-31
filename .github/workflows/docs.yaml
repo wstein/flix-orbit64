@@ -172,7 +172,7 @@ jobs:
               [ -f "site/$target" ] && continue
               sed "s|href='$target'|href='https://api.flix.dev/$target'|g" "$f" > "$f.tmp"
               mv "$f.tmp" "$f"
-              external="$external$target\n"
+              external="$external$target"$'\n'
             done < <(grep -oE "href='[A-Za-z0-9_.-]+\.html'" "$f" | sed "s/^href='//; s/'$//" | sort -u)
           done
 
