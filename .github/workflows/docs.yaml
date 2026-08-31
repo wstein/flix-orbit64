@@ -190,7 +190,7 @@ jobs:
                 echo "::error::$target is not published here and $url does not resolve"
                 broken=1
               fi
-            done < <(printf "$external" | sort -u)
+            done < <(printf '%s' "$external" | sort -u)
           fi
 
           # Backstop: after that rewrite nothing local may still dangle.
