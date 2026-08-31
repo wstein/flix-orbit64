@@ -11,3 +11,4 @@ crash_report_*.txt
 # project content.
 .DS_Store
 .remember/
+/flix.jar
