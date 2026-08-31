@@ -510,6 +510,13 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   GPL, this package is Apache-2.0, and its tables are derived from geometry for
   that reason as much as any other. Comparison happens at the facelet layer,
   where no licence question arises because nobody owns what colour a sticker is.
+- [A Rubik's Cube Solving Guide](https://circuitcellar.com/research-design-hub/projects/a-rubiks-cube-solving-guide/)
+  (Circuit Cellar) -- packs each edge into 5 bits (orientation, then
+  permutation) and each corner into 5 bits likewise, two 64-bit integers for
+  all 12 edges and all 8 corners. Fixed-width per-cubie packing rather than
+  this format's mixed-radix ranking, and not base64url or otherwise made
+  URL-safe -- built for a PIC32's 32KB of RAM, not for a shareable token --
+  but the closest existing relative to this package's name and bit layout.
 
 See `AGENTS.md` for the toolchain, and
 <https://wstein.github.io/flix-orbit64/> for the generated API documentation.
