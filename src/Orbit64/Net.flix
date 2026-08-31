@@ -412,6 +412,15 @@ mod Orbit64.Net {
     /// `convention(n)` says. It is a rendering, not a proof of agreement.
     ///
     pub def toFacelets(n: Int32, orbits: List[Coord]): Result[String, Vector[Int32]] =
+        validate(n, orbits) |> Result.flatMap(_ -> dispatch(n, orbits))
+
+    ///
+    /// The three checks any drawable state must pass regardless of size: this
+    /// module has a convention for `n`, `orbits` names each orbit that
+    /// convention expects, and every coordinate in it is one a real cube can
+    /// be in.
+    ///
+    def validate(n: Int32, orbits: List[Coord]): Result[String, Unit] =
         let expected = Orbit64.Orbit.layout(n);
         let got = List.map(Orbit64.Coord.kind, orbits);
         if (not canDraw(n))
@@ -429,12 +438,20 @@ mod Orbit64.Net {
         // is public and a hand-built coordinate is not.
         else if (List.exists(c -> not Orbit64.Coord.isValid(c), orbits))
             Err("that state is not a cube")
-        else if (n == 4) Ok(facelets4(orbits))
+        else Ok(())
+
+    ///
+    /// `toFacelets`'s size dispatch, once `validate` has fixed `orbits`'
+    /// shape.
+    ///
+    def dispatch(n: Int32, orbits: List[Coord]): Result[String, Vector[Int32]] =
+        if (n == 4) Ok(facelets4(orbits))
         else if (n == 5)
             match facelets5(orbits) {
                 case Some(fs) => Ok(fs)
-                // Unreachable: the layout check above already fixed the shape.
-                case None     => Err("expected orbits ${expected} for the ${n}x${n}x${n}")
+                // Unreachable: validate already fixed the shape.
+                case None     =>
+                    Err("expected orbits ${Orbit64.Orbit.layout(n)} for the ${n}x${n}x${n}")
             }
         else Ok(facelets3(n, orbits))
 
