@@ -535,8 +535,42 @@ important for the 3x3x3 source because Norskog identifies a corrected 2012
 archive after an earlier `x.txt` omitted two moves.
 
 The 2x2x2 archive contains one 3,674,160-symbol stream over `U`, `R`, `F` and
-their inverses. Its importer emits a `PackedBlock` root in canonical Orbit64
-source form:
+their inverses. A recursive transcription is substantially better than treating
+that stream as an opaque packed block. The
+[`2x2x2-devils-alg.orbit64`](examples/algorithm-tool/2x2x2-devils-alg.orbit64)
+example translates the recursive definition used by the cubing.js
+[stress test](https://experiments.cubing.net/cubing.js/stress-tests/2x2x2-devils-alg.html)
+into native Orbit64 source.
+
+The source has 1,175 immediate move or definition references, down from 2,069
+in the stress-test definition, and expands to the archive's complete circuit.
+The main savings expose exact repeated structure rather than applying a byte
+compressor:
+
+```text
+def t = (U R)2 n (tHead w tTail)2 tHead
+def v = (u)8 a U' R r U' R s U R t w U U F'
+def z = (v)6 (u)6 x
+export z
+```
+
+In the original definition, `t` contains a 499-element body twice followed by
+the first 290 elements of that body. The native source names that prefix as
+`tHead`, recognizes the existing `w` definition in the middle, and names the
+157-element suffix as `tTail`. It also interns the longest repeated 28-element
+phrase in `x` as `xSplice`. These rewrites are lossless: expansion produces
+3,674,160 moves and the normalized move stream has SHA-256
+`cecea1fe7c13f145b1fb4999846df2d0c30beec21ef6a923c8c4ce905621ee6b`, exactly
+matching `Hamilton222.txt`.
+
+This is an exact recursive repacking, not a claim that the grammar is globally
+minimal. Finding a smallest grammar requires a separately specified optimizer
+and an optimality criterion; the wire format must not make decoder behavior
+depend on that choice. The canonical DAG encoder may intern structurally equal
+nodes regardless of how a source frontend discovered them.
+
+For comparison, an importer that does not recognize the recursive definition
+can still emit a `PackedBlock` root in canonical Orbit64 source form:
 
 ```text
 extern block H2 = "bruce-2x2"

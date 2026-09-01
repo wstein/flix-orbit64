@@ -1,0 +1,167 @@
+# Bruce Norskog's 2x2x2 devil's algorithm.
+# Native transcription of the recursive cubing.js stress-test definition.
+# Expansion: 3,674,160 quarter turns.
+# Normalized move-stream SHA-256:
+# cecea1fe7c13f145b1fb4999846df2d0c30beec21ef6a923c8c4ce905621ee6b
+
+def b = (U R)3
+
+def a = b (U R)2
+
+def i = (b)2 U R
+
+def c = U' R i i U' R
+
+def n = U' R a
+
+def d = (n)2
+
+def e = n c U R
+
+def f = U R c a U' R
+
+def g = n c a b U' R
+
+def h = n b c a U' R
+
+def j = c c a U' R
+
+def k = (b)2 U' R
+
+def l = n c c
+
+def m = n U R
+
+def o = U' R U R
+
+def r = (
+  a d c U R e f k n b h a
+  o d c U R f c c n c a b
+  d o d c U R j a b U' R d
+  c c f c g d c c f c c U'
+  R i c a U R d n U' R d l
+  j U R U R e j a o c d c
+  c f c g l c c a d U' R d
+  d U R c i U' R c j U R c
+  e c m c U R c a d U' R d
+  g a b o U R n b e c c a
+  d
+)
+
+def s = (
+  n b g a U' R d b l i n U'
+  R e c k d b c a n b U' R
+  m c U R m c i d o U R
+)
+
+def tHead = (
+  U U a U R d U' R i h k h
+  c e c n c a b d U' R d c
+  U R f U R U R h a U' R d
+  l f a b n b U' R d e c k
+  c f U' R i g k U R d U R
+  c f c c a U R d U' R d e
+  j h h e j a o U R d c U
+  R U R e f a U' R e g k g
+  l U R c a d U' R d d U R
+  c i U' R c h e j a o l i
+  U' R U' R i g m c i d U' R
+  n b e U R e U R c a d U'
+  R d c a b U' R h U R e f
+  a U' R d h c j U R g m e
+  f U R m c i d d U U a U
+  R d U' R i c k n b e f a
+  o d c U R j a b n o d l
+  i n b o U R e U R n b c
+  a d U' R d g c i U' R c g
+  n c g c a U R d U' R d d
+  U R U R c k U R j U R c
+  e U R n c a b d U' R c c
+  d c U R f U R U R l U R
+  U' R i c a U R d n U' R d
+  m c
+)
+
+def w = (
+  c U' R i j a U' R h c U' R
+  i j a U' R n b e f a o d
+  U R U R g l f a U' R e c
+  k d c U R f a b U' R m h
+  i d n U
+)
+
+def tTail = (
+  U a U R d e e f k n b h
+  a o d c U R f c c n c a
+  b d o d c U R j a b U' R
+  d c c f c g d c c f c c
+  U' R i c a U R d n U' R d
+  l j U R U R e j a o c d
+  c c f c g l c c a d U' R
+  d d U R c i U' R c j U R
+  c e c m c U R c a d U' R
+  d g a b o U R n b e c c
+  a d U' R n b g a U' R d b
+  l i n U' R e c k d b c a
+  n b U' R m c U R m c i d
+  d
+)
+
+def t = (U R)2 n (tHead w tTail)2 tHead
+
+def u = k r U' R s U R t w F
+
+def v = (u)8 a U' R r U' R s U R t w U U F'
+
+def p = (
+  F U' w' t' R' U' s' R R R U r'
+  R' U R' U' b' R' F R b U R U'
+  R r U' R' R' R' s U R t w U
+  F'
+)
+
+def q = (
+  F' U' w' t' R' U' s' R' U r' R' U
+  a' R' F U' U' w' t' R' U' s' R' U
+  r' R' U a' F R r U' R s U R'
+  R' R' t w U a F'
+)
+
+def xSplice = (
+  r U' R s U R t U' R U p a
+  a b U' R U' R i j a U' R h
+  c U' R i
+)
+
+def x = (
+  k r U' R s U R t c U' R i
+  j a U' R h c U' R i j a U'
+  R n b e f a o d U R U R
+  g l f a U' R n U' R U p b
+  U R U p b U R U p b o c
+  k d c U R f a b U' R U' R
+  k a b o U R U p b U R U
+  p b U R U p U R d U R U
+  R d n U F k xSplice c n a U p
+  b d U' R n b e f a o d U
+  R U R g n o U R U p b U
+  R U p b U R U p U R U' R
+  c f a U' R e c k U' p a U'
+  R U p b U R c U R U R c
+  U R U p b n b U' R U' R k
+  a b n b U R U p b U R d
+  U R U R d n U F a U' R xSplice
+  j a U' R n b e U R o U p
+  a i d o d U R U R g l f
+  a U' R e n b U R U q b U
+  R U' R k n U' R U p b U R
+  n a b U R U' p U R f a b
+  U' R U' R k U R U p U p b
+  U p U p c U p U R U p U
+  p U R U' R b U p b U' R b
+  U R U p U' R U p b U R o
+  U p b U U U F'
+)
+
+def z = (v)6 (u)6 x
+export z
