@@ -45,7 +45,7 @@ mod Orbit64.Coord {
     /// Why `c` is not a state a cube can be in, or nothing when it is one.
     ///
     /// The constraints are stated once, here, and used twice: as the predicate
-    /// `isValid`, and as the reason `Orbit64.encode` gives when it refuses. A
+    /// `isValid`, and as the reason `Orbit64.State.encode` gives when it refuses. A
     /// caller building coordinates from its own model gets told which rule it
     /// broke rather than that something, somewhere, was wrong.
     ///

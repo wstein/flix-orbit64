@@ -20,7 +20,7 @@ def aMidge(): Orbit64.Coord.Coord =
 def netAcceptsExactlyTheLayout(): Unit \ Assert =
     drawable() |> List.forEach(n ->
         Assert.assertTrueWithMsg(
-            Result.isOk(Orbit64.Net.draw(n, Orbit64.solved(n), false)),
+            Result.isOk(Orbit64.Net.draw(n, Orbit64.State.solved(n), false)),
             "declined the solved ${n}x${n}x${n}"))
 
 @Test
@@ -33,7 +33,7 @@ def netDeclinesAnEmptyOrbitList(): Unit \ Assert =
 @Test
 def netDeclinesAnIncompleteOrbitList(): Unit \ Assert =
     drawable() |> List.forEach(n -> {
-        let full = Orbit64.solved(n);
+        let full = Orbit64.State.solved(n);
         // every proper prefix, so "one orbit short" and "corners only" both count
         List.range(0, List.length(full)) |> List.forEach(k ->
             Assert.assertTrueWithMsg(
@@ -44,7 +44,7 @@ def netDeclinesAnIncompleteOrbitList(): Unit \ Assert =
 @Test
 def netDeclinesADuplicatedOrbit(): Unit \ Assert =
     drawable() |> List.forEach(n -> {
-        let full = Orbit64.solved(n);
+        let full = Orbit64.State.solved(n);
         match full {
             case first :: _ =>
                 Assert.assertTrueWithMsg(
@@ -60,7 +60,7 @@ def netDeclinesAnOrbitThatSizeDoesNotHave(): Unit \ Assert =
     // terms and still not a cube of that size.
     List#{2, 4} |> List.forEach(n ->
         Assert.assertTrueWithMsg(
-            Result.isErr(Orbit64.Net.draw(n, List.append(Orbit64.solved(n), List#{aMidge()}), false)),
+            Result.isErr(Orbit64.Net.draw(n, List.append(Orbit64.State.solved(n), List#{aMidge()}), false)),
             "drew a ${n}x${n}x${n} carrying a midge orbit"))
 
 @Test
@@ -68,7 +68,7 @@ def netDeclinesAReorderedOrbitList(): Unit \ Assert =
     // Reversal only changes the layout where the orbits are not all alike.
     List#{3, 4, 5} |> List.forEach(n ->
         Assert.assertTrueWithMsg(
-            Result.isErr(Orbit64.Net.draw(n, List.reverse(Orbit64.solved(n)), false)),
+            Result.isErr(Orbit64.Net.draw(n, List.reverse(Orbit64.State.solved(n)), false)),
             "drew a ${n}x${n}x${n} with its orbits back to front"))
 
 ///

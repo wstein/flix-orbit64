@@ -21,9 +21,9 @@ def fourByFourSolved(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
     Assert.assertEq(expected = Ok("                U  U  U  U \n                U  U  U  U \n                U  U  U  U \n                U  U  U  U \n\n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n L  L  L  L     F  F  F  F     R  R  R  R     B  B  B  B \n\n                D  D  D  D \n                D  D  D  D \n                D  D  D  D \n                D  D  D  D "), Orbit64.Net.draw(4, orbits, false));
-    match Orbit64.encode(4, orbits) {
+    match Orbit64.State.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, t))
+        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(4, t))
     }
 
 ///
@@ -37,9 +37,9 @@ def fourByFourRwU2(): Unit \ Assert =
         CenterCoord(Vector#{2, 0, 2, 0, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5})
     };
     Assert.assertEq(expected = Ok("                F  F  U  U \n                F  F  U  U \n                F  F  U  U \n                F  F  U  U \n\n R  R  R  R     U  U  B  B     L  L  L  L     F  F  D  D \n L  L  L  L     F  F  D  D     R  R  R  R     U  U  B  B \n L  L  L  L     F  F  D  D     R  R  R  R     U  U  B  B \n L  L  L  L     F  F  D  D     R  R  R  R     U  U  B  B \n\n                D  D  B  B \n                D  D  B  B \n                D  D  B  B \n                D  D  B  B "), Orbit64.Net.draw(4, orbits, false));
-    match Orbit64.encode(4, orbits) {
+    match Orbit64.State.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, t))
+        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(4, t))
     }
 
 ///
@@ -53,7 +53,7 @@ def fourByFourRU2RFD2FU3R(): Unit \ Assert =
         CenterCoord(Vector#{2, 0, 3, 2, 0, 1, 2, 1, 1, 2, 5, 3, 5, 1, 5, 5, 4, 3, 4, 3, 0, 4, 0, 4})
     };
     Assert.assertEq(expected = Ok("                L  U  U  U \n                L  F  U  U \n                L  D  F  R \n                D  L  U  U \n\n F  F  F  R     F  D  B  B     L  F  L  L     F  F  F  D \n L  L  D  D     F  R  F  R     F  U  R  R     U  U  L  B \n L  L  D  B     D  B  D  D     F  F  R  R     U  U  L  B \n U  U  R  B     L  B  L  B     D  U  D  R     F  R  B  R \n\n                D  R  D  R \n                D  B  R  B \n                L  B  B  R \n                B  D  B  U "), Orbit64.Net.draw(4, orbits, false));
-    match Orbit64.encode(4, orbits) {
+    match Orbit64.State.encode(4, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, t))
+        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(4, t))
     }

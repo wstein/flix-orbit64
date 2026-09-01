@@ -23,9 +23,9 @@ def fiveByFiveSolved(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
     Assert.assertEq(expected = Ok("                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n\n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n\n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D "), Orbit64.Net.draw(5, orbits, false));
-    match Orbit64.encode(5, orbits) {
+    match Orbit64.State.encode(5, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(5, t))
+        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(5, t))
     }
 
 ///
@@ -41,9 +41,9 @@ def fiveByFiveUw(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 5, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 2, 4, 4, 4, 4, 5, 5, 5})
     };
     Assert.assertEq(expected = Ok("                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n\n F  F  F  F  F     R  R  R  R  R     B  B  B  B  B     L  L  L  L  L \n F  F  F  F  F     R  R  R  R  R     B  B  B  B  B     L  L  L  L  L \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n L  L  L  L  L     F  F  F  F  F     R  R  R  R  R     B  B  B  B  B \n\n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D \n                   D  D  D  D  D "), Orbit64.Net.draw(5, orbits, false));
-    match Orbit64.encode(5, orbits) {
+    match Orbit64.State.encode(5, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(5, t))
+        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(5, t))
     }
 
 ///
@@ -59,9 +59,9 @@ def fiveByFive2Ruwf2(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 2, 5, 1, 1, 1, 2, 3, 2, 1, 3, 3, 5, 3, 2, 4, 4, 4, 4, 0, 5, 5})
     };
     Assert.assertEq(expected = Ok("                   U  U  U  U  U \n                   U  U  U  U  U \n                   U  U  U  U  U \n                   F  F  F  F  F \n                   D  B  D  D  D \n\n F  F  F  D  R     F  D  F  F  F     L  U  B  B  B     L  L  L  L  L \n F  F  F  D  R     F  D  F  F  F     L  U  B  B  B     L  L  L  L  L \n L  L  L  L  R     F  D  F  F  F     L  R  R  R  R     B  U  B  B  B \n L  L  L  L  B     R  R  R  R  R     F  R  R  R  R     B  U  B  B  B \n L  L  L  L  B     R  R  R  R  R     F  R  R  R  R     B  U  B  B  B \n\n                   U  U  U  U  U \n                   D  D  D  B  D \n                   D  D  D  B  D \n                   D  D  D  B  D \n                   D  D  D  B  D "), Orbit64.Net.draw(5, orbits, false));
-    match Orbit64.encode(5, orbits) {
+    match Orbit64.State.encode(5, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(5, t))
+        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(5, t))
     }
 
 ///
@@ -77,7 +77,7 @@ def fiveByFiveRuw2Rfd2Fu4R(): Unit \ Assert =
         CenterCoord(Vector#{0, 2, 0, 2, 5, 0, 1, 1, 2, 3, 1, 3, 1, 5, 3, 5, 2, 4, 3, 4, 4, 0, 4, 5})
     };
     Assert.assertEq(expected = Ok("                   L  U  U  U  U \n                   L  F  U  U  U \n                   L  F  U  U  U \n                   D  D  F  R  R \n                   D  L  U  U  U \n\n F  F  F  R  R     F  D  B  B  B     L  F  L  L  L     F  F  F  F  D \n F  F  F  D  D     F  R  F  R  R     F  U  B  B  B     L  U  L  F  L \n L  L  L  D  D     F  D  F  R  R     F  U  R  R  R     U  U  B  L  B \n L  L  L  D  B     D  L  D  D  D     F  F  R  R  R     U  U  B  L  B \n U  U  B  R  B     L  B  L  L  B     D  U  D  R  R     F  R  R  B  R \n\n                   D  R  D  D  R \n                   D  B  R  B  B \n                   D  B  D  D  R \n                   L  L  B  B  U \n                   B  D  B  B  U "), Orbit64.Net.draw(5, orbits, false));
-    match Orbit64.encode(5, orbits) {
+    match Orbit64.State.encode(5, orbits) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.decode(5, t))
+        case Ok(t)  => Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(5, t))
     }

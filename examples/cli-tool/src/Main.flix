@@ -23,10 +23,10 @@ def table(colour: Bool): Unit \ IO =
     println("  cube      states  bits  chars");
     println("  ----  ----------  ----  -----");
     List.range(2, 8) |> List.forEach(n -> {
-        let total = Orbit64.stateCount(n);
+        let total = Orbit64.State.stateCount(n);
         // BigInt.log2 is the bit length, i.e. the ceiling of the real log.
         let bits = BigInt.log2(total) |> Int32.toString |> String.padLeft(4, ' ');
-        let chars = Orbit64.width(n) |> Int32.toString |> String.padLeft(5, ' ');
+        let chars = Orbit64.State.width(n) |> Int32.toString |> String.padLeft(5, ' ');
         println("  ${n}x${n}x${n}  ${sci(total)}  ${bits}  ${chars}")
     });
     println("");
@@ -45,11 +45,11 @@ def demo(colour: Bool): Unit \ IO =
         Orbit64.Coord.Coord.CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
         Orbit64.Coord.Coord.MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
     };
-    match Orbit64.encode(3, superflip) {
+    match Orbit64.State.encode(3, superflip) {
         case Err(e) => println("encode failed: ${e}")
         case Ok(token) =>
             println("  superflip encodes to ${token}");
-            match Orbit64.decode(3, token) {
+            match Orbit64.State.decode(3, token) {
                 case Err(e) => println("  decode failed: ${e}")
                 case Ok(back) =>
                     println("  decodes back identically: ${back == superflip}");
@@ -61,9 +61,9 @@ def demo(colour: Bool): Unit \ IO =
 /// Decode `token`, inferring the cube size from its length.
 ///
 def report(token: String, colour: Bool): Unit \ IO =
-    match List.range(2, 8) |> List.find(n -> Orbit64.width(n) == String.length(token)) {
+    match List.range(2, 8) |> List.find(n -> Orbit64.State.width(n) == String.length(token)) {
         case None => println("no cube size uses a ${String.length(token)}-character token")
-        case Some(n) => match Orbit64.decode(n, token) {
+        case Some(n) => match Orbit64.State.decode(n, token) {
             case Err(e) => println("not a valid ${n}x${n}x${n} token: ${e}")
             case Ok(orbits) =>
                 println("${n}x${n}x${n}, ${List.length(orbits)} orbits:");

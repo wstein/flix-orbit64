@@ -12,7 +12,7 @@
 def readable(): List[Int32] = List#{2, 3, 4, 5}
 
 def stickersOf(n: Int32): Vector[Int32] =
-    match Orbit64.Net.toFacelets(n, Orbit64.solved(n)) {
+    match Orbit64.Net.toFacelets(n, Orbit64.State.solved(n)) {
         case Ok(fs) => fs
         case Err(_) => Vector#{}
     }

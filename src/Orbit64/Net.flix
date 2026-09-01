@@ -828,7 +828,7 @@ mod Orbit64.Net {
     /// same piece, or a colour turning up five times where four is the whole
     /// supply. `Coord.faultOf` states those constraints once, and this is where
     /// the facelet direction leans on them -- the same check, and the same
-    /// wording, that `Orbit64.encode` gives a caller building coordinates by
+    /// wording, that `Orbit64.State.encode` gives a caller building coordinates by
     /// hand.
     ///
     def allCubes(orbits: List[Coord]): Result[String, List[Coord]] =

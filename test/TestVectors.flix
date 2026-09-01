@@ -16,14 +16,14 @@ def test2x2SolvedEncodes(): Unit \ Assert =
     let orbits = List#{
         CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0})
     };
-    Assert.assertEq(expected = Ok("AAAAA"), Orbit64.encode(2, orbits))
+    Assert.assertEq(expected = Ok("AAAAA"), Orbit64.State.encode(2, orbits))
 
 @Test
 def test2x2SolvedDecodes(): Unit \ Assert =
     let orbits = List#{
         CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(2, "AAAAA"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(2, "AAAAA"))
 
 
 @Test
@@ -31,14 +31,14 @@ def test2x2Scramble0Encodes(): Unit \ Assert =
     let orbits = List#{
         CornerCoord(Vector#{6, 2, 1, 5, 0, 3, 7, 4}, Vector#{0, 2, 1, 1, 1, 1, 2, 1})
     };
-    Assert.assertEq(expected = Ok("EJ6Rr"), Orbit64.encode(2, orbits))
+    Assert.assertEq(expected = Ok("EJ6Rr"), Orbit64.State.encode(2, orbits))
 
 @Test
 def test2x2Scramble0Decodes(): Unit \ Assert =
     let orbits = List#{
         CornerCoord(Vector#{6, 2, 1, 5, 0, 3, 7, 4}, Vector#{0, 2, 1, 1, 1, 1, 2, 1})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(2, "EJ6Rr"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(2, "EJ6Rr"))
 
 
 @Test
@@ -46,14 +46,14 @@ def test2x2Scramble1Encodes(): Unit \ Assert =
     let orbits = List#{
         CornerCoord(Vector#{4, 6, 3, 5, 1, 0, 7, 2}, Vector#{2, 2, 0, 0, 0, 2, 2, 1})
     };
-    Assert.assertEq(expected = Ok("DJ5Lt"), Orbit64.encode(2, orbits))
+    Assert.assertEq(expected = Ok("DJ5Lt"), Orbit64.State.encode(2, orbits))
 
 @Test
 def test2x2Scramble1Decodes(): Unit \ Assert =
     let orbits = List#{
         CornerCoord(Vector#{4, 6, 3, 5, 1, 0, 7, 2}, Vector#{2, 2, 0, 0, 0, 2, 2, 1})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(2, "DJ5Lt"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(2, "DJ5Lt"))
 
 
 @Test
@@ -62,7 +62,7 @@ def test3x3SolvedEncodes(): Unit \ Assert =
         CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
         MidgeCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
     };
-    Assert.assertEq(expected = Ok("AAAAAAAAAAAA"), Orbit64.encode(3, orbits))
+    Assert.assertEq(expected = Ok("AAAAAAAAAAAA"), Orbit64.State.encode(3, orbits))
 
 @Test
 def test3x3SolvedDecodes(): Unit \ Assert =
@@ -70,7 +70,7 @@ def test3x3SolvedDecodes(): Unit \ Assert =
         CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
         MidgeCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(3, "AAAAAAAAAAAA"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(3, "AAAAAAAAAAAA"))
 
 
 @Test
@@ -79,7 +79,7 @@ def test3x3SuperflipEncodes(): Unit \ Assert =
         CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
         MidgeCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1})
     };
-    Assert.assertEq(expected = Ok("AAAAAAAAAAf_"), Orbit64.encode(3, orbits))
+    Assert.assertEq(expected = Ok("AAAAAAAAAAf_"), Orbit64.State.encode(3, orbits))
 
 @Test
 def test3x3SuperflipDecodes(): Unit \ Assert =
@@ -87,7 +87,7 @@ def test3x3SuperflipDecodes(): Unit \ Assert =
         CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
         MidgeCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(3, "AAAAAAAAAAf_"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(3, "AAAAAAAAAAf_"))
 
 
 @Test
@@ -96,7 +96,7 @@ def test3x3SuneEncodes(): Unit \ Assert =
         CornerCoord(Vector#{0, 1, 7, 6, 4, 5, 3, 2}, Vector#{0, 0, 1, 1, 0, 0, 0, 1}),
         MidgeCoord(Vector#{0, 1, 2, 6, 4, 5, 11, 7, 8, 9, 10, 3}, Vector#{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0})
     };
-    Assert.assertEq(expected = Ok("ABU68xS1q8iQ"), Orbit64.encode(3, orbits))
+    Assert.assertEq(expected = Ok("ABU68xS1q8iQ"), Orbit64.State.encode(3, orbits))
 
 @Test
 def test3x3SuneDecodes(): Unit \ Assert =
@@ -104,7 +104,7 @@ def test3x3SuneDecodes(): Unit \ Assert =
         CornerCoord(Vector#{0, 1, 7, 6, 4, 5, 3, 2}, Vector#{0, 0, 1, 1, 0, 0, 0, 1}),
         MidgeCoord(Vector#{0, 1, 2, 6, 4, 5, 11, 7, 8, 9, 10, 3}, Vector#{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(3, "ABU68xS1q8iQ"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(3, "ABU68xS1q8iQ"))
 
 
 @Test
@@ -113,7 +113,7 @@ def test3x3Scramble0Encodes(): Unit \ Assert =
         CornerCoord(Vector#{2, 3, 5, 4, 0, 1, 6, 7}, Vector#{0, 1, 2, 0, 1, 1, 2, 2}),
         MidgeCoord(Vector#{5, 11, 3, 2, 10, 7, 1, 0, 9, 8, 4, 6}, Vector#{0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0})
     };
-    Assert.assertEq(expected = Ok("AWMmIry_APKe"), Orbit64.encode(3, orbits))
+    Assert.assertEq(expected = Ok("AWMmIry_APKe"), Orbit64.State.encode(3, orbits))
 
 @Test
 def test3x3Scramble0Decodes(): Unit \ Assert =
@@ -121,7 +121,7 @@ def test3x3Scramble0Decodes(): Unit \ Assert =
         CornerCoord(Vector#{2, 3, 5, 4, 0, 1, 6, 7}, Vector#{0, 1, 2, 0, 1, 1, 2, 2}),
         MidgeCoord(Vector#{5, 11, 3, 2, 10, 7, 1, 0, 9, 8, 4, 6}, Vector#{0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(3, "AWMmIry_APKe"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(3, "AWMmIry_APKe"))
 
 
 @Test
@@ -130,7 +130,7 @@ def test3x3Scramble1Encodes(): Unit \ Assert =
         CornerCoord(Vector#{2, 1, 4, 0, 3, 5, 6, 7}, Vector#{0, 1, 0, 0, 0, 2, 2, 1}),
         MidgeCoord(Vector#{5, 1, 3, 2, 0, 6, 10, 7, 8, 4, 11, 9}, Vector#{1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0})
     };
-    Assert.assertEq(expected = Ok("AUi1GvzQin1y"), Orbit64.encode(3, orbits))
+    Assert.assertEq(expected = Ok("AUi1GvzQin1y"), Orbit64.State.encode(3, orbits))
 
 @Test
 def test3x3Scramble1Decodes(): Unit \ Assert =
@@ -138,7 +138,7 @@ def test3x3Scramble1Decodes(): Unit \ Assert =
         CornerCoord(Vector#{2, 1, 4, 0, 3, 5, 6, 7}, Vector#{0, 1, 0, 0, 0, 2, 2, 1}),
         MidgeCoord(Vector#{5, 1, 3, 2, 0, 6, 10, 7, 8, 4, 11, 9}, Vector#{1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(3, "AUi1GvzQin1y"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(3, "AUi1GvzQin1y"))
 
 
 @Test
@@ -148,7 +148,7 @@ def test4x4SolvedEncodes(): Unit \ Assert =
         WingCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    Assert.assertEq(expected = Ok("AAAAAAAAAAAAAAAAAAAAAAAAAAA"), Orbit64.encode(4, orbits))
+    Assert.assertEq(expected = Ok("AAAAAAAAAAAAAAAAAAAAAAAAAAA"), Orbit64.State.encode(4, orbits))
 
 @Test
 def test4x4SolvedDecodes(): Unit \ Assert =
@@ -157,7 +157,7 @@ def test4x4SolvedDecodes(): Unit \ Assert =
         WingCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, "AAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(4, "AAAAAAAAAAAAAAAAAAAAAAAAAAA"))
 
 
 @Test
@@ -167,7 +167,7 @@ def test4x4Scramble0Encodes(): Unit \ Assert =
         WingCoord(Vector#{18, 19, 23, 20, 6, 16, 3, 13, 1, 12, 5, 7, 22, 11, 8, 9, 14, 2, 21, 17, 10, 0, 4, 15}),
         CenterCoord(Vector#{4, 3, 2, 4, 5, 1, 0, 1, 3, 2, 5, 0, 2, 3, 2, 5, 4, 0, 0, 1, 3, 1, 5, 4})
     };
-    Assert.assertEq(expected = Ok("BJSsuyGPOiU06kIz-eqibqTP1th"), Orbit64.encode(4, orbits))
+    Assert.assertEq(expected = Ok("BJSsuyGPOiU06kIz-eqibqTP1th"), Orbit64.State.encode(4, orbits))
 
 @Test
 def test4x4Scramble0Decodes(): Unit \ Assert =
@@ -176,7 +176,7 @@ def test4x4Scramble0Decodes(): Unit \ Assert =
         WingCoord(Vector#{18, 19, 23, 20, 6, 16, 3, 13, 1, 12, 5, 7, 22, 11, 8, 9, 14, 2, 21, 17, 10, 0, 4, 15}),
         CenterCoord(Vector#{4, 3, 2, 4, 5, 1, 0, 1, 3, 2, 5, 0, 2, 3, 2, 5, 4, 0, 0, 1, 3, 1, 5, 4})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, "BJSsuyGPOiU06kIz-eqibqTP1th"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(4, "BJSsuyGPOiU06kIz-eqibqTP1th"))
 
 
 @Test
@@ -186,7 +186,7 @@ def test4x4Scramble1Encodes(): Unit \ Assert =
         WingCoord(Vector#{0, 5, 7, 1, 14, 6, 3, 22, 15, 23, 13, 8, 21, 12, 2, 10, 19, 16, 17, 11, 9, 18, 20, 4}),
         CenterCoord(Vector#{5, 5, 2, 1, 3, 3, 2, 1, 5, 0, 2, 4, 4, 0, 2, 0, 4, 1, 0, 1, 4, 3, 5, 3})
     };
-    Assert.assertEq(expected = Ok("BAy4TWgX4vSZOHnM2NdN63BRWKG"), Orbit64.encode(4, orbits))
+    Assert.assertEq(expected = Ok("BAy4TWgX4vSZOHnM2NdN63BRWKG"), Orbit64.State.encode(4, orbits))
 
 @Test
 def test4x4Scramble1Decodes(): Unit \ Assert =
@@ -195,7 +195,7 @@ def test4x4Scramble1Decodes(): Unit \ Assert =
         WingCoord(Vector#{0, 5, 7, 1, 14, 6, 3, 22, 15, 23, 13, 8, 21, 12, 2, 10, 19, 16, 17, 11, 9, 18, 20, 4}),
         CenterCoord(Vector#{5, 5, 2, 1, 3, 3, 2, 1, 5, 0, 2, 4, 4, 0, 2, 0, 4, 1, 0, 1, 4, 3, 5, 3})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(4, "BAy4TWgX4vSZOHnM2NdN63BRWKG"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(4, "BAy4TWgX4vSZOHnM2NdN63BRWKG"))
 
 
 @Test
@@ -207,7 +207,7 @@ def test5x5SolvedEncodes(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    Assert.assertEq(expected = Ok("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), Orbit64.encode(5, orbits))
+    Assert.assertEq(expected = Ok("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), Orbit64.State.encode(5, orbits))
 
 @Test
 def test5x5SolvedDecodes(): Unit \ Assert =
@@ -218,7 +218,7 @@ def test5x5SolvedDecodes(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(5, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(5, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
 
 
 @Test
@@ -230,7 +230,7 @@ def test5x5Scramble0Encodes(): Unit \ Assert =
         CenterCoord(Vector#{0, 4, 1, 3, 4, 4, 1, 2, 2, 1, 5, 0, 2, 0, 4, 3, 2, 0, 1, 3, 5, 5, 3, 5}),
         CenterCoord(Vector#{5, 5, 2, 5, 0, 1, 0, 3, 0, 2, 2, 4, 1, 1, 2, 4, 3, 4, 0, 3, 5, 1, 3, 4})
     };
-    Assert.assertEq(expected = Ok("BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS"), Orbit64.encode(5, orbits))
+    Assert.assertEq(expected = Ok("BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS"), Orbit64.State.encode(5, orbits))
 
 @Test
 def test5x5Scramble0Decodes(): Unit \ Assert =
@@ -241,7 +241,7 @@ def test5x5Scramble0Decodes(): Unit \ Assert =
         CenterCoord(Vector#{0, 4, 1, 3, 4, 4, 1, 2, 2, 1, 5, 0, 2, 0, 4, 3, 2, 0, 1, 3, 5, 5, 3, 5}),
         CenterCoord(Vector#{5, 5, 2, 5, 0, 1, 0, 3, 0, 2, 2, 4, 1, 1, 2, 4, 3, 4, 0, 3, 5, 1, 3, 4})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(5, "BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(5, "BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS"))
 
 
 @Test
@@ -253,7 +253,7 @@ def test5x5Scramble1Encodes(): Unit \ Assert =
         CenterCoord(Vector#{5, 5, 0, 1, 3, 0, 5, 1, 3, 2, 3, 4, 4, 0, 4, 0, 2, 5, 2, 4, 3, 1, 1, 2}),
         CenterCoord(Vector#{5, 0, 3, 3, 4, 5, 1, 5, 2, 4, 4, 0, 1, 5, 3, 1, 3, 2, 2, 2, 4, 0, 0, 1})
     };
-    Assert.assertEq(expected = Ok("CS4VwsPPKZmHYvHO6XpLm43iQChcG5dsI3rgJeX8ai"), Orbit64.encode(5, orbits))
+    Assert.assertEq(expected = Ok("CS4VwsPPKZmHYvHO6XpLm43iQChcG5dsI3rgJeX8ai"), Orbit64.State.encode(5, orbits))
 
 @Test
 def test5x5Scramble1Decodes(): Unit \ Assert =
@@ -264,7 +264,7 @@ def test5x5Scramble1Decodes(): Unit \ Assert =
         CenterCoord(Vector#{5, 5, 0, 1, 3, 0, 5, 1, 3, 2, 3, 4, 4, 0, 4, 0, 2, 5, 2, 4, 3, 1, 1, 2}),
         CenterCoord(Vector#{5, 0, 3, 3, 4, 5, 1, 5, 2, 4, 4, 0, 1, 5, 3, 1, 3, 2, 2, 2, 4, 0, 0, 1})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(5, "CS4VwsPPKZmHYvHO6XpLm43iQChcG5dsI3rgJeX8ai"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(5, "CS4VwsPPKZmHYvHO6XpLm43iQChcG5dsI3rgJeX8ai"))
 
 
 @Test
@@ -278,7 +278,7 @@ def test6x6SolvedEncodes(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    Assert.assertEq(expected = Ok("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), Orbit64.encode(6, orbits))
+    Assert.assertEq(expected = Ok("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), Orbit64.State.encode(6, orbits))
 
 @Test
 def test6x6SolvedDecodes(): Unit \ Assert =
@@ -291,7 +291,7 @@ def test6x6SolvedDecodes(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(6, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(6, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
 
 
 @Test
@@ -305,7 +305,7 @@ def test6x6Scramble0Encodes(): Unit \ Assert =
         CenterCoord(Vector#{5, 0, 5, 3, 1, 5, 3, 1, 5, 3, 2, 0, 0, 3, 1, 4, 2, 2, 2, 4, 0, 4, 4, 1}),
         CenterCoord(Vector#{3, 1, 4, 2, 5, 1, 2, 3, 0, 0, 5, 3, 5, 2, 4, 4, 0, 4, 3, 1, 5, 1, 0, 2})
     };
-    Assert.assertEq(expected = Ok("A3aowfv7mrY5a0fF-VLs5LqBjuY2IMc8QgkU0FS9QNkT-lFVxDYZjT5VBL5DSU0WyT"), Orbit64.encode(6, orbits))
+    Assert.assertEq(expected = Ok("A3aowfv7mrY5a0fF-VLs5LqBjuY2IMc8QgkU0FS9QNkT-lFVxDYZjT5VBL5DSU0WyT"), Orbit64.State.encode(6, orbits))
 
 @Test
 def test6x6Scramble0Decodes(): Unit \ Assert =
@@ -318,7 +318,7 @@ def test6x6Scramble0Decodes(): Unit \ Assert =
         CenterCoord(Vector#{5, 0, 5, 3, 1, 5, 3, 1, 5, 3, 2, 0, 0, 3, 1, 4, 2, 2, 2, 4, 0, 4, 4, 1}),
         CenterCoord(Vector#{3, 1, 4, 2, 5, 1, 2, 3, 0, 0, 5, 3, 5, 2, 4, 4, 0, 4, 3, 1, 5, 1, 0, 2})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(6, "A3aowfv7mrY5a0fF-VLs5LqBjuY2IMc8QgkU0FS9QNkT-lFVxDYZjT5VBL5DSU0WyT"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(6, "A3aowfv7mrY5a0fF-VLs5LqBjuY2IMc8QgkU0FS9QNkT-lFVxDYZjT5VBL5DSU0WyT"))
 
 
 @Test
@@ -332,7 +332,7 @@ def test6x6Scramble1Encodes(): Unit \ Assert =
         CenterCoord(Vector#{5, 1, 3, 2, 1, 2, 1, 0, 4, 4, 4, 5, 3, 3, 2, 2, 3, 0, 4, 0, 5, 0, 1, 5}),
         CenterCoord(Vector#{4, 5, 1, 0, 5, 2, 2, 4, 3, 1, 0, 4, 0, 5, 1, 3, 0, 3, 1, 3, 2, 4, 5, 2})
     };
-    Assert.assertEq(expected = Ok("A6NZa0XyMKvP7ivYNtp9IU38qGJ-qqhA1rCYBFflJ4qSkF6Vvo24jP3CEFUNrCB5-0"), Orbit64.encode(6, orbits))
+    Assert.assertEq(expected = Ok("A6NZa0XyMKvP7ivYNtp9IU38qGJ-qqhA1rCYBFflJ4qSkF6Vvo24jP3CEFUNrCB5-0"), Orbit64.State.encode(6, orbits))
 
 @Test
 def test6x6Scramble1Decodes(): Unit \ Assert =
@@ -345,7 +345,7 @@ def test6x6Scramble1Decodes(): Unit \ Assert =
         CenterCoord(Vector#{5, 1, 3, 2, 1, 2, 1, 0, 4, 4, 4, 5, 3, 3, 2, 2, 3, 0, 4, 0, 5, 0, 1, 5}),
         CenterCoord(Vector#{4, 5, 1, 0, 5, 2, 2, 4, 3, 1, 0, 4, 0, 5, 1, 3, 0, 3, 1, 3, 2, 4, 5, 2})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(6, "A6NZa0XyMKvP7ivYNtp9IU38qGJ-qqhA1rCYBFflJ4qSkF6Vvo24jP3CEFUNrCB5-0"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(6, "A6NZa0XyMKvP7ivYNtp9IU38qGJ-qqhA1rCYBFflJ4qSkF6Vvo24jP3CEFUNrCB5-0"))
 
 
 @Test
@@ -362,7 +362,7 @@ def test7x7SolvedEncodes(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    Assert.assertEq(expected = Ok("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), Orbit64.encode(7, orbits))
+    Assert.assertEq(expected = Ok("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), Orbit64.State.encode(7, orbits))
 
 @Test
 def test7x7SolvedDecodes(): Unit \ Assert =
@@ -378,7 +378,7 @@ def test7x7SolvedDecodes(): Unit \ Assert =
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}),
         CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(7, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(7, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
 
 
 @Test
@@ -395,7 +395,7 @@ def test7x7Scramble0Encodes(): Unit \ Assert =
         CenterCoord(Vector#{3, 1, 4, 5, 5, 5, 0, 1, 2, 2, 0, 4, 3, 3, 3, 1, 5, 1, 0, 0, 2, 2, 4, 4}),
         CenterCoord(Vector#{2, 2, 4, 0, 5, 1, 5, 0, 2, 3, 4, 3, 2, 3, 3, 5, 1, 4, 0, 0, 1, 5, 1, 4})
     };
-    Assert.assertEq(expected = Ok("l3dq6yUnJYFa_Rly_9F8Z3JCoEtWgs4pqrI8XEqo1_A5S15-D4DktJttxGZcC5AvUNmJpM1-vvJ5nDMavnI5Jc3cQ"), Orbit64.encode(7, orbits))
+    Assert.assertEq(expected = Ok("Al3dq6yUnJYFa_Rly_9F8Z3JCoEtWgs4pqrI8XEqo1_A5S15-D4DktJttxGZcC5AvUNmJpM1-vvJ5nDMavnI5Jc3cQ"), Orbit64.State.encode(7, orbits))
 
 @Test
 def test7x7Scramble0Decodes(): Unit \ Assert =
@@ -411,7 +411,7 @@ def test7x7Scramble0Decodes(): Unit \ Assert =
         CenterCoord(Vector#{3, 1, 4, 5, 5, 5, 0, 1, 2, 2, 0, 4, 3, 3, 3, 1, 5, 1, 0, 0, 2, 2, 4, 4}),
         CenterCoord(Vector#{2, 2, 4, 0, 5, 1, 5, 0, 2, 3, 4, 3, 2, 3, 3, 5, 1, 4, 0, 0, 1, 5, 1, 4})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(7, "l3dq6yUnJYFa_Rly_9F8Z3JCoEtWgs4pqrI8XEqo1_A5S15-D4DktJttxGZcC5AvUNmJpM1-vvJ5nDMavnI5Jc3cQ"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(7, "Al3dq6yUnJYFa_Rly_9F8Z3JCoEtWgs4pqrI8XEqo1_A5S15-D4DktJttxGZcC5AvUNmJpM1-vvJ5nDMavnI5Jc3cQ"))
 
 
 @Test
@@ -428,7 +428,7 @@ def test7x7Scramble1Encodes(): Unit \ Assert =
         CenterCoord(Vector#{1, 1, 0, 3, 0, 0, 4, 5, 1, 4, 2, 3, 0, 5, 3, 1, 5, 3, 4, 2, 5, 2, 4, 2}),
         CenterCoord(Vector#{5, 1, 1, 0, 3, 3, 0, 1, 4, 2, 2, 5, 0, 3, 2, 3, 5, 4, 4, 1, 5, 0, 2, 4})
     };
-    Assert.assertEq(expected = Ok("d6-iQw7H21v8reT3J4uQAIkyVrwGwD-lrKaqfw1EFx3rVyrpYmmNl--tjCliZP5R0FEf7-os75Zk9hJgncQa3Md1E"), Orbit64.encode(7, orbits))
+    Assert.assertEq(expected = Ok("Ad6-iQw7H21v8reT3J4uQAIkyVrwGwD-lrKaqfw1EFx3rVyrpYmmNl--tjCliZP5R0FEf7-os75Zk9hJgncQa3Md1E"), Orbit64.State.encode(7, orbits))
 
 @Test
 def test7x7Scramble1Decodes(): Unit \ Assert =
@@ -444,4 +444,4 @@ def test7x7Scramble1Decodes(): Unit \ Assert =
         CenterCoord(Vector#{1, 1, 0, 3, 0, 0, 4, 5, 1, 4, 2, 3, 0, 5, 3, 1, 5, 3, 4, 2, 5, 2, 4, 2}),
         CenterCoord(Vector#{5, 1, 1, 0, 3, 3, 0, 1, 4, 2, 2, 5, 0, 3, 2, 3, 5, 4, 4, 1, 5, 0, 2, 4})
     };
-    Assert.assertEq(expected = Ok(orbits), Orbit64.decode(7, "d6-iQw7H21v8reT3J4uQAIkyVrwGwD-lrKaqfw1EFx3rVyrpYmmNl--tjCliZP5R0FEf7-os75Zk9hJgncQa3Md1E"))
+    Assert.assertEq(expected = Ok(orbits), Orbit64.State.decode(7, "Ad6-iQw7H21v8reT3J4uQAIkyVrwGwD-lrKaqfw1EFx3rVyrpYmmNl--tjCliZP5R0FEf7-os75Zk9hJgncQa3Md1E"))
