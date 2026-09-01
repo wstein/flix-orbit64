@@ -587,7 +587,7 @@ then inlines every single-use rule, every trivial `(node)n` alias, and every
 `node move`, `move node`, or `move move` alias. It ends with 185 shared rules
 and a 141-symbol root, and expands to the same checked digest. The last pass
 improves direct readability but duplicates frequently used move pairs, raising
-the immediate-reference count from 864 to 956. This generated grammar is an
+the immediate-reference count from 864 to 957. This generated grammar is an
 optimizer acceptance fixture rather than the canonical human-facing example.
 It gives a future encoder a precise baseline for bottom-up grammar induction
 and a way to compare stronger recursive optimizers fairly.
@@ -614,7 +614,8 @@ suffix-automaton pass finds maximal-repeat candidates without expanding a DAG;
 a deterministic weighted interval pass selects their usable occurrences. After
 each replacement the optimizer rescans affected neighborhoods, interns equal
 subtrees, folds adjacent repetitions such as `(U' R')4 (U' R')2` into
-`(U' R')6`, and prunes rules according to the selected output profile.
+`(U' R')6`, recognizes exact source operators such as `R U' R U` as
+`R [U': R]`, and prunes rules according to the selected output profile.
 
 There are two profiles with different legitimate costs:
 

@@ -8,7 +8,7 @@
 # Terminals: U, U', R, R', F, F'. Expansion: 3,674,160 quarter turns.
 # SHA-256: cecea1fe7c13f145b1fb4999846df2d0c30beec21ef6a923c8c4ce905621ee6b
 
-def g000 = R U' (R U)4
+def g000 = R [U': R] (R U)3
 def g001 = g000 (R U)4
 def g002 = g000 R U
 def g003 = (R U)6

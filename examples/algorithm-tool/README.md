@@ -19,7 +19,7 @@ frequent adjacent pair from left to right, and uses descending terminal/rule
 order to break ties. It then inlines every single-use rule, every trivial
 `(node)n` alias, and every `node move`, `move node`, or `move move` alias. The
 result has 185 generated rules and a 141-symbol root. This last readability
-pass duplicates frequently used move pairs, so it has 956 immediate references
+pass duplicates frequently used move pairs, so it has 957 immediate references
 rather than the 864 of the more shared intermediate DAG. It is exact and
 reproducible, but deliberately mechanical; it is a useful optimizer fixture,
 not the more readable presentation.
