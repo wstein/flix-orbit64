@@ -577,6 +577,18 @@ and an optimality criterion; the wire format must not make decoder behavior
 depend on that choice. The canonical DAG encoder may intern structurally equal
 nodes regardless of how a source frontend discovered them.
 
+The matching
+[`2x2x2-devils-alg.repair.orbit64`](examples/algorithm-tool/2x2x2-devils-alg.repair.orbit64)
+fixture demonstrates the other direction: extract the terminal stream first,
+then infer the DAG from small rules to large rules. Its deterministic RePair
+pass starts with `g000 = R U`, replaces the most frequent adjacent pair
+left-to-right, and breaks equal-frequency ties by terminal/rule order. It ends
+with 563 rules and a 122-symbol root, and expands to the same checked digest.
+This generated grammar is less readable and has 1,228 immediate references, so
+it is an optimizer acceptance fixture rather than the canonical human-facing
+example. It gives a future encoder a precise baseline for bottom-up grammar
+induction and a way to compare stronger recursive optimizers fairly.
+
 For comparison, an importer that does not recognize the recursive definition
 can still emit a `PackedBlock` root in canonical Orbit64 source form:
 
