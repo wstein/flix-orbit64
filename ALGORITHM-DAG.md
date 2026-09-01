@@ -542,17 +542,24 @@ example translates the recursive definition used by the cubing.js
 [stress test](https://experiments.cubing.net/cubing.js/stress-tests/2x2x2-devils-alg.html)
 into native Orbit64 source.
 
-The source has 1,175 immediate move or definition references, down from 2,069
+The source has 1,173 immediate move or definition references, down from 2,069
 in the stress-test definition, and expands to the archive's complete circuit.
 The main savings expose exact repeated structure rather than applying a byte
 compressor:
 
 ```text
+def a = (U R)5
+def i = (U R)7
+def c = U' R (U R)14 U' R
 def t = (U R)2 n (tHead w tTail)2 tHead
 def v = (u)8 a U' R r U' R s U R t w U U F'
 def z = (v)6 (u)6 x
 export z
 ```
+
+The transcription normalizes the elementary `U R` chains directly rather than
+preserving aliases from the source implementation. In particular, `i` is seven
+copies of `U R`; the two copies in `c` make fourteen, not eleven or twenty-two.
 
 In the original definition, `t` contains a 499-element body twice followed by
 the first 290 elements of that body. The native source names that prefix as

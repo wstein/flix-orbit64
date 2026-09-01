@@ -6,11 +6,11 @@
 
 def b = (U R)3
 
-def a = b (U R)2
+def a = (U R)5
 
-def i = (b)2 U R
+def i = (U R)7
 
-def c = U' R i i U' R
+def c = U' R (U R)14 U' R
 
 def n = U' R a
 
