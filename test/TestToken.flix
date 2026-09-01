@@ -7,6 +7,7 @@ use Orbit64.Move.Face.U
 use Orbit64.Move.Amount.Clockwise
 use Orbit64.Move.Slp.Slp.Slp
 use Orbit64.Move.Slp.Rule.Terminal
+use Orbit64.Move.LayerClass.LayerClass
 use Orbit64.Token.Token.{StateToken, MoveSequenceToken, MoveSlpToken}
 
 @Test
@@ -34,7 +35,8 @@ def tokenDecoderDispatchesAMoveSequence(): Unit \ Assert =
     match Orbit64.Move.encode(3, moves) {
         case Err(e) => Assert.assertTrueWithMsg(false, "encode failed: ${e}")
         case Ok(t)  => Assert.assertEq(
-            expected = Ok(MoveSequenceToken(3, moves)), Orbit64.Token.decode(t))
+            expected = Ok(MoveSequenceToken(LayerClass(1), moves)),
+            Orbit64.Token.decode(t))
     }
 
 @Test
@@ -43,7 +45,7 @@ def tokenDecoderDispatchesAMoveSlp(): Unit \ Assert =
     match Orbit64.Move.Slp.encode(3, slp) {
         case Err(e) => Assert.assertTrueWithMsg(false, "encode failed: ${e}")
         case Ok(t)  => Assert.assertEq(
-            expected = Ok(MoveSlpToken(3, slp)), Orbit64.Token.decode(t))
+            expected = Ok(MoveSlpToken(LayerClass(1), slp)), Orbit64.Token.decode(t))
     }
 
 @Test

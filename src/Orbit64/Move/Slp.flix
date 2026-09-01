@@ -20,63 +20,53 @@ mod Orbit64.Move.Slp {
 
     /// Encode a structurally exact move SLP.
     pub def encode(n: Int32, slp: Slp): Result[String, String] = match slp {
-        case Slp.Slp(rules) => match Orbit64.Move.sizeHeader(32, n) {
-            case Err(e) => Err(e)
-            case Ok(header) => match firstFault(n, rules, 0) {
+        case Slp.Slp(rules) =>
+            if (n < 2) Err("cube size must be at least 2")
+            else match firstFault(n, rules, 0) {
                 case Some(why) => Err("move SLP is invalid: ${why}")
                 case None =>
+                    let alphabet = Orbit64.Move.alphabetSize(n);
                     let count = List.length(rules);
-                    let total = grammarTotal(Orbit64.Move.alphabetSize(n), count);
-                    let value = assemble(n, rules, 0, 0ii);
-                    let prefix = Orbit64.Internal.Encoding.encodeVlq(count)
-                        |> Result.getWithDefault("");
-                    let payload = Orbit64.Internal.Encoding.toBase64(
-                        value, Orbit64.Internal.Encoding.dataWidth(total));
-                    Ok(String.concat(String.concat(header, prefix), payload))
+                    let wireRank = grammarOffset(alphabet, count)
+                        + assemble(n, rules, 0, 0ii);
+                    Orbit64.Internal.Encoding.encodeDelimitedRank(2, n / 2, wireRank)
             }
-        }
     }
 
-    /// Decode a move-SLP token without expanding its root.
-    pub def decode(token: String): Result[String, (Int32, Slp)] =
-        match Orbit64.Move.readSizeHeader(2, token) {
-            case Err(e) => Err(e)
-            case Ok((n, afterSize)) =>
-                match Orbit64.Internal.Encoding.decodeVlq(token, afterSize) {
-                    case Err(e) => Err(e)
-                    case Ok((count, afterCount)) => decodePayload(n, count, afterCount, token)
-                }
-        }
+    /// Decode a move SLP without expanding its root, returning its layer class.
+    pub def decode(token: String): Result[String, (Orbit64.Move.LayerClass, Slp)] =
+        Orbit64.Internal.Encoding.decodeDelimitedRank(2, token)
+            |> Result.flatMap(match (layers, wireRank) ->
+                decodeGrammar(layers, wireRank))
 
-    def decodePayload(n: Int32, count: Int32, start: Int32,
-                      token: String): Result[String, (Int32, Slp)] =
-        let payloadChars = String.length(token) - start;
-        if (2ii * Int32.toBigInt(count) > 3ii * Int32.toBigInt(payloadChars) and count > 0)
-            Err("SLP rule count cannot fit in the token payload")
+    def decodeGrammar(layers: Int32, wireRank: BigInt):
+            Result[String, (Orbit64.Move.LayerClass, Slp)] =
+        if (layers > 1073741823) Err("layer count exceeds the Int32 cube-size range")
         else
+            let n = layers * 2;
             let alphabet = Orbit64.Move.alphabetSize(n);
-            let total = grammarTotal(alphabet, count);
-            let expected = Orbit64.Internal.Encoding.dataWidth(total);
-            if (payloadChars != expected)
-                Err("expected ${expected} SLP-payload characters, got ${payloadChars}")
-            else
-                let payload = String.slice(start = start, end = String.length(token), token);
-                match Orbit64.Internal.Encoding.fromBase64(payload) {
-                    case None => Err("token contains a character outside the base64url alphabet")
-                    case Some(value) =>
-                        if (value >= total) Err("move-SLP payload is out of range")
-                        else Ok((n, Slp.Slp(splitRules(n, count - 1, value, Nil))))
-                }
+            let (count, ordinary) = grammarRange(alphabet, wireRank, 0, 0ii, 1ii);
+            let layerClass = Orbit64.Move.LayerClass.LayerClass(layers);
+            Ok((layerClass, Slp.Slp(splitRules(n, count - 1, ordinary, Nil))))
 
-    def grammarTotal(alphabet: BigInt, count: Int32): BigInt =
-        totalLoop(alphabet, count, 0, 1ii)
+    def grammarOffset(alphabet: BigInt, count: Int32): BigInt =
+        grammarOffsetLoop(alphabet, count, 0, 0ii, 1ii)
 
-    def totalLoop(alphabet: BigInt, count: Int32,
-                  index: Int32, acc: BigInt): BigInt =
-        if (index == count) acc
+    def grammarOffsetLoop(alphabet: BigInt, count: Int32, index: Int32,
+                          offset: BigInt, block: BigInt): BigInt =
+        if (index == count) offset
         else
             let i = Int32.toBigInt(index);
-            totalLoop(alphabet, count, index + 1, acc * (alphabet + i * i))
+            grammarOffsetLoop(alphabet, count, index + 1,
+                offset + block, block * (alphabet + i * i))
+
+    def grammarRange(alphabet: BigInt, wireRank: BigInt, count: Int32,
+                     offset: BigInt, block: BigInt): (Int32, BigInt) =
+        if (wireRank < offset + block) (count, wireRank - offset)
+        else
+            let i = Int32.toBigInt(count);
+            grammarRange(alphabet, wireRank, count + 1,
+                offset + block, block * (alphabet + i * i))
 
     def assemble(n: Int32, rules: List[Rule],
                  index: Int32, acc: BigInt): BigInt = match rules {

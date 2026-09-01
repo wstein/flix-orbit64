@@ -29,6 +29,16 @@ mod Orbit64.Move {
         case CounterClockwise
     }
 
+    /// Cubes sharing one reachable layer count and therefore one move alphabet.
+    pub enum LayerClass with Eq, ToString {
+        case LayerClass(Int32)
+    }
+
+    /// Return the reachable layer count carried by `layerClass`.
+    pub def layerCount(layerClass: LayerClass): Int32 = match layerClass {
+        case LayerClass.LayerClass(layers) => layers
+    }
+
     /// The number of primitive moves available at size `n`.
     pub def alphabetSize(n: Int32): BigInt =
         18ii * Int32.toBigInt(n / 2)
@@ -70,52 +80,45 @@ mod Orbit64.Move {
 
     /// Encode a literal sequence of primitive moves.
     pub def encode(n: Int32, moves: List[Move]): Result[String, String] =
-        match sizeHeader(16, n) {
-            case Err(e) => Err(e)
-            case Ok(header) => match firstFault(n, moves) {
-                case Some(why) => Err("move sequence is invalid: ${why}")
-                case None =>
-                    let count = List.length(moves);
-                    let total = BigInt.pow(base = alphabetSize(n), count);
-                    let value = moves |> List.foldLeft((acc, move) ->
-                        acc * alphabetSize(n) + rank(n, move), 0ii);
-                    let prefix = Orbit64.Internal.Encoding.encodeVlq(count)
-                        |> Result.getWithDefault("");
-                    let payload = Orbit64.Internal.Encoding.toBase64(
-                        value, Orbit64.Internal.Encoding.dataWidth(total));
-                    Ok(String.concat(String.concat(header, prefix), payload))
-            }
+        if (n < 2) Err("cube size must be at least 2")
+        else match firstFault(n, moves) {
+            case Some(why) => Err("move sequence is invalid: ${why}")
+            case None =>
+                let base = alphabetSize(n);
+                let count = List.length(moves);
+                let ordinary = moves |> List.foldLeft((acc, move) ->
+                    acc * base + rank(n, move), 0ii);
+                let wireRank = sequenceOffset(base, count) + ordinary;
+                Orbit64.Internal.Encoding.encodeDelimitedRank(1, n / 2, wireRank)
         }
 
-    /// Decode a literal move-sequence token and return its cube size.
-    pub def decode(token: String): Result[String, (Int32, List[Move])] =
-        match readSizeHeader(1, token) {
-            case Err(e) => Err(e)
-            case Ok((n, afterSize)) =>
-                match Orbit64.Internal.Encoding.decodeVlq(token, afterSize) {
-                    case Err(e) => Err(e)
-                    case Ok((count, afterCount)) => decodePayload(n, count, afterCount, token)
-                }
-        }
+    /// Decode a literal move sequence and return its odd/even layer class.
+    pub def decode(token: String): Result[String, (LayerClass, List[Move])] =
+        Orbit64.Internal.Encoding.decodeDelimitedRank(1, token)
+            |> Result.flatMap(match (layers, wireRank) ->
+                decodeSequence(layers, wireRank))
 
-    def decodePayload(n: Int32, count: Int32, start: Int32,
-                      token: String): Result[String, (Int32, List[Move])] =
-        let payloadChars = String.length(token) - start;
-        if (2ii * Int32.toBigInt(count) > 3ii * Int32.toBigInt(payloadChars) and count > 0)
-            Err("move count cannot fit in the token payload")
+    def decodeSequence(layers: Int32, wireRank: BigInt):
+            Result[String, (LayerClass, List[Move])] =
+        if (layers > 1073741823) Err("layer count exceeds the Int32 cube-size range")
         else
-            let total = BigInt.pow(base = alphabetSize(n), count);
-            let expected = Orbit64.Internal.Encoding.dataWidth(total);
-            if (payloadChars != expected)
-                Err("expected ${expected} move-payload characters, got ${payloadChars}")
-            else
-                let payload = String.slice(start = start, end = String.length(token), token);
-                match Orbit64.Internal.Encoding.fromBase64(payload) {
-                    case None => Err("token contains a character outside the base64url alphabet")
-                    case Some(value) =>
-                        if (value >= total) Err("move-sequence payload is out of range")
-                        else Ok((n, splitMoves(n, count, value, Nil)))
-                }
+            let n = layers * 2;
+            let base = alphabetSize(n);
+            let (count, ordinary) = sequenceRange(base, wireRank, 0, 0ii, 1ii);
+            Ok((LayerClass.LayerClass(layers), splitMoves(n, count, ordinary, Nil)))
+
+    def sequenceOffset(base: BigInt, count: Int32): BigInt =
+        offsetLoop(base, count, 0, 0ii, 1ii)
+
+    def offsetLoop(base: BigInt, count: Int32, index: Int32,
+                   offset: BigInt, block: BigInt): BigInt =
+        if (index == count) offset
+        else offsetLoop(base, count, index + 1, offset + block, block * base)
+
+    def sequenceRange(base: BigInt, wireRank: BigInt, count: Int32,
+                      offset: BigInt, block: BigInt): (Int32, BigInt) =
+        if (wireRank < offset + block) (count, wireRank - offset)
+        else sequenceRange(base, wireRank, count + 1, offset + block, block * base)
 
     def splitMoves(n: Int32, count: Int32, value: BigInt,
                    out: List[Move]): List[Move] =
@@ -127,49 +130,6 @@ mod Orbit64.Move {
 
     def firstFault(n: Int32, moves: List[Move]): Option[String] =
         moves |> List.filterMap(move -> faultOf(n, move)) |> List.head
-
-    /// Build the first sextet and optional size escape for `classBase`.
-    pub def sizeHeader(classBase: Int32, n: Int32): Result[String, String] =
-        if (n < 2) Err("cube size must be at least 2")
-        else
-            let inline = n - 2;
-            let low = if (inline < 15) inline else 15;
-            let c = Orbit64.Internal.Encoding.charOf(classBase + low)
-                |> Option.getWithDefault('A') |> Char.toString;
-            if (inline < 15) Ok(c)
-            else Orbit64.Internal.Encoding.encodeVlq(n - 17)
-                |> Result.map(suffix -> String.concat(c, suffix))
-
-    /// Read and validate a move-class size header.
-    pub def readSizeHeader(expectedClass: Int32, token: String):
-            Result[String, (Int32, Int32)] =
-        if (String.isEmpty(token)) Err("token is empty")
-        else firstDigit(token) |> Result.flatMap(first ->
-            readSizeDigit(expectedClass, token, first))
-
-    def firstDigit(token: String): Result[String, Int32] =
-        match Orbit64.Internal.Encoding.digitOf(String.charAt(0, token)) {
-            case None => Err("token contains a character outside the base64url alphabet")
-            case Some(first) => Ok(first)
-        }
-
-    def readSizeDigit(expectedClass: Int32, token: String, first: Int32):
-            Result[String, (Int32, Int32)] =
-        let actualClass = first / 16;
-        if (actualClass != expectedClass)
-            Err("token has class ${actualClass}, expected ${expectedClass}")
-        else decodeSizeLow(token, Int32.modulo(first, 16))
-
-    def decodeSizeLow(token: String, low: Int32): Result[String, (Int32, Int32)] =
-        if (low < 15) Ok((low + 2, 1))
-        else Orbit64.Internal.Encoding.decodeVlq(token, 1)
-            |> Result.flatMap(finishEscapedSize)
-
-    def finishEscapedSize(decoded: (Int32, Int32)):
-            Result[String, (Int32, Int32)] = match decoded {
-        case (extra, _) if extra > 2147483630 => Err("cube size exceeds Int32")
-        case (extra, end)                     => Ok((extra + 17, end))
-    }
 
     def faceRank(face: Face): Int32 = match face {
         case Face.U => 0

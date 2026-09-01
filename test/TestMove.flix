@@ -5,6 +5,7 @@
 use Orbit64.Move.Move.{LayerTurn}
 use Orbit64.Move.Face.{U, R, B}
 use Orbit64.Move.Amount.{Clockwise, Half, CounterClockwise}
+use Orbit64.Move.LayerClass.LayerClass
 
 @Test
 def moveAlphabetGrowsWithReachableLayers(): Unit \ Assert =
@@ -47,10 +48,10 @@ def moveRanksRemainExactAtTheLargestRepresentableSize(): Unit \ Assert =
 
 @Test
 def emptyMoveSequenceHasNoRankPayload(): Unit \ Assert =
-    Assert.assertEq(expected = Ok("RA"), Orbit64.Move.encode(3, Nil));
+    Assert.assertEq(expected = Ok("c"), Orbit64.Move.encode(3, Nil));
     Assert.assertEq(
-        expected = Ok((3, (Nil: List[Orbit64.Move.Move]))),
-        Orbit64.Move.decode("RA"))
+        expected = Ok((LayerClass(1), (Nil: List[Orbit64.Move.Move]))),
+        Orbit64.Move.decode("c"))
 
 @Test
 def literalMoveSequenceHasAStableToken(): Unit \ Assert =
@@ -58,8 +59,8 @@ def literalMoveSequenceHasAStableToken(): Unit \ Assert =
         LayerTurn(U, 0, Clockwise),
         LayerTurn(R, 0, Half)
     };
-    Assert.assertEq(expected = Ok("RCAE"), Orbit64.Move.encode(3, moves));
-    Assert.assertEq(expected = Ok((3, moves)), Orbit64.Move.decode("RCAE"))
+    Assert.assertEq(expected = Ok("d4"), Orbit64.Move.encode(3, moves));
+    Assert.assertEq(expected = Ok((LayerClass(1), moves)), Orbit64.Move.decode("d4"))
 
 @Test
 def allSixBySixAndSevenBySevenLayersRoundTrip(): Unit \ Assert =
@@ -68,31 +69,62 @@ def allSixBySixAndSevenBySevenLayersRoundTrip(): Unit \ Assert =
         LayerTurn(R, 1, Half),
         LayerTurn(B, 2, CounterClockwise)
     };
-    List#{6, 7} |> List.forEach(n ->
+    let tokens = List#{6, 7} |> List.map(n ->
         match Orbit64.Move.encode(n, moves) {
-            case Err(e) => Assert.assertTrueWithMsg(false, "encode failed: ${e}")
-            case Ok(t)  => Assert.assertEq(expected = Ok((n, moves)), Orbit64.Move.decode(t))
-        })
+            case Err(e) => {
+                Assert.assertTrueWithMsg(false, "encode failed: ${e}");
+                ""
+            }
+            case Ok(t)  => {
+                Assert.assertEq(
+                    expected = Ok((LayerClass(3), moves)), Orbit64.Move.decode(t));
+                t
+            }
+        });
+    let first = List.head(tokens) |> Option.getWithDefault("");
+    Assert.assertEq(expected = List.repeat(2, first), tokens)
 
 @Test
-def sizeEscapeHasOneCanonicalSpelling(): Unit \ Assert =
-    Assert.assertEq(expected = Ok("fAA"), Orbit64.Move.encode(17, Nil));
+def oddAndEvenCubePairsShareOneMoveToken(): Unit \ Assert =
+    let move = List#{LayerTurn(B, 0, CounterClockwise)};
     Assert.assertEq(
-        expected = Ok((17, (Nil: List[Orbit64.Move.Move]))),
-        Orbit64.Move.decode("fAA"));
-    Assert.assertTrue(Orbit64.Move.decode("fAgA") |> Result.isErr);
-    let tooLarge = Orbit64.Internal.Encoding.encodeVlq(2147483647)
-        |> Result.map(v -> String.concat("f", v))
-        |> Result.getWithDefault("");
-    Assert.assertTrue(Orbit64.Move.decode(tooLarge) |> Result.isErr)
+        expected = Orbit64.Move.encode(2, move),
+        Orbit64.Move.encode(3, move));
+    Assert.assertEq(
+        expected = Orbit64.Move.encode(4, List#{LayerTurn(B, 1, Half)}),
+        Orbit64.Move.encode(5, List#{LayerTurn(B, 1, Half)}))
 
 @Test
-def sequenceCountMaySpanMoreThanOneSextet(): Unit \ Assert =
+def longSequenceLengthIsRecoveredWithoutACountField(): Unit \ Assert =
     let moves = List.repeat(32, LayerTurn(U, 0, Clockwise));
     match Orbit64.Move.encode(3, moves) {
         case Err(e) => Assert.assertTrueWithMsg(false, "encode failed: ${e}")
-        case Ok(t)  => Assert.assertEq(expected = Ok((3, moves)), Orbit64.Move.decode(t))
+        case Ok(t)  => Assert.assertEq(
+            expected = Ok((LayerClass(1), moves)), Orbit64.Move.decode(t))
     }
+
+@Test
+def suppliedTwentyFiveMoveAlgorithmHasAnExactCompactVector(): Unit \ Assert =
+    let moves = List#{
+        LayerTurn(Orbit64.Move.Face.L, 0, Half),
+        LayerTurn(U, 0, Half), LayerTurn(B, 0, Clockwise),
+        LayerTurn(U, 0, CounterClockwise), LayerTurn(Orbit64.Move.Face.F, 0, Half),
+        LayerTurn(Orbit64.Move.Face.D, 0, Clockwise), LayerTurn(B, 0, Half),
+        LayerTurn(R, 0, Clockwise), LayerTurn(B, 0, Clockwise),
+        LayerTurn(R, 0, Clockwise), LayerTurn(Orbit64.Move.Face.D, 0, Clockwise),
+        LayerTurn(Orbit64.Move.Face.L, 0, CounterClockwise), LayerTurn(B, 0, Half),
+        LayerTurn(U, 0, Half), LayerTurn(B, 0, Half), LayerTurn(R, 0, Half),
+        LayerTurn(U, 0, Half), LayerTurn(Orbit64.Move.Face.L, 0, Half),
+        LayerTurn(Orbit64.Move.Face.F, 0, CounterClockwise), LayerTurn(R, 0, Clockwise),
+        LayerTurn(Orbit64.Move.Face.F, 0, Half),
+        LayerTurn(Orbit64.Move.Face.D, 0, CounterClockwise),
+        LayerTurn(R, 0, CounterClockwise), LayerTurn(Orbit64.Move.Face.D, 0, Clockwise),
+        LayerTurn(Orbit64.Move.Face.L, 0, Clockwise)
+    };
+    Assert.assertEq(expected = Ok("feZUmCMgn6C3bYGJfz"), Orbit64.Move.encode(3, moves));
+    Assert.assertEq(
+        expected = Ok((LayerClass(1), moves)),
+        Orbit64.Move.decode("feZUmCMgn6C3bYGJfz"))
 
 @Test
 def moveSequenceRejectsMalformedInput(): Unit \ Assert =
@@ -100,5 +132,6 @@ def moveSequenceRejectsMalformedInput(): Unit \ Assert =
     Assert.assertTrue(
         Orbit64.Move.encode(5, List#{LayerTurn(R, 2, Half)}) |> Result.isErr);
     Assert.assertTrue(Orbit64.Move.decode("AA") |> Result.isErr);
-    Assert.assertTrue(Orbit64.Move.decode("R") |> Result.isErr);
-    Assert.assertTrue(Orbit64.Move.decode("RB_") |> Result.isErr)
+    Assert.assertTrue(Orbit64.Move.decode("Q") |> Result.isErr);
+    Assert.assertTrue(Orbit64.Move.decode("cA") |> Result.isErr);
+    Assert.assertTrue(Orbit64.Move.decode("c!") |> Result.isErr)

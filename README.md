@@ -38,7 +38,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                    # 151 tests
+./flixw test                                    # 153 tests
 (cd examples/cli-tool && flix run)              # size table, round-trip
 (cd examples/cli-tool && flix run -- <token>)   # decode; length picks n
 ```
@@ -141,9 +141,9 @@ The first base64url sextet divides the Orbit64 family into four classes:
 | `10` | `g`–`v` | move straight-line program |
 | `11` | `w`–`_` | reserved |
 
-Move sequences and SLPs carry their cube size because their arbitrary token
-length cannot identify it. The exact ranks, validation rules, and canonical
-integer encodings are specified in [FORMAT.md](FORMAT.md).
+Move sequences and SLPs gamma-code their reachable layer count because their
+arbitrary token length cannot identify it. The exact ranks, validation rules,
+and canonical bit padding are specified in [FORMAT.md](FORMAT.md).
 
 ## The same cube, three ways
 
@@ -494,8 +494,8 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   encoding.
 - `src/Orbit64/Move/Slp.flix` -- straight-line programs over primitive moves.
 - `src/Orbit64/Token.flix` -- first-sextet dispatch across the token family.
-- `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical VLQ
-  primitives.
+- `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical
+  delimiter-padded bitstream primitives.
 - `src/Orbit64/Net.flix` -- draws a decoded cube as a coloured net, up to the
   5x5x5, and reads one back out of its facelets. It is the only module that
   knows where pieces and facelets sit; `Orbit64.Move` names faces but carries no

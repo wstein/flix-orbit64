@@ -67,7 +67,7 @@ is published.
 - `src/Orbit64/Move.flix`, `src/Orbit64/Move/Slp.flix` — primitive moves,
   literal sequences, and straight-line programs
 - `src/Orbit64/Token.flix` — tagged decoding across the Orbit64 token family
-- `src/Orbit64/Internal/Encoding.flix` — shared base64url and VLQ arithmetic
+- `src/Orbit64/Internal/Encoding.flix` — shared base64url and delimited-bitstream arithmetic
 - `src/Orbit64/` — the rest of the library, all nested under the `Orbit64`
   module so that a consumer's own `Coord`, `Orbit`, or `Rank` cannot collide
   with ours. `Orbit64/Net.flix` owns state-to-facelet geometry;
