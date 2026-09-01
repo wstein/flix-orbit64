@@ -145,6 +145,12 @@ Move sequences and SLPs gamma-code their reachable layer count because their
 arbitrary token length cannot identify it. The exact ranks, validation rules,
 and canonical bit padding are specified in [FORMAT.md](FORMAT.md).
 
+The released SLP contains only terminal and binary-concatenation rules. A
+richer source language and typed DAG for repetitions, inverses, conjugates,
+commutators, stable slices, packed macro streams, and the published 3x3x3
+devil's algorithm is documented as an unimplemented
+[algorithm-DAG proposal](ALGORITHM-DAG.md).
+
 ## The same cube, three ways
 
 The two 3x3x3 states below, in the notations you are most likely to meet them in.

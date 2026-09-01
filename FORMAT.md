@@ -21,6 +21,10 @@ The remaining bits belong to that class's payload.
 Decoders reject the reserved class. Assigning it a meaning requires a later
 version of this specification; existing class meanings never change.
 
+An extended algorithm DAG capable of representing indexed macro streams and
+the published 3x3x3 devil's algorithm is being designed separately. It is not
+part of the released format; see [ALGORITHM-DAG.md](ALGORITHM-DAG.md).
+
 ## Canonical unsigned integers
 
 Fixed-width integers are ordinary big-endian base64url, left-padded with `A`.
