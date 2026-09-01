@@ -1,7 +1,7 @@
 # Orbit64 algorithm DAG proposal
 
 Status: the typed, validated `Orbit64.Algorithm` core is implemented on the
-development branch. It represents primitive layer-turn terminals plus exact
+development branch for Orbit64 0.7.0. It represents primitive layer-turn terminals plus exact
 `Concat`, `Repeat`, `Inverse`, `Block`, `PackedBlock`, `Partition`, and
 `SliceParts` nodes. `foldTerminals` streams the exact expansion through a
 caller-supplied fold without materializing it. Canonical class-`11` token
