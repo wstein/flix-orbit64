@@ -76,7 +76,7 @@ definition    := "def" NAME "=" expression
 externalBlock := "extern" "block" NAME "=" STRING
 export        := "export" NAME
 
-expression    := concatenation ("\\" move)?
+expression    := concatenation
 concatenation := postfix+
 postfix       := primary "'"*
 
@@ -155,7 +155,6 @@ The following expansions define source semantics:
 | `a'` | reverse `a` and invert each terminal |
 | `[a: b]` | `a b a'` |
 | `[a, b]` | `a b a' b'` |
-| `a \ R` | remove a final expanded `R`, after validating it |
 | `x[i:j]` | elements `i` through `j - 1` of block `x` |
 | `x[i:]` | elements of `x` from `i` onward |
 | `x[:j]` | the first `j` elements of `x` |
@@ -171,11 +170,6 @@ such as `[D, B]` expands to `D B D' B'`. Operators may be nested and inverted:
 [L: [D, B]]'
 ([R, U] [F: D])6
 ```
-
-The chop operator is an Orbit64 construction aid, not established cube
-notation. It examines expanded terminals, so `a \ R` is valid only when the
-last move produced by `a` is exactly `R`. It must not remove an entire macro
-element merely because that element ends in `R`.
 
 ### Stable slices
 
@@ -213,6 +207,7 @@ refer only to earlier nodes.
 Move(move)
 Block(children)
 PackedBlock(alphabet, symbols)
+Partition(sequence, boundaries)
 SliceParts(block, start, end)
 Concat(children)
 Repeat(child, count)
@@ -246,6 +241,12 @@ references and a packed stream of alphabet indices. It is semantically a
 `Block`, including stable element boundaries. Chunk indexes permit slicing and
 streaming without decoding the complete block.
 
+The alphabet contains earlier DAG nodes, not merely terminal moves. This lets an
+importer factor repeated phrases and alternating runs into `Concat` and
+`Repeat` nodes, then encode millions of occurrences as compact alphabet IDs.
+`PackedBlock` is therefore the result of definition optimization, not a wrapper
+around an unexamined input file.
+
 An implementation should store for each chunk:
 
 - the number of block elements;
@@ -255,12 +256,26 @@ An implementation should store for each chunk:
 
 Compression is a transport detail and does not affect DAG equality.
 
+### Partition
+
+`Partition(sequence, boundaries)` gives an optimized sequence a stable logical
+part view. Boundaries are monotonically increasing offsets into the sequence's
+immediate elements, start at zero, and end at its element count. Adjacent
+boundaries delimit one logical part.
+
+This separates two concerns that do not coincide in Norskog's `q` definition:
+the best physical compression divides the exact stream at recurring bridge
+phrases, while published slice indices count the elements of `q_shortcut`.
+`Partition` retains those published indices without forcing the exact stream
+back into its much larger textual segmentation.
+
 ### SliceParts
 
 `SliceParts(block, start, end)` requires `0 <= start <= end <= partCount(block)`.
-It preserves the selected child boundaries. Slicing an inverse block operates
-on the already reversed element view, matching Norskog's `X`, `T`, and `Q`
-notation for inverse sequences.
+It accepts `Block`, `PackedBlock`, or `Partition` inputs and preserves the
+selected logical boundaries. Slicing an inverse block operates on the already
+reversed element view, matching Norskog's `X`, `T`, and `Q` notation for inverse
+sequences.
 
 ### Inverse
 
@@ -285,11 +300,15 @@ them.
 | `a'` | `Inverse(a)` |
 | `[a: b]` | `Concat([a, b, Inverse(a)])` |
 | `[a, b]` | `Concat([a, b, Inverse(a), Inverse(b)])` |
-| `a \ R` | validated terminal-level truncation |
 | `x[i:j]` | `SliceParts(x, i, j)` |
 
-Conjugates, commutators, and chop need no permanent wire opcode. The compiler
-lowers them into the smaller core after validation.
+Conjugates and commutators need no permanent wire opcode. The compiler lowers
+them into the smaller core after validation.
+
+There is no general chop operator. A known path is written directly; for
+example, removing the final `R` from `(U R)105` gives `(U R)104 U`. Opening a
+generated cycle is instead a typed construction operation that identifies and
+validates the cut edge.
 
 ## Devil's-algorithm case study
 
@@ -327,6 +346,177 @@ were found. They are not required to replay the published specification. If
 Orbit64 later preserves construction provenance, it may add typed splice plans
 and coverage certificates above the exact DAG; decoders must not require those
 proof objects merely to stream moves.
+
+### Definition optimization
+
+The corrected archive should be normalized by removing its definition prefix,
+line endings, and formatting whitespace before optimizing it. Its line breaks
+are presentation details except in `q_shortcut.txt`; they are not algorithm
+elements.
+
+Measurements of the normalized corrected archive give:
+
+| Definition | Symbols | Physical segmentation | Segments | Distinct templates |
+| ---------- | ------: | --------------------- | -------: | -----------------: |
+| `x` | 73,483,059 | start a segment at every `V` | 699,714 | 59 |
+| exact `q` | 156,764,385 | end a segment after every `xUwaER` | 2,177,084 | 795 |
+| shortcut `q` | 70,641 | one published shortcut symbol per part | 70,641 | not applicable |
+
+The `x` alphabet is only `U`, `R`, and `V`, where `V = U'`. It contains 699,713
+`V` symbols. Human-readable generated source begins:
+
+```text
+def x = (
+  (U R)2
+  V R (U R)40
+  V R (U R)104
+  V R (U R)20
+  V R (U R)104
+  V R (U R)6
+  # ...
+)
+```
+
+After the short prefix, nearly every segment has the form:
+
+```text
+V R (U R)n
+```
+
+Only 58 segment strings occur after the prefix, with a maximum length of 210
+symbols. Fifty-six have the regular form above. The corrected stream has two
+named exceptions:
+
+```text
+def xBridge = V R (U R)35 U U (U R)36  # 62 occurrences
+def xClose  = V R (U R)35 U             # final segment
+```
+
+The importer emits the readable repetition form first. DAG construction interns
+identical `Repeat` and `Concat` nodes, then represents the segment sequence as a
+`PackedBlock` over those 58 shared templates. Fixed-width template IDs require
+six bits each, about 525 KB before the small dictionary and framing; the observed
+template distribution has a theoretical entropy near 316 KB.
+
+The exact `q` stream contains `xUwaER` 2,177,083 times. Cutting immediately
+after that phrase produces 2,177,084 segments, but only 795 distinct strings;
+the longest is 156 macro symbols. Those dictionary entries are themselves
+factored into alternating `UR` repetitions, `D` interruptions, and the shared
+bridge node:
+
+```text
+def bridge = bruce_x U w a E R
+```
+
+Ten-bit fixed-width dictionary IDs require about 2.72 MB before dictionary and
+framing. The observed distribution's theoretical entropy is about 1.24 MB. A
+canonical entropy code may approach the latter, but dictionary factoring is
+required even if the first wire version uses fixed-width IDs.
+
+`q_shortcut.txt` is already Norskog's optimized logical definition. It contains
+70,641 parts, including 12,879 `u` placeholders. Each `u` summarizes a different
+exact subpath whose final transformation is `U`; it is not an exact move. The
+importer aligns those shortcut parts with ranges of the optimized exact `q`
+stream and emits:
+
+```text
+Partition(exactQ, shortcutBoundaries)
+```
+
+Effect metadata records the shortcut symbols separately. This preserves the
+published `q(i,j)` indexing, permits fast endpoint verification, and never
+substitutes `u` for its intervening Hamiltonian path.
+
+The top-level definition is already small, but two bridge phrases occur often
+enough to name before parsing it:
+
+```text
+def joinForward = F j t k G K T Y F K T J G  # 400 occurrences
+def joinReverse = F j t k G y t k F K T J G  # 240 occurrences
+```
+
+These optimizations are exact textual factorizations. They make no group-theory
+assumption and can be verified by streaming the original and optimized macro
+symbols side by side.
+
+### Beyond dictionary factoring
+
+Dictionary factoring is a baseline, not the intended final representation. A
+compression probe over the template-ID streams shows substantial higher-order
+structure:
+
+| Stream | Uncompressed IDs | Deflate | bzip2 | LZMA |
+| ------ | ---------------: | ------: | ----: | ---: |
+| `x`, one byte per template | 699,714 B | 191,077 B | 64,479 B | 51,784 B |
+| exact `q`, two bytes per template | 4,354,168 B | 1,226,675 B | 701,635 B | 608,872 B |
+
+These compressor sizes are diagnostics, not proposed wire encodings. Their
+large improvement over independent template IDs demonstrates correlations and
+repeated subsequences that a deeper construction can expose.
+
+The desired endpoint resembles a compact fractal definition: a small rule and
+finite parameters generate an output vastly larger than the definition. For
+this circuit, the rule is the published subgroup hierarchy:
+
+```text
+<UR>
+  -> <U,R>
+  -> <U,R,D>
+  -> <U,R,D,L>
+  -> <U,R,D,L,F>
+```
+
+The first seed is exactly `(U R)105`. Higher levels lift a path or cycle into
+cosets and join the resulting cycles. The 3x3x3 construction uses 349,920
+`<UR>` cycles at the next level, an initial 63-coset cycle at the `<U,R,D>`
+level, 132 cosets at the `<U,R,D,L>` level, and 2,048 cosets at the final level.
+
+The construction layer therefore needs mathematical combinators above the
+exact sequence DAG. Candidate semantics are:
+
+```text
+SeedCycle(word)
+OpenCycle(cycle, cutEdge)
+Lift(baseTraversal, quotientEnumeration)
+JoinCycles(liftedTraversal, joinPlan, localRewrite)
+RepeatBridge(path, bridge, count)
+JoinTriples(liftedTraversal, triplePlan, localRewrite)
+```
+
+These names are provisional until their edge-rewrite semantics have been
+derived from the corrected corpus and tested by exact re-expansion. They must
+not become opaque built-ins. Each node specifies:
+
+- the finite group or quotient coordinate being enumerated;
+- deterministic element and neighbor ordering;
+- the exact local edge replacement;
+- termination bounds;
+- a compact plan or a deterministic plan generator; and
+- a certificate sufficient to validate connectivity and endpoints.
+
+There are three representation levels:
+
+1. **Transcription:** packed exact symbols and slices.
+2. **Construction:** subgroup lifts and joins with explicit plans.
+3. **Regeneration:** deterministic search rules regenerate those plans from
+   seeds, ordering, and tie-breaking rules.
+
+Level 3 is the Mandelbrot-like goal. It is only sound if the search is fully
+specified: queue order, generator order, state ranking, splice selection, and
+all tie-breaking are part of the format. A statement such as "use BFS" is not
+deterministic enough to identify one circuit.
+
+The published archive contains the resulting exact streams and an explanatory
+account of the hierarchy, but no generator source fixing all those choices has
+been located. Orbit64 must therefore reverse-engineer and verify the join plans
+before claiming a regenerative representation of this particular circuit. If
+a plan has irreducible choices, those choices remain explicit compressed data;
+the format must not pretend they follow from the recurrence.
+
+Construction nodes elaborate to the exact DAG. Decoding returns the finite
+construction without running its searches. Expansion and plan regeneration are
+explicit, budgeted operations so an untrusted token cannot trigger an enormous
+BFS merely by being decoded.
 
 ### Acceptance examples
 
@@ -402,6 +592,7 @@ Validation proceeds without fully expanding the root.
 - exactly one root is exported;
 - repetitions are positive;
 - slice bounds are ordered and within the referenced block;
+- partition boundaries start at zero, are monotonic, and cover their sequence;
 - packed symbols belong to their declared alphabet; and
 - decoded integers and encodings are canonical.
 
@@ -418,9 +609,9 @@ resulting cube transformation, when available
 canonical digest
 ```
 
-Counts require arbitrary-precision integers. First and last moves make chop
-validation constant-time after metadata calculation. Digests permit streaming
-verification of large packed blocks.
+Counts require arbitrary-precision integers. First and last moves support path
+and cut-edge validation without expansion. Digests permit streaming verification
+of large packed blocks.
 
 ### Exactness and Hamiltonicity
 
@@ -474,15 +665,18 @@ otherwise one DAG could acquire many byte representations.
 
 ## Implementation phases
 
-1. Implement the parser, formatter, name resolution, and ordinary algebra
-   operators with unit and round-trip tests.
-2. Implement the typed in-memory DAG, metadata calculation, lazy expansion,
-   and structural validation.
-3. Add stable blocks, packed blocks, slices, and a Norskog compatibility
-   importer tested against small extracted fixtures.
-4. Specify the extension-class binary layout with canonical vectors, then add
+1. Normalize the corrected 2x2x2 and 3x3x3 corpora, derive exact template
+   streams, and commit only small reproducible fixtures and their measurements.
+2. Recover the subgroup lift and splice plans, test whether deterministic
+   generators reproduce them, and specify the construction combinators before
+   freezing the IR.
+3. Implement the typed exact DAG, metadata calculation, lazy expansion,
+   partitions, packed blocks, and structural validation.
+4. Implement the example parser, formatter, name resolution, ordinary algebra
+   operators, and Norskog importers with unit and round-trip tests.
+5. Specify the extension-class binary layout with canonical vectors, then add
    encoding, decoding, corruption tests, and streaming tests.
-5. Add the locked 2x2x2 and 3x3x3 imports to `examples/algorithm-tool`, then
+6. Add the locked 2x2x2 and 3x3x3 imports to `examples/algorithm-tool`, then
    independently verify their root digests, expanded lengths, final
    transformations, and computationally feasible construction claims.
 
