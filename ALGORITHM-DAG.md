@@ -587,10 +587,49 @@ then inlines every single-use rule, every trivial `(node)n` alias, and every
 `node move`, `move node`, or `move move` alias. It ends with 185 shared rules
 and a 141-symbol root, and expands to the same checked digest. The last pass
 improves direct readability but duplicates frequently used move pairs, raising
-the immediate-reference count from 864 to 962. This generated grammar is an
+the immediate-reference count from 864 to 956. This generated grammar is an
 optimizer acceptance fixture rather than the canonical human-facing example.
 It gives a future encoder a precise baseline for bottom-up grammar induction
 and a way to compare stronger recursive optimizers fairly.
+
+### Optimizer priority
+
+The RePair fixture is a fast baseline, not the final optimizer. Selecting the
+most frequent adjacent pair is cheap, but it can miss a longer repeated block
+whose replacement would save more of the complete grammar. Conversely, the
+longest repeated block is not automatically best: a very long block that occurs
+twice can lose to a shorter block that occurs thousands of times.
+
+The production optimizer should search **maximal repeated blocks** and select
+the candidate with the greatest net encoded gain:
+
+```text
+gain(block) = bytes removed from all selected occurrences
+              - bytes for one block definition
+              - bytes for its replacement references
+```
+
+Occurrences chosen for one block must not overlap. A suffix-array or
+suffix-automaton pass finds maximal-repeat candidates without expanding a DAG;
+a deterministic weighted interval pass selects their usable occurrences. After
+each replacement the optimizer rescans affected neighborhoods, interns equal
+subtrees, folds adjacent repetitions such as `(U' R')4 (U' R')2` into
+`(U' R')6`, and prunes rules according to the selected output profile.
+
+There are two profiles with different legitimate costs:
+
+- **Wire profile:** retain every shared node whose encoded reference is cheaper
+  than repeating its body.
+- **Source profile:** inline single-use rules and the trivial wrappers that add
+  no explanatory value, including `(node)n`, `node move`, `move node`, and
+  `move move`.
+
+Both profiles must begin from the same exact terminal stream and produce the
+same DAG digest after canonical interning. Candidate ties are part of the
+format: resolve them by greatest gain, then leftmost source occurrence, then
+lexicographic canonical block encoding. This gives the small-to-large search a
+repeatable rhythm without pretending that one greedy pass proves a globally
+smallest grammar.
 
 For comparison, an importer that does not recognize the recursive definition
 can still emit a `PackedBlock` root in canonical Orbit64 source form:
