@@ -632,6 +632,51 @@ lexicographic canonical block encoding. This gives the small-to-large search a
 repeatable rhythm without pretending that one greedy pass proves a globally
 smallest grammar.
 
+### DAG-to-source extraction
+
+The optimizer does not emit source definitions as it discovers nodes. It first
+builds a compact exact DAG. A separate **DAG-to-source extractor**, owned by the
+example tool, chooses which shared nodes deserve source names and which are
+clearer inline. This is the pass that removes RePair's ugly fragments; it is
+not manual editing and it is not part of token decoding.
+
+Extraction is multipass:
+
+```text
+choose source names -> inline unchosen nodes -> flatten Concat
+                    -> fold adjacent repeats -> recognize source operators
+                    -> rescore names -> repeat while the source improves
+```
+
+For example, suppose the exact DAG contains:
+
+```text
+g005 = U R' (U' R')4
+g007 = Concat(g005, Repeat(U' R', 4))
+```
+
+If `g005` is not selected as a source name, extraction substitutes its body,
+flattens the concatenation, and applies the local identities:
+
+```text
+Concat(Repeat(p, m), Repeat(p, n)) = Repeat(p, m + n)
+Concat(p, Repeat(p, n))            = Repeat(p, n + 1)
+Concat(Repeat(p, n), p)            = Repeat(p, n + 1)
+```
+
+The resulting source is therefore:
+
+```text
+U R' (U' R')8
+```
+
+The extractor must perform this normalization after every inlining round,
+because the useful adjacency may be hidden behind a source-name reference. It
+may not erase a `Block` boundary that `SliceParts` can observe; it operates on
+the source binding view and ordinary `Concat` nodes only. The library owns safe
+DAG normalization and canonical interning, while the example tool owns the
+source-name policy and presentation-oriented rewrites.
+
 For comparison, an importer that does not recognize the recursive definition
 can still emit a `PackedBlock` root in canonical Orbit64 source form:
 
