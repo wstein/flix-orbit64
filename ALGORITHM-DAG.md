@@ -551,6 +551,7 @@ compressor:
 def a = (U R)5
 def i = (U R)7
 def c = U' R (U R)14 U' R
+def d = (U' R (U R)5)2
 def t = (U R)2 n (tHead w tTail)2 tHead
 def v = (u)8 a U' R r U' R s U R t w U U F'
 def z = (v)6 (u)6 x

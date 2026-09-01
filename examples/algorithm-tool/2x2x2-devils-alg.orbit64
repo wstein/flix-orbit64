@@ -14,7 +14,7 @@ def c = U' R (U R)14 U' R
 
 def n = U' R a
 
-def d = (n)2
+def d = (U' R (U R)5)2
 
 def e = n c U R
 
