@@ -6,7 +6,7 @@ use Orbit64.Algorithm.Algorithm.{Algorithm}
 use Orbit64.Algorithm.Node.{Terminal, Concat, Repeat, Inverse, Block, PackedBlock, Partition, SliceParts}
 use Orbit64.Move.Move.{LayerTurn}
 use Orbit64.Move.Face.{U, R}
-use Orbit64.Move.Amount.{Clockwise, CounterClockwise}
+use Orbit64.Move.Amount.{Clockwise, CounterClockwise, Half}
 
 @Test
 def algorithmCountsConcatsRepeatsAndInversesWithoutExpansion(): Unit \ Assert =
@@ -48,3 +48,22 @@ def algorithmRejectsInvalidReferencesCountsAndBoundaries(): Unit \ Assert =
     Assert.assertFalse(Orbit64.Algorithm.faultOf(3, forward) |> Option.isEmpty);
     Assert.assertFalse(Orbit64.Algorithm.faultOf(3, zeroRepeat) |> Option.isEmpty);
     Assert.assertFalse(Orbit64.Algorithm.faultOf(3, badPartition) |> Option.isEmpty)
+
+@Test
+def algorithmStreamsSlicesAndInversesWithoutMaterializingThem(): Unit \ Assert =
+    let u = LayerTurn(U, 0, Clockwise);
+    let r = LayerTurn(R, 0, Half);
+    let dag = Algorithm(List#{
+        Terminal(u),
+        Terminal(r),
+        Block(List#{0, 1, 0}),
+        SliceParts(2, 1, 3),
+        Inverse(3),
+        Repeat(4, 2ii)
+    }, 5);
+    let streamed = Orbit64.Algorithm.foldTerminals(3, dag, Nil,
+        (out, move) -> move :: out) |> Result.map(List.reverse);
+    Assert.assertEq(expected = Ok(List#{
+        LayerTurn(U, 0, CounterClockwise), r,
+        LayerTurn(U, 0, CounterClockwise), r
+    }), streamed)

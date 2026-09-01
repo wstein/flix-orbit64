@@ -3,10 +3,11 @@
 Status: the typed, validated `Orbit64.Algorithm` core is implemented on the
 development branch. It represents primitive layer-turn terminals plus exact
 `Concat`, `Repeat`, `Inverse`, `Block`, `PackedBlock`, `Partition`, and
-`SliceParts` nodes. Canonical class-`11` token encoding, bounded streaming, and
-the source-language tool remain proposed work. The released `Orbit64.Move.Slp`
-API supports only `Terminal` and binary `Concat` rules; [FORMAT.md](FORMAT.md)
-remains the normative description of released tokens.
+`SliceParts` nodes. `foldTerminals` streams the exact expansion through a
+caller-supplied fold without materializing it. Canonical class-`11` token
+encoding and the source-language tool remain proposed work. The released
+`Orbit64.Move.Slp` API supports only `Terminal` and binary `Concat` rules;
+[FORMAT.md](FORMAT.md) remains the normative description of released tokens.
 
 This proposal defines an Orbit64 representation for finite algorithms that are
 too large to expand into literal move sequences. Its motivating test case is
@@ -65,8 +66,8 @@ the DAG directly or supply another notation frontend.
 
 This boundary means that "algorithm notation support" describes the example
 tool, while "algorithm DAG support" describes the library. The first shipped
-step has tests for IR validity and exact, non-expanding terminal/part counts.
-The wire format, streaming, and example parser follow this contract.
+steps test IR validity, exact non-expanding terminal/part counts, and
+fold-based streaming. The wire format and example parser follow this contract.
 
 ## Source language
 
