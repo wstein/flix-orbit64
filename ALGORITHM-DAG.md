@@ -582,12 +582,15 @@ The matching
 fixture demonstrates the other direction: extract the terminal stream first,
 then infer the DAG from small rules to large rules. Its deterministic RePair
 pass starts with `g000 = R U`, replaces the most frequent adjacent pair
-left-to-right, and breaks equal-frequency ties by terminal/rule order. It ends
-with 563 rules and a 122-symbol root, and expands to the same checked digest.
-This generated grammar is less readable and has 1,228 immediate references, so
-it is an optimizer acceptance fixture rather than the canonical human-facing
-example. It gives a future encoder a precise baseline for bottom-up grammar
-induction and a way to compare stronger recursive optimizers fairly.
+left-to-right, breaks equal-frequency ties by descending terminal/rule order,
+then inlines every single-use rule, every trivial `(node)n` alias, and every
+`node move`, `move node`, or `move move` alias. It ends with 185 shared rules
+and a 141-symbol root, and expands to the same checked digest. The last pass
+improves direct readability but duplicates frequently used move pairs, raising
+the immediate-reference count from 864 to 962. This generated grammar is an
+optimizer acceptance fixture rather than the canonical human-facing example.
+It gives a future encoder a precise baseline for bottom-up grammar induction
+and a way to compare stronger recursive optimizers fairly.
 
 For comparison, an importer that does not recognize the recursive definition
 can still emit a `PackedBlock` root in canonical Orbit64 source form:

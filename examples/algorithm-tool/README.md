@@ -15,8 +15,12 @@ produces 3,674,160 moves; after mapping `U'`, `R'`, and `F'` to the archive's
 `2x2x2-devils-alg.repair.orbit64` takes the opposite route: it starts with the
 archive's extracted terminal stream and infers a DAG bottom-up with a fully
 specified RePair pass. It creates `g000 = R U`, repeatedly replaces the most
-frequent adjacent pair from left to right, and uses terminal/rule order to break
-ties. The result has 563 generated rules and a 122-symbol root. It is exact and
+frequent adjacent pair from left to right, and uses descending terminal/rule
+order to break ties. It then inlines every single-use rule, every trivial
+`(node)n` alias, and every `node move`, `move node`, or `move move` alias. The
+result has 185 generated rules and a 141-symbol root. This last readability
+pass duplicates frequently used move pairs, so it has 962 immediate references
+rather than the 864 of the more shared intermediate DAG. It is exact and
 reproducible, but deliberately mechanical; it is a useful optimizer fixture,
 not the more readable presentation.
 
