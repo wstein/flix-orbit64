@@ -1,0 +1,12 @@
+[package]
+name        = "orbit64-algorithm-tool"
+description = "Source parser, formatter, optimizer, and importers for Orbit64 algorithm DAGs"
+version     = "0.1.0"
+repository  = "github:wstein/flix-orbit64"
+modules     = ["AlgorithmTool"]
+flix        = "0.75.2"
+license     = "Apache-2.0"
+authors     = ["Werner Stein"]
+
+[dependencies]
+"github:wstein/flix-orbit64" = "0.7.0"

@@ -1,9 +1,19 @@
 # Algorithm-tool design examples
 
-This directory holds source examples for the proposed algorithm frontend in
-[`ALGORITHM-DAG.md`](../../ALGORITHM-DAG.md). The parser and the richer DAG are
-not implemented in Orbit64 0.6.0, so these files are reference and acceptance
-fixtures rather than runnable examples today.
+This is a separate Flix package for the source frontend described in
+[`ALGORITHM-DAG.md`](../../ALGORITHM-DAG.md). It depends on Orbit64 0.7.0 and
+keeps source parsing, formatting, optimization, and legacy imports outside the
+notation-independent library DAG.
+
+Run its checks from this directory with the repository wrapper:
+
+```console
+../../flixw check
+../../flixw test
+```
+
+The initial package provides the exact source AST. Parser, formatter, lowering,
+optimizer, and importer phases build on that typed boundary.
 
 `2x2x2-devils-alg.orbit64` is a lossless recursive transcription of Bruce
 Norskog's 2x2x2 devil's algorithm. It was derived from the recursive
