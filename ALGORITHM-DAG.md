@@ -45,14 +45,35 @@ The format must:
 The first implementation targets finite `n x n x n` algorithms. The node model
 does not assume that all future puzzle families use the same move vocabulary.
 
+## Package boundary
+
+The distributable library owns the notation-independent pieces:
+
+```text
+Orbit64.Algorithm             public DAG types and validation
+Orbit64.Algorithm.Encoding    canonical token encoding and decoding
+Orbit64.Algorithm.Stream      bounded-memory terminal expansion
+```
+
+The parser, formatter, source diagnostics, and legacy importers belong to a
+separate `examples/algorithm-tool` package. That package depends on Orbit64 and
+lowers source expressions into the public DAG. Applications may instead build
+the DAG directly or supply another notation frontend.
+
+This boundary means that "algorithm notation support" describes the example
+tool, while "algorithm DAG support" describes the library. Both are tested:
+the root project tests the IR and wire format, and CI separately builds and
+tests the example parser against the same pinned minimum Flix version.
+
 ## Source language
 
 ### Grammar
 
 ```ebnf
 program       := NEWLINE* statement (NEWLINE+ statement)* NEWLINE* EOF
-statement     := definition | export
+statement     := definition | externalBlock | export
 definition    := "def" NAME "=" expression
+externalBlock := "extern" "block" NAME "=" STRING
 export        := "export" NAME
 
 expression    := concatenation ("\\" move)?
@@ -76,6 +97,11 @@ insignificant. `#` or `;` introduces a comment through the end of the line.
 Definitions may reference only earlier definitions. Exactly one exported name
 selects the root. Requiring an explicit export avoids making file order part of
 the program's meaning.
+
+An external block declares a source-bundle input. Its string is a logical asset
+name resolved by the example tool's source lock, never a filesystem path or URL
+interpreted by the library. Resolution supplies a verified `PackedBlock` before
+ordinary name resolution begins.
 
 Move tokens and language keywords are reserved and cannot be definition names.
 In particular, lower-case `x`, `y`, and `z` always mean WCA rotations. An
@@ -302,6 +328,70 @@ Orbit64 later preserves construction provenance, it may add typed splice plans
 and coverage certificates above the exact DAG; decoders must not require those
 proof objects merely to stream moves.
 
+### Acceptance examples
+
+The algorithm-tool example includes reproducible imports for both published
+Norskog circuits:
+
+| Puzzle | Exact source | Archive bytes | Expanded moves | Archive SHA-256 |
+| ------ | ------------ | ------------: | -------------: | -------------- |
+| 2x2x2 | `hamilton222.zip` | 265,642 | 3,674,160 | `b6cffd24c81315e3d7da21756822f1ee6398adcd5773cae6e0dfdc2b15d528d9` |
+| 3x3x3 | `rubikhamilton.zip` | 7,096,554 | 43,252,003,274,489,856,000 | `77e70f68e39ebfb51b4fd74c1d07392782988c758e865e1baff17f021effe285` |
+
+The archives remain at their author's site rather than being copied into this
+repository. The example's source lock records the HTTPS URL, byte length, and
+SHA-256; the importer refuses an archive that does not match. This is especially
+important for the 3x3x3 source because Norskog identifies a corrected 2012
+archive after an earlier `x.txt` omitted two moves.
+
+The 2x2x2 archive contains one 3,674,160-symbol stream over `U`, `R`, `F` and
+their inverses. Its importer emits a `PackedBlock` root in canonical Orbit64
+source form:
+
+```text
+extern block H2 = "bruce-2x2"
+export H2
+```
+
+`extern block` is an example-tool data binding, not a DAG node beyond the
+ordinary `PackedBlock` it supplies. The source lock maps `bruce-2x2` to the
+verified archive member. Keeping acquisition outside the expression grammar
+makes the same canonical source usable with local files, an application asset
+store, or a network-disabled build.
+
+The 3x3x3 importer converts `misc.txt`, `t.txt`, `x.txt`, `q.txt`, and
+`RubiksCubeHamilton.txt` into native definitions, packed blocks, inverse nodes,
+and `SliceParts` references. Its canonical output uses ordinary syntax such as:
+
+```text
+def V = U'
+def S = R'
+extern block bruce_x = "bruce-3x3-x"
+def Q = q'
+def H3 = h t[0:39] Q[0:66887] bruce_x[0:73438647] F j
+export H3
+```
+
+The abbreviated `H3` line illustrates the translation and is not substituted
+for the archive's complete top-level definition. The example compiler consumes
+that complete definition from the verified archive and can emit canonical
+Orbit64 source or an algorithm-DAG token.
+
+Acceptance requires more than successful parsing:
+
+- the 2x2x2 imported root expands to exactly 3,674,160 quarter turns;
+- the 3x3x3 imported root expands to exactly the cube-group order shown above;
+- both roots return to their initial state;
+- imported part counts make every published slice bound valid;
+- re-importing produces the same canonical DAG digest; and
+- optional exhaustive verification confirms the Hamiltonian property where
+  computationally practical.
+
+The complete 2x2x2 traversal is practical to verify in CI after a cached,
+digest-checked download. Full 3x3x3 state enumeration is not. CI instead checks
+the archive and member digests, structural invariants, slice bounds, expanded
+length, endpoint summaries, and canonical DAG digest.
+
 ## Validation
 
 Validation proceeds without fully expanding the root.
@@ -392,9 +482,9 @@ otherwise one DAG could acquire many byte representations.
    importer tested against small extracted fixtures.
 4. Specify the extension-class binary layout with canonical vectors, then add
    encoding, decoding, corruption tests, and streaming tests.
-5. Import the complete published archive and independently verify its root
-   digest, expanded length, final transformation, and available construction
-   claims.
+5. Add the locked 2x2x2 and 3x3x3 imports to `examples/algorithm-tool`, then
+   independently verify their root digests, expanded lengths, final
+   transformations, and computationally feasible construction claims.
 
 No phase should describe the algorithm-DAG token as supported until its public
 API, canonical wire vectors, and decoder limits are all implemented.
