@@ -38,7 +38,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                    # 131 tests
+./flixw test                                    # 151 tests
 (cd examples/cli-tool && flix run)              # size table, round-trip
 (cd examples/cli-tool && flix run -- <token>)   # decode; length picks n
 ```
@@ -72,6 +72,23 @@ compiler this project pins.
 defines nests under the `Orbit64` module, so nothing it ships can collide with
 names of yours -- and it defines no top-level `main`, so yours still compiles.
 
+Literal moves are type-safe values rather than notation strings:
+
+```flix
+use Orbit64.Move.Move.LayerTurn
+use Orbit64.Move.Face.{U, R}
+use Orbit64.Move.Amount.{Clockwise, Half}
+
+def moves(): Result[String, String] =
+    Orbit64.Move.encode(3, List#{
+        LayerTurn(U, 0, Clockwise),
+        LayerTurn(R, 0, Half)
+    }) //=> Ok("RCAE")
+```
+
+`Orbit64.Token.decode(token)` dispatches states, literal sequences, and SLPs
+without a caller choosing a decoder first.
+
 ## State format
 
 Every twisty cube factors into orbits -- families of pieces that turns permute
@@ -94,8 +111,8 @@ convention fixes the fourth entry as the **X-centres** (the four diagonal cells
 of a face's centre block) and the fifth as the **plus-centres** (the four
 edge-adjacent cells).
 
-Both counts truncate, so `layout` is pure arithmetic in `n` -- this codebase has
-no notion of a face, an axis, or a turn.
+Both counts truncate, so the state codec's `layout` is pure arithmetic in `n`:
+it has no notion of a face, an axis, or a turn.
 
 | cube  | bits   | chars |
 |-------|--------|-------|
@@ -478,9 +495,9 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
 - `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical VLQ
   primitives.
 - `src/Orbit64/Net.flix` -- draws a decoded cube as a coloured net, up to the
-  5x5x5, and reads one back out of its facelets. The only module that knows a
-  cube has faces: the codec defines no geometry, so a picture needs one, and
-  this derives its own from cube geometry.
+  5x5x5, and reads one back out of its facelets. It is the only module that
+  knows where pieces and facelets sit; `Orbit64.Move` names faces but carries no
+  slot geometry.
 - `examples/cli-tool/` -- the demo command line, a separate package that
   depends on this one the same way any other consumer would, kept out of the
   library so that it can define a top-level `main`. Sample source, not driven
@@ -490,6 +507,11 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   3D facelet representation, orbits found by connected components, every state
   verified to round-trip at sticker level.
 - `test/TestOrbit64.flix` -- sizes, round-trips, and error handling.
+- `test/TestMove.flix`, `test/TestMoveSlp.flix` -- primitive-move validation,
+  exact format vectors, large-size and multi-sextet headers, and malformed
+  payload rejection.
+- `test/TestToken.flix` -- universal class dispatch, including explicit 6x6x6
+  and 7x7x7 state-class coverage and reserved-class rejection.
 - `test/TestNet4x4.flix` -- fixtures for the 4x4x4 display convention: states
   built by a separate geometric model, with that model's own nets as the
   expected output.

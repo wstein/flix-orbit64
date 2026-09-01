@@ -1,6 +1,6 @@
 [package]
 name        = "orbit64-cli"
-description = "Demo command line for orbit64: a size table, a round-trip demo, and a token decoder"
+description = "Demo command line for orbit64 state tokens"
 version     = "0.1.0"
 repository  = "github:wstein/flix-orbit64"
 flix        = "0.75.2"

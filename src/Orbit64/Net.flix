@@ -7,11 +7,11 @@
 /// carry information -- which means this module supplies them itself before it
 /// can draw anything. They are the first thing `draw` puts down.
 ///
-/// This is the only module in the package that knows a cube has faces. The
-/// codec is pure arithmetic in `n` and defines no geometry whatsoever, which is
-/// exactly what lets it cover every size from the 2x2x2 up. A picture needs to
-/// know which slot sits where, so this module supplies a convention and
-/// `convention` names it.
+/// This is the only module in the package that knows where a cube's pieces and
+/// facelets sit. State ranking is pure arithmetic in `n`; `Orbit64.Move` names
+/// faces and layer depths but carries no slot geometry. A picture needs to know
+/// which slot sits where, so this module supplies a convention and `convention`
+/// names it.
 ///
 /// One set of tables serves both directions. `toFacelets` writes a state out as
 /// stickers and `fromFacelets` reads one back in, which is what lets a project
