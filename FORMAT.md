@@ -23,11 +23,6 @@ version of this specification; existing class meanings never change.
 
 ## Canonical unsigned integers
 
-Headers use a base64 VLQ. Each sextet contributes five payload bits. Values
-`32` through `63` mean that another sextet follows; values `0` through `31`
-end the integer. Payload groups are least-significant first. The last group
-must be non-zero unless it is the only group, so every integer has one spelling.
-
 Fixed-width integers are ordinary big-endian base64url, left-padded with `A`.
 A field whose range contains only one value has width zero.
 
@@ -60,7 +55,10 @@ depths   0 .. floor(n / 2) - 1
 amounts  clockwise, half, counter-clockwise
 ```
 
-The alphabet therefore has `18 * floor(n / 2)` moves. Its rank is:
+Two cubes have the same primitive vocabulary whenever they have the same
+reachable layer count `l = floor(n / 2)`. A move token therefore identifies
+the layer class `{2l, 2l + 1}`, not one exact cube size. The alphabet has
+`A = 18l` moves, and a move's rank is:
 
 ```text
 ((faceRank * floor(n / 2)) + depth) * 3 + amountRank
@@ -71,16 +69,35 @@ Whole-cube rotations, slice names, wide-move aliases, commutator syntax, and
 canonicalization are not token features. A notation layer may expand them to
 primitive moves before encoding.
 
-Both move classes encode `n` in the low four bits of the first sextet. Values
-`0` through `14` mean `n = value + 2`. Value `15` is an escape and is followed
-by a canonical VLQ containing `n - 17`. Thus the format has no size cliff.
+After the two class bits, `l` is written as an Elias gamma code. Gamma coding
+is unbounded, gives the common class `l = 1` the single bit `1`, and preserves
+the size information the move vocabulary actually needs.
+
+The remainder of either move token is a minimal binary rank followed by one
+reserved marker bit set to `1`, then enough zero fill to reach a base64url
+sextet boundary:
+
+```text
+class | gamma(l) | minimal rank bits | 1 | 000...
+```
+
+The rank zero has no bits. Decoders remove trailing zero fill and the marker,
+and reject any token whose rank has redundant leading zeroes or whose total
+width is not minimal. The marker records the exact binary boundary without a
+length field.
 
 ## Move sequence
 
-After the size header, a canonical VLQ gives the number `k` of moves. The moves
-are Horner-ranked in base `18 * floor(n / 2)` and written at the exact width
-needed for all sequences of length `k`. The count makes the token
-self-terminating and preserves leading moves whose rank is zero.
+For `k` moves, first compute their ordinary Horner rank `r` in base `A`. The
+wire rank skips every shorter sequence:
+
+```text
+sequenceRank = (1 + A + ... + A^(k - 1)) + r
+```
+
+The empty sequence has rank zero. These ranges partition every non-negative
+integer, so decoding recovers `k` with the exact-integer equivalent of
+`floor(log_A((A - 1) * sequenceRank + 1))`. No move count is stored.
 
 Tokens describe literal primitive sequences. Equality means the same expanded
 sequence, not the same resulting cube transformation.
@@ -96,18 +113,27 @@ Terminal(move)
 Concat(left, right), where left < i and right < i
 ```
 
-After the size header, a canonical VLQ gives the rule count `r`. Rule `i` has
-radix `moveAlphabetSize(n) + i^2` and rank:
+Rule `i` has radix `A + i^2` and rank:
 
 ```text
 Terminal(move)       = moveRank
 Concat(left, right)  = moveAlphabetSize(n) + left * i + right
 ```
 
-The rule ranks are combined by mixed-radix Horner ranking and written at the
-exact width needed for every grammar with `r` rules. Decoding validates every
-reference without expanding the generated sequence. Grammar-token equality is
-structural equality; different SLPs may expand to the same moves.
+The rule ranks are combined by mixed-radix Horner ranking. If `G(r)` is the
+number of structurally valid `r`-rule grammars, the wire rank skips every
+shorter grammar:
+
+```text
+G(0) = 1
+G(r) = product(i = 0 .. r - 1, A + i^2)
+slpRank = (G(0) + ... + G(r - 1)) + grammarRank
+```
+
+These ranges also partition every non-negative integer, so no rule count is
+stored. Decoding recovers the range, validates every reference, and never
+expands the root. Grammar-token equality is structural equality; different
+SLPs may expand to the same moves.
 
 ## Public API
 
@@ -116,8 +142,8 @@ family, not an alias for one member:
 
 ```text
 Orbit64.State.encode / decode
-Orbit64.Move.encode / decode
-Orbit64.Move.Slp.encode / decode
+Orbit64.Move.encode / decode        (decode returns a layer class)
+Orbit64.Move.Slp.encode / decode    (decode returns a layer class)
 Orbit64.Token.decode
 ```
 

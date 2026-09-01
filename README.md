@@ -83,11 +83,13 @@ def moves(): Result[String, String] =
     Orbit64.Move.encode(3, List#{
         LayerTurn(U, 0, Clockwise),
         LayerTurn(R, 0, Half)
-    }) //=> Ok("RCAE")
+    }) //=> Ok("d4")
 ```
 
 `Orbit64.Token.decode(token)` dispatches states, literal sequences, and SLPs
-without a caller choosing a decoder first.
+without a caller choosing a decoder first. Move tokens carry the reachable
+layer count rather than cube parity, so the same token applies to `2l x 2l x
+2l` and `(2l + 1) x (2l + 1) x (2l + 1)` cubes.
 
 ## State format
 
