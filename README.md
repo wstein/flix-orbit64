@@ -6,15 +6,17 @@
 [![Flix](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fwstein%2Fflix-orbit64%2Fmain%2F.flixw%2Flock.toml&query=%24.compiler.version&label=Flix&color=blue)](https://flix.dev)
 [![License](https://img.shields.io/github/license/wstein/flix-orbit64)](LICENSE)
 
-A canonical, URL-safe, minimal-width encoding for `n x n x n` twisty cube
-state, for every size from the 2x2x2 to the 7x7x7.
+A canonical, URL-safe family of compact encodings for `n x n x n` twisty-cube
+states, literal move sequences, and straight-line programs over moves.
 
 Read under the same slot convention, two identical cubes always produce the
 same token, so string equality is state equality. That qualifier is load-bearing
 rather than lawyerly: a token records ordinals and carries no geometry of its
 own, so two implementations that number their slots differently will describe
 one physical cube with two tokens. [Slot numbering](#slot-numbering) says what
-follows from that. No token is a character wider than the state count requires.
+follows from that. State tokens reserve two leading type bits and are otherwise
+as narrow as the state count permits. Move formats use the other leading-bit
+classes; see the [wire-format specification](FORMAT.md).
 
 ```
 2x2x2  AAAAA                                       (solved)
@@ -56,7 +58,7 @@ def demo(): Unit \ IO =
         CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
         MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
     };
-    match Orbit64.encode(3, superflip) {
+    match Orbit64.State.encode(3, superflip) {
         case Ok(token) => println(token)          //=> AAAAAAAAAAf_
         case Err(e)    => println("nope: ${e}")
     }
@@ -66,17 +68,18 @@ The API documentation is published at
 <https://wstein.github.io/flix-orbit64/>, rendered by `flix doc` from the
 compiler this project pins.
 
-`Orbit64.decode(n, token)` is the exact inverse. Everything the package defines
-nests under the `Orbit64` module, so nothing it ships can collide with names of
-yours -- and it defines no top-level `main`, so yours still compiles.
+`Orbit64.State.decode(n, token)` is the exact inverse. Everything the package
+defines nests under the `Orbit64` module, so nothing it ships can collide with
+names of yours -- and it defines no top-level `main`, so yours still compiles.
 
-## The format
+## State format
 
 Every twisty cube factors into orbits -- families of pieces that turns permute
 among themselves and never mix. Each orbit gets one coordinate over a range of
 exactly its own size, the coordinates are combined by mixed radix, and the
-result is written in base64url at a fixed width. No separators, no field
-alignment, no type tag.
+result is written in base64url at a fixed width. No separators or field
+alignment are used. The first two bits are the state class tag shared by the
+Orbit64 token family.
 
 | orbit     | count               | range         | bits  |
 |-----------|---------------------|---------------|-------|
@@ -101,11 +104,27 @@ no notion of a face, an axis, or a turn.
 | 4x4x4 | 156.96 |    27 |
 | 5x5x5 | 248.32 |    42 |
 | 6x6x6 | 390.58 |    66 |
-| 7x7x7 | 533.47 |    89 |
+| 7x7x7 | 533.47 |    90 |
 
-Widths are distinct and grow as `n^2`, so a token's length identifies its
-puzzle. Tokens are fixed-width and left-padded with `A`, and index 0 is `A`, so
-a solved cube of any size is a run of `A`s.
+Widths are distinct and grow as `n^2`, so a state token's length identifies its
+puzzle. Width is the fewest characters that fit every state beneath the `00`
+class prefix. Tokens are fixed-width and left-padded with `A`, and index 0 is
+`A`, so a solved cube of any size is a run of `A`s.
+
+## Token classes
+
+The first base64url sextet divides the Orbit64 family into four classes:
+
+| Bits | Characters | Meaning |
+|------|------------|---------|
+| `00` | `A`–`P` | state |
+| `01` | `Q`–`f` | literal move sequence |
+| `10` | `g`–`v` | move straight-line program |
+| `11` | `w`–`_` | reserved |
+
+Move sequences and SLPs carry their cube size because their arbitrary token
+length cannot identify it. The exact ranks, validation rules, and canonical
+integer encodings are specified in [FORMAT.md](FORMAT.md).
 
 ## The same cube, three ways
 
@@ -332,7 +351,7 @@ rather than merely draw one:
 ```flix
 // a cube some other engine turned, as face indices
 Orbit64.Net.fromFacelets(4, stickers)
-    |> Result.flatMap(orbits -> Orbit64.encode(4, orbits))
+    |> Result.flatMap(orbits -> Orbit64.State.encode(4, orbits))
 ```
 
 Both directions read one set of tables, which is why the inverse lives here
@@ -450,8 +469,14 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   integers appear only in the final assembly.
 - `src/Orbit64/Orbit.flix` -- which orbits a cube has and how large each one is.
 - `src/Orbit64/Coord.flix` -- one orbit's state and its rank/unrank.
-- `src/Orbit64.flix` -- mixed-radix assembly, base64url, `encode`/`decode`. The
-  public API; everything a caller needs is here.
+- `src/Orbit64/State.flix` -- mixed-radix state assembly and
+  `Orbit64.State.encode`/`decode`.
+- `src/Orbit64/Move.flix` -- primitive layer turns and literal move-sequence
+  encoding.
+- `src/Orbit64/Move/Slp.flix` -- straight-line programs over primitive moves.
+- `src/Orbit64/Token.flix` -- first-sextet dispatch across the token family.
+- `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical VLQ
+  primitives.
 - `src/Orbit64/Net.flix` -- draws a decoded cube as a coloured net, up to the
   5x5x5, and reads one back out of its facelets. The only module that knows a
   cube has faces: the codec defines no geometry, so a picture needs one, and

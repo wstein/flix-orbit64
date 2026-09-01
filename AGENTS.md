@@ -63,11 +63,16 @@ is published.
 
 ## Layout
 
-- `src/Orbit64.flix` — the package's public API
+- `src/Orbit64/State.flix` — state counting and state `encode`/`decode`
+- `src/Orbit64/Move.flix`, `src/Orbit64/Move/Slp.flix` — primitive moves,
+  literal sequences, and straight-line programs
+- `src/Orbit64/Token.flix` — tagged decoding across the Orbit64 token family
+- `src/Orbit64/Internal/Encoding.flix` — shared base64url and VLQ arithmetic
 - `src/Orbit64/` — the rest of the library, all nested under the `Orbit64`
   module so that a consumer's own `Coord`, `Orbit`, or `Rank` cannot collide
-  with ours. `Orbit64/Net.flix` is the only geometry in the package -- the
-  codec itself has none, which is what lets it cover every size
+  with ours. `Orbit64/Net.flix` owns state-to-facelet geometry;
+  `Orbit64/Move.flix` owns the deliberately smaller face/layer/amount vocabulary
+  needed to describe turns. State ranking remains pure arithmetic in `n`
 - `test/` — `@Test` functions
 - `examples/cli-tool/` — the demo command line, a separate Flix package that
   depends on this one the same way any other consumer would
