@@ -3,11 +3,12 @@
 ///
 mod Orbit64.Token {
 
-    /// A decoded state, literal move sequence, or move SLP with its size domain.
+    /// A decoded state or algorithm token with its size domain.
     pub enum Token with Eq, ToString {
         case StateToken(Int32, List[Orbit64.Coord.Coord]),
         case MoveSequenceToken(Orbit64.Move.LayerClass, List[Orbit64.Move.Move]),
-        case MoveSlpToken(Orbit64.Move.LayerClass, Orbit64.Move.Slp.Slp)
+        case MoveSlpToken(Orbit64.Move.LayerClass, Orbit64.Move.Slp.Slp),
+        case AlgorithmToken(Orbit64.Move.LayerClass, Orbit64.Algorithm.Algorithm)
     }
 
     /// Dispatch on the two most significant bits of the first sextet.
@@ -23,7 +24,7 @@ mod Orbit64.Token {
             case 0 => decodeState(token)
             case 1 => decodeMoves(token)
             case 2 => decodeSlp(token)
-            case _ => Err("token class 11 is reserved")
+            case _ => decodeAlgorithm(token)
         }
 
     def decodeMoves(token: String): Result[String, Token] =
@@ -35,6 +36,11 @@ mod Orbit64.Token {
         Orbit64.Move.Slp.decode(token)
             |> Result.map(match (layerClass, slp) ->
                 Token.MoveSlpToken(layerClass, slp))
+
+    def decodeAlgorithm(token: String): Result[String, Token] =
+        Orbit64.Algorithm.Encoding.decode(token)
+            |> Result.map(match (layerClass, algorithm) ->
+                Token.AlgorithmToken(layerClass, algorithm))
 
     def decodeState(token: String): Result[String, Token] =
         match sizeForWidth(String.length(token), 2) {

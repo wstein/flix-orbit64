@@ -67,3 +67,25 @@ def algorithmStreamsSlicesAndInversesWithoutMaterializingThem(): Unit \ Assert =
         LayerTurn(U, 0, CounterClockwise), r,
         LayerTurn(U, 0, CounterClockwise), r
     }), streamed)
+
+@Test
+def algorithmTokenRoundTripsEveryNodeKindAndDispatches(): Unit \ Assert =
+    let dag = Algorithm(List#{
+        Terminal(LayerTurn(U, 0, Clockwise)),
+        Terminal(LayerTurn(R, 0, Half)),
+        Concat(List#{0, 1}),
+        Repeat(2, 3ii),
+        Inverse(3),
+        Block(List#{0, 4}),
+        PackedBlock(List#{0, 1}, List#{1, 0, 1}),
+        Partition(5, List#{0, 1, 2}),
+        SliceParts(7, 0, 1)
+    }, 8);
+    let token = Orbit64.Algorithm.Encoding.encode(3, dag);
+    Assert.assertEq(expected = Ok(dag), token |> Result.flatMap(encoded ->
+        Orbit64.Algorithm.Encoding.decode(encoded) |> Result.map(match (_, decoded) -> decoded)));
+    Assert.assertTrue(token |> Result.map(encoded ->
+        Orbit64.Token.decode(encoded) |> Result.map(value -> match value {
+            case Orbit64.Token.Token.AlgorithmToken(_, decoded) => decoded == dag
+            case _ => false
+        })) == Ok(Ok(true)))

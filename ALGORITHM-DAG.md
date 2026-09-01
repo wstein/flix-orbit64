@@ -773,41 +773,32 @@ The released `10` class is a complete enumerative code for `Terminal`/`Concat`
 SLPs. Every non-negative grammar rank is already meaningful, so it has no
 unused escape rank in which to add DAG opcodes compatibly.
 
-The expanded DAG must therefore use the reserved `11` extension class if old
-SLP tokens remain decodable. The proposed extension envelope is:
+The expanded DAG therefore uses the `11` extension class, leaving old SLP
+tokens decodable. Its released envelope is:
 
 ```text
 11iiii | extension payload
 ```
 
-The low four bits `iiii` select extension IDs 0 through 14. ID 15 introduces a
-following extended ID and is never assigned directly. The first proposed ID is:
+The payload contains, in order:
 
 ```text
-0  algorithm DAG
-```
-
-The algorithm-DAG payload contains, in order:
-
-```text
-schema version
-puzzle and notation profile
-move alphabet
-topologically ordered node table
-packed-block chunk table
+leading sentinel bit
 root node reference
-delimiter bit and zero fill
+topologically ordered node table
 ```
 
-This assignment is provisional until an implementation and canonical test
-vectors land. State (`00`), literal move (`01`), and released SLP (`10`) tokens
-remain byte-for-byte unchanged.
+The outer class-`11` envelope gamma-codes the layer count, then delimiter-pads
+the payload exactly like the other variable-width classes. The inner payload
+uses gamma-coded natural fields, a four-bit node tag, and explicit list
+lengths. Tags 8 through 15 are reserved for a successor schema. [FORMAT.md](FORMAT.md)
+is normative. State (`00`), literal move
+(`01`), and released SLP (`10`) tokens remain byte-for-byte unchanged.
 
-Node references should use backward distances, making nearby references cheap.
-Counts, slice bounds, arities, and uncommon backward distances use canonical
-unsigned bit-varints. Node opcodes reserve an escape opcode for later node
-families. A canonical encoding must specify chunk boundaries and compression;
-otherwise one DAG could acquire many byte representations.
+This first schema encodes absolute earlier-node references. Its eight defined
+node tags leave tags 8 through 15 reserved; a later rich DAG schema may assign
+one of them only with a fully specified extension payload, never by
+reinterpreting these tokens.
 
 ## Implementation phases
 
@@ -817,14 +808,14 @@ otherwise one DAG could acquire many byte representations.
    generators reproduce them, and specify the construction combinators before
    freezing the IR.
 3. Implement the typed exact DAG, metadata calculation, lazy expansion,
-   partitions, packed blocks, and structural validation.
+   partitions, packed blocks, structural validation, and class-`11` encoding.
 4. Implement the example parser, formatter, name resolution, ordinary algebra
    operators, and Norskog importers with unit and round-trip tests.
-5. Specify the extension-class binary layout with canonical vectors, then add
-   encoding, decoding, corruption tests, and streaming tests.
+5. Add canonical vectors, corruption tests, decoder limits, and a versioned
+   successor envelope before introducing new node families.
 6. Add the locked 2x2x2 and 3x3x3 imports to `examples/algorithm-tool`, then
    independently verify their root digests, expanded lengths, final
    transformations, and computationally feasible construction claims.
 
-No phase should describe the algorithm-DAG token as supported until its public
-API, canonical wire vectors, and decoder limits are all implemented.
+The current token is supported for the published typed node set. It does not
+yet carry a source grammar, rich WCA terminals, a parser, or an optimizer.

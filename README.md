@@ -86,7 +86,8 @@ def moves(): Result[String, String] =
     }) //=> Ok("d4")
 ```
 
-`Orbit64.Token.decode(token)` dispatches states, literal sequences, and SLPs
+`Orbit64.Token.decode(token)` dispatches states, literal sequences, SLPs, and
+typed algorithm DAGs
 without a caller choosing a decoder first. Move tokens carry the reachable
 layer count rather than cube parity, so the same token applies to `2l x 2l x
 2l` and `(2l + 1) x (2l + 1) x (2l + 1)` cubes.
@@ -139,17 +140,17 @@ The first base64url sextet divides the Orbit64 family into four classes:
 | `00` | `A`–`P` | state |
 | `01` | `Q`–`f` | literal move sequence |
 | `10` | `g`–`v` | move straight-line program |
-| `11` | `w`–`_` | reserved |
+| `11` | `w`–`_` | typed algorithm DAG |
 
 Move sequences and SLPs gamma-code their reachable layer count because their
 arbitrary token length cannot identify it. The exact ranks, validation rules,
 and canonical bit padding are specified in [FORMAT.md](FORMAT.md).
 
-The released SLP contains only terminal and binary-concatenation rules. A
-richer source language and typed DAG for repetitions, inverses, conjugates,
-commutators, stable slices, packed macro streams, and the published 3x3x3
-devil's algorithm is documented as an unimplemented
-[algorithm-DAG proposal](ALGORITHM-DAG.md).
+The released SLP contains only terminal and binary-concatenation rules. The
+class-`11` typed DAG adds repetitions, inverses, stable slices, and packed
+macro streams while preserving exact primitive layer-turn sequences. Its
+source grammar, WCA notation frontend, and devil's-algorithm importer remain
+separate proposed work; see [ALGORITHM-DAG.md](ALGORITHM-DAG.md).
 
 ## The same cube, three ways
 
