@@ -57,7 +57,7 @@ export        := "export" NAME
 
 expression    := concatenation ("\\" move)?
 concatenation := postfix+
-postfix       := primary ("'" | "^" INTEGER)*
+postfix       := primary "'"*
 
 primary       := move
                | reference
@@ -82,10 +82,10 @@ In particular, lower-case `x`, `y`, and `z` always mean WCA rotations. An
 importer must rename a legacy definition that uses one of those names rather
 than making parsing depend on the current symbol table.
 
-The postfix forms `(a)33` and `(a)^33` are equivalent. The number without a
-caret is accepted only immediately after `)` or `]`; this prevents `R33` or
-`name33` from acquiring surprising meanings. Repetition counts are positive
-integers of arbitrary encoded size. Zero and negative repetitions are invalid.
+Repetition uses cubing notation and is accepted only immediately after `)` or
+`]`; this prevents `R33` or `name33` from acquiring surprising meanings. Write
+`(name)33` to repeat a named definition. Repetition counts are positive integers
+of arbitrary encoded size. Zero and negative repetitions are invalid.
 
 ### Move tokens
 
@@ -125,7 +125,7 @@ The following expansions define source semantics:
 | Source operation | Meaning |
 | ---------------- | ------- |
 | `a b` | concatenate `a`, then `b` |
-| `(a)33`, `(a)^33` | repeat `a` 33 times |
+| `(a)33` | repeat `a` 33 times |
 | `a'` | reverse `a` and invert each terminal |
 | `[a: b]` | `a b a'` |
 | `[a, b]` | `a b a' b'` |
@@ -255,7 +255,7 @@ them.
 | Source operation | DAG lowering |
 | ---------------- | ------------ |
 | `a b` | `Concat([a, b])` |
-| `(a)^n` | `Repeat(a, n)` |
+| `(a)n` | `Repeat(a, n)` |
 | `a'` | `Inverse(a)` |
 | `[a: b]` | `Concat([a, b, Inverse(a)])` |
 | `[a, b]` | `Concat([a, b, Inverse(a), Inverse(b)])` |
