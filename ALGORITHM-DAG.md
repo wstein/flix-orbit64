@@ -1,9 +1,12 @@
 # Orbit64 algorithm DAG proposal
 
-Status: design proposal. None of the source language or DAG described here is
-implemented in Orbit64 0.6.0. The released `Orbit64.Move.Slp` API supports only
-`Terminal` and binary `Concat` rules; [FORMAT.md](FORMAT.md) remains the
-normative description of released tokens.
+Status: the typed, validated `Orbit64.Algorithm` core is implemented on the
+development branch. It represents primitive layer-turn terminals plus exact
+`Concat`, `Repeat`, `Inverse`, `Block`, `PackedBlock`, `Partition`, and
+`SliceParts` nodes. Canonical class-`11` token encoding, bounded streaming, and
+the source-language tool remain proposed work. The released `Orbit64.Move.Slp`
+API supports only `Terminal` and binary `Concat` rules; [FORMAT.md](FORMAT.md)
+remains the normative description of released tokens.
 
 This proposal defines an Orbit64 representation for finite algorithms that are
 too large to expand into literal move sequences. Its motivating test case is
@@ -50,7 +53,7 @@ does not assume that all future puzzle families use the same move vocabulary.
 The distributable library owns the notation-independent pieces:
 
 ```text
-Orbit64.Algorithm             public DAG types and validation
+Orbit64.Algorithm             public DAG types, validation, and metadata
 Orbit64.Algorithm.Encoding    canonical token encoding and decoding
 Orbit64.Algorithm.Stream      bounded-memory terminal expansion
 ```
@@ -61,9 +64,9 @@ lowers source expressions into the public DAG. Applications may instead build
 the DAG directly or supply another notation frontend.
 
 This boundary means that "algorithm notation support" describes the example
-tool, while "algorithm DAG support" describes the library. Both are tested:
-the root project tests the IR and wire format, and CI separately builds and
-tests the example parser against the same pinned minimum Flix version.
+tool, while "algorithm DAG support" describes the library. The first shipped
+step has tests for IR validity and exact, non-expanding terminal/part counts.
+The wire format, streaming, and example parser follow this contract.
 
 ## Source language
 
