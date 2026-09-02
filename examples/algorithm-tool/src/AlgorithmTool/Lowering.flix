@@ -46,7 +46,7 @@ mod AlgorithmTool.Lowering {
     def lowerExpression(expr: AlgorithmTool.Ast.Expr, bindings: List[(String, Int32)],
                         reversedNodes: List[Orbit64.Algorithm.Node]):
             Result[String, (Int32, List[Orbit64.Algorithm.Node])] = match expr {
-        case Move(move) => Ok(appendNode(Orbit64.Algorithm.Node.Terminal(move), reversedNodes))
+        case Move(move) => Ok(internTerminal(move, reversedNodes))
         case Reference(name) =>
             lookup(name, bindings) |> Result.map(reference -> (reference, reversedNodes))
         case Concat(children) =>
@@ -112,6 +112,23 @@ mod AlgorithmTool.Lowering {
                    reversedNodes: List[Orbit64.Algorithm.Node]):
             (Int32, List[Orbit64.Algorithm.Node]) =
         (List.length(reversedNodes), node :: reversedNodes)
+
+    /// Reuse an earlier identical terminal instead of appending a duplicate node.
+    def internTerminal(move: Orbit64.Move.Move,
+                       reversedNodes: List[Orbit64.Algorithm.Node]):
+            (Int32, List[Orbit64.Algorithm.Node]) =
+        match findTerminal(move, reversedNodes, List.length(reversedNodes) - 1) {
+            case Some(index) => (index, reversedNodes)
+            case None => appendNode(Orbit64.Algorithm.Node.Terminal(move), reversedNodes)
+        }
+
+    def findTerminal(move: Orbit64.Move.Move, nodes: List[Orbit64.Algorithm.Node],
+                     index: Int32): Option[Int32] = match nodes {
+        case Nil => None
+        case Orbit64.Algorithm.Node.Terminal(existing) :: rest =>
+            if (existing == move) Some(index) else findTerminal(move, rest, index - 1)
+        case _ :: rest => findTerminal(move, rest, index - 1)
+    }
 
     def lookup(name: String, bindings: List[(String, Int32)]): Result[String, Int32] =
         match bindings {
