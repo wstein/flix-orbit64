@@ -9,4 +9,4 @@ license     = "Apache-2.0"
 authors     = ["Werner Stein"]
 
 [dependencies]
-"github:wstein/flix-orbit64" = "0.8.1"
+"github:wstein/flix-orbit64" = "0.8.2"

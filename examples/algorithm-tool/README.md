@@ -1,7 +1,7 @@
 # Algorithm-tool design examples
 
 This is a separate Flix package for the source frontend described in
-[`ALGORITHM-DAG.md`](../../ALGORITHM-DAG.md). It depends on Orbit64 0.8.1 and
+[`ALGORITHM-DAG.md`](../../ALGORITHM-DAG.md). It depends on Orbit64 0.8.2 and
 keeps source parsing, formatting, optimization, and legacy imports outside the
 notation-independent library DAG.
 
