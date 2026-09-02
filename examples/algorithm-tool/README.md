@@ -1,7 +1,7 @@
 # Algorithm-tool design examples
 
 This is a separate Flix package for the source frontend described in
-[`ALGORITHM-DAG.md`](../../ALGORITHM-DAG.md). It depends on Orbit64 0.8.0 and
+[`ALGORITHM-DAG.md`](../../ALGORITHM-DAG.md). It depends on Orbit64 0.8.1 and
 keeps source parsing, formatting, optimization, and legacy imports outside the
 notation-independent library DAG.
 
@@ -10,6 +10,13 @@ Run its checks from this directory with the repository wrapper:
 ```console
 ../../flixw check
 ../../flixw test
+```
+
+To convert native source to a class-`10` token and deterministic reconstructed
+source, use the example package's entry point:
+
+```console
+../../flixw run -- input.flix output.orbit64 reconstructed.flix
 ```
 
 The package now parses the native grammar: primitive WCA face moves, grouping,
