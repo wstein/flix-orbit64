@@ -16,8 +16,20 @@ To convert native source to a class-`10` token and deterministic reconstructed
 source, use the example package's entry point:
 
 ```console
-../../flixw run -- input.flix output.orbit64 reconstructed.flix
+../../flixw run -- input.alg output.orbit64 reconstructed.alg
 ```
+
+`*.alg` is native algorithm notation, not Flix source code. The reconstructed
+form uses generated `n0`, `n1`, … names and preserves the decoded primitive
+move stream; it is intentionally not a source-level pretty-print of the
+original names or comments.
+
+Checked round-trip artifacts accompany both 2x2x2 fixtures:
+
+- `2x2x2-devils-alg.encoded.orbit64` and
+  `2x2x2-devils-alg.reconstructed.alg`;
+- `2x2x2-devils-alg.repair.encoded.orbit64` and
+  `2x2x2-devils-alg.repair.reconstructed.alg`.
 
 The package now parses the native grammar: primitive WCA face moves, grouping,
 repetition, inversion, conjugates, commutators, named definitions, comments,

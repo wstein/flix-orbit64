@@ -27,7 +27,8 @@ mod AlgorithmTool.Formatter {
 
     def formatExpr(expr: AlgorithmTool.Ast.Expr): String = expression(expr)
 
-    def formatDefinitions(definitions: List[AlgorithmTool.Ast.Definition]): String = match definitions {
+    def formatDefinitions(definitions: List[AlgorithmTool.Ast.Definition]): String =
+        match definitions {
         case Nil => ""
         case Definition(name, body) :: rest =>
             String.concat("def ${name} = ${formatExpr(body)}\n", formatDefinitions(rest))
