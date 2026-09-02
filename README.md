@@ -47,7 +47,7 @@ pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```toml
 [dependencies]
-"github:wstein/flix-orbit64" = "0.7.0"
+"github:wstein/flix-orbit64" = "0.8.0"
 ```
 
 ```flix
