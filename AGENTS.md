@@ -64,8 +64,7 @@ is published.
 ## Layout
 
 - `src/Orbit64/State.flix` — state counting and state `encode`/`decode`
-- `src/Orbit64/Move.flix`, `src/Orbit64/Move/Slp.flix` — primitive moves,
-  literal sequences, and straight-line programs
+- `src/Orbit64/Move.flix` — primitive moves and literal sequences
 - `src/Orbit64/Algorithm.flix`, `src/Orbit64/Algorithm/Encoding.flix` — typed
   algorithm DAGs, validation, streaming, and class-`10` encoding
 - `src/Orbit64/Token.flix` — tagged decoding across the Orbit64 token family

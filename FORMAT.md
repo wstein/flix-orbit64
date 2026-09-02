@@ -104,27 +104,40 @@ integer, so decoding recovers `k` with the exact-integer equivalent of
 Tokens describe literal primitive sequences. Equality means the same expanded
 sequence, not the same resulting cube transformation.
 
-## Algorithm DAG
+## Algorithm grammar
 
-An algorithm DAG has a topologically ordered node table and an explicit root.
+An algorithm token is an operation stream which reconstructs a typed DAG. Its
+operations are topologically ordered: every reference is a backward distance
+to an operation that has already appeared in the stream. The final `export`
+operation selects the root by the same kind of backward distance. This keeps
+the wire format independent of the library's in-memory node indices.
+
 The released nodes are `Terminal`, `Concat`, `Repeat`, `Inverse`, `Block`,
 `PackedBlock`, `Partition`, and `SliceParts`. Terminals are the primitive
 layer-turn vocabulary defined above; rich WCA source notation is deliberately
 outside the library codec.
 
 The class-`10` rank is a self-delimiting bit grammar. Its first bit is `1`; it
-is followed by gamma-coded non-negative node count and root, then each node's
-four-bit tag and gamma-coded fields. A natural number `v` is Elias gamma code
-for `v + 1`. Lists are encoded as their length followed by their items. The
-tag order is `Terminal`, `Concat`, `Repeat`, `Inverse`, `Block`,
-`PackedBlock`, `Partition`, `SliceParts`. Tags `8` through `15` are reserved
-and rejected by this schema.
+is followed by a gamma-coded operation count, that many tagged operations,
+and one final `export` tag. A natural number `v` is Elias gamma code for
+`v + 1`. Lists are encoded as their length followed by their items. The
+operation tags `0` through `7` are, in order, `Terminal`, `Concat`, `Repeat`,
+`Inverse`, `Block`, `PackedBlock`, `Partition`, and `SliceParts`. Tags `8`
+through `14` are reserved and rejected. Tag `15` is valid only as the final
+`export` operation.
+
+Each reference field stores `currentOperation - targetOperation - 1`; zero
+therefore names the immediately preceding operation. `Concat`, `Block`, and
+the alphabet of `PackedBlock` contain reference lists. `Repeat`, `Inverse`,
+`Partition`, and `SliceParts` contain one reference. Symbol lists and
+partition boundaries are ordinary non-negative integer lists, not references.
 
 As with literal moves, the outer envelope gamma-codes the reachable layer
 count and uses a marker bit plus zero fill to finish a sextet. Decoding rejects
-trailing payload bits, out-of-alphabet terminals, invalid DAG structure, and
-non-canonical outer padding. DAG equality is structural equality. Encoders
-should use class `01` for a literal sequence when it is shorter.
+trailing payload bits, forward or invalid references, out-of-alphabet
+terminals, invalid DAG structure, and non-canonical outer padding. DAG equality
+is structural equality. Encoders should use class `01` for a literal sequence
+when it is shorter.
 
 ## Extension envelope
 

@@ -89,3 +89,14 @@ def algorithmTokenRoundTripsEveryNodeKindAndDispatches(): Unit \ Assert =
             case Orbit64.Token.Token.AlgorithmToken(_, decoded) => decoded == dag
             case _ => false
         })) == Ok(Ok(true)))
+
+@Test
+def algorithmTokenExportsAnEarlierOperation(): Unit \ Assert =
+    let dag = Algorithm(List#{
+        Terminal(LayerTurn(U, 0, Clockwise)),
+        Terminal(LayerTurn(R, 0, Half)),
+        Concat(List#{0, 1})
+    }, 1);
+    Assert.assertEq(expected = Ok(dag), Orbit64.Algorithm.Encoding.encode(3, dag)
+        |> Result.flatMap(token -> Orbit64.Algorithm.Encoding.decode(token)
+            |> Result.map(match (_, decoded) -> decoded)))

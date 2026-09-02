@@ -1,9 +1,9 @@
 ///
 /// Canonical class-`10` encoding for typed algorithm DAGs.
 ///
-/// The payload is a self-delimiting bit grammar: a leading sentinel, the node
-/// count and root, followed by each four-bit tagged node. Natural numbers use Elias
-/// gamma coding of `value + 1`; therefore no field needs a fixed width.
+/// The payload is a self-delimiting operation grammar: a leading sentinel,
+/// operation count, tagged operations, and a final `export` back-reference.
+/// References are backward distances, never internal table indices.
 ///
 mod Orbit64.Algorithm.Encoding {
 
@@ -42,47 +42,61 @@ mod Orbit64.Algorithm.Encoding {
         match algorithm {
             case Orbit64.Algorithm.Algorithm.Algorithm(nodes, root) =>
                 append(naturalBits(Int32.toBigInt(List.length(nodes))),
-                    append(naturalBits(Int32.toBigInt(root)), nodeBits(n, nodes)))
+                    append(nodeBits(n, nodes, 0), exportBits(List.length(nodes), root)))
         }
 
-    def nodeBits(n: Int32, nodes: List[Orbit64.Algorithm.Node]): List[Bool] = match nodes {
+    def nodeBits(n: Int32, nodes: List[Orbit64.Algorithm.Node], index: Int32):
+            List[Bool] = match nodes {
         case Nil => Nil
-        case node :: rest => append(oneNodeBits(n, node), nodeBits(n, rest))
+        case node :: rest => append(oneNodeBits(n, index, node), nodeBits(n, rest, index + 1))
     }
 
-    def oneNodeBits(n: Int32, node: Orbit64.Algorithm.Node): List[Bool] = match node {
+    def exportBits(count: Int32, root: Int32): List[Bool] =
+        append(tagBits(15), naturalBits(Int32.toBigInt(count - root - 1)))
+
+    def oneNodeBits(n: Int32, index: Int32, node: Orbit64.Algorithm.Node): List[Bool] = match node {
         case Orbit64.Algorithm.Node.Terminal(move) =>
             append(tagBits(0), naturalBits(Orbit64.Move.rank(n, move)))
         case Orbit64.Algorithm.Node.Concat(children) =>
-            append(tagBits(1), referenceListBits(children))
+            append(tagBits(1), referenceListBits(children, index))
         case Orbit64.Algorithm.Node.Repeat(child, count) =>
-            append(tagBits(2), append(naturalBits(Int32.toBigInt(child)), naturalBits(count)))
+            append(tagBits(2), append(referenceBits(child, index), naturalBits(count)))
         case Orbit64.Algorithm.Node.Inverse(child) =>
-            append(tagBits(3), naturalBits(Int32.toBigInt(child)))
+            append(tagBits(3), referenceBits(child, index))
         case Orbit64.Algorithm.Node.Block(children) =>
-            append(tagBits(4), referenceListBits(children))
+            append(tagBits(4), referenceListBits(children, index))
         case Orbit64.Algorithm.Node.PackedBlock(alphabet, symbols) =>
-            append(tagBits(5), append(referenceListBits(alphabet), referenceListBits(symbols)))
+            append(tagBits(5), append(referenceListBits(alphabet, index), intListBits(symbols)))
         case Orbit64.Algorithm.Node.Partition(sequence, boundaries) =>
-            append(tagBits(6), append(naturalBits(Int32.toBigInt(sequence)),
-                referenceListBits(boundaries)))
+            append(tagBits(6), append(referenceBits(sequence, index), intListBits(boundaries)))
         case Orbit64.Algorithm.Node.SliceParts(sequence, start, end) =>
-            append(tagBits(7), append(naturalBits(Int32.toBigInt(sequence)),
+            append(tagBits(7), append(referenceBits(sequence, index),
                 append(naturalBits(Int32.toBigInt(start)), naturalBits(Int32.toBigInt(end)))))
     }
 
     def tagBits(tag: Int32): List[Bool] =
         binaryBits(Int32.toBigInt(tag), 4, Nil)
 
-    def referenceListBits(values: List[Int32]): List[Bool] =
+    def referenceListBits(values: List[Int32], index: Int32): List[Bool] =
         append(naturalBits(Int32.toBigInt(List.length(values))),
-            intBits(values))
+            referenceBitsList(values, index))
+
+    def referenceBitsList(values: List[Int32], index: Int32): List[Bool] = match values {
+        case Nil => Nil
+        case value :: rest =>
+            append(referenceBits(value, index), referenceBitsList(rest, index))
+    }
+
+    def referenceBits(reference: Int32, index: Int32): List[Bool] =
+        naturalBits(Int32.toBigInt(index - reference - 1))
 
     def intBits(values: List[Int32]): List[Bool] = match values {
         case Nil => Nil
-        case value :: rest =>
-            append(naturalBits(Int32.toBigInt(value)), intBits(rest))
+        case value :: rest => append(naturalBits(Int32.toBigInt(value)), intBits(rest))
     }
+
+    def intListBits(values: List[Int32]): List[Bool] =
+        append(naturalBits(Int32.toBigInt(List.length(values))), intBits(values))
 
     def naturalBits(value: BigInt): List[Bool] =
         let binary = positiveBits(value + 1ii);
@@ -112,25 +126,68 @@ mod Orbit64.Algorithm.Encoding {
     def parseAlgorithm(n: Int32, bits: List[Bool]): Result[String, Orbit64.Algorithm.Algorithm] =
         parseNatural(bits) |> Result.flatMap(match (count, afterCount) ->
             intValue(count, "node count") |> Result.flatMap(nodeCount ->
-                parseNatural(afterCount) |> Result.flatMap(match (root, afterRoot) ->
-                    intValue(root, "root") |> Result.flatMap(rootIndex ->
-                        parseNodes(n, nodeCount, afterRoot, Nil)
-                            |> Result.flatMap(match (nodes, remaining) ->
-                                if (List.isEmpty(remaining))
-                                    Ok(Orbit64.Algorithm.Algorithm.Algorithm(nodes, rootIndex))
-                                else Err("algorithm payload has trailing bits"))))))
+                parseNodes(n, nodeCount, afterCount, Nil, 0) |> Result.flatMap(
+                    match (nodes, remaining) ->
+                        parseExport(List.length(nodes), remaining) |> Result.map(root ->
+                            Orbit64.Algorithm.Algorithm.Algorithm(nodes, root)))))
 
     def parseNodes(n: Int32, remaining: Int32, bits: List[Bool],
-                   out: List[Orbit64.Algorithm.Node]):
+                   out: List[Orbit64.Algorithm.Node], index: Int32):
             Result[String, (List[Orbit64.Algorithm.Node], List[Bool])] =
         if (remaining == 0) Ok((List.reverse(out), bits))
-        else parseNode(n, bits) |> Result.flatMap(match (node, rest) ->
-            parseNodes(n, remaining - 1, rest, node :: out))
+        else parseNode(n, index, bits) |> Result.flatMap(match (node, rest) ->
+            parseNodes(n, remaining - 1, rest, node :: out, index + 1))
 
-    def parseNode(n: Int32, bits: List[Bool]):
+    def parseNode(n: Int32, index: Int32, bits: List[Bool]):
             Result[String, (Orbit64.Algorithm.Node, List[Bool])] =
         parseTag(bits) |> Result.flatMap(match (tag, afterTag) ->
-            parseTaggedNode(n, tag, afterTag))
+            match parseTaggedNode(n, tag, afterTag) {
+                case Ok((node, rest)) => Ok((absolutize(node, index), rest))
+                case Err(message) => Err("node ${index}: ${message}")
+            })
+
+    def parseExport(count: Int32, bits: List[Bool]): Result[String, Int32] =
+        parseTag(bits) |> Result.flatMap(match (tag, afterTag) ->
+            parseExportTag(count, tag, afterTag))
+
+    def parseExportTag(count: Int32, tag: Int32, bits: List[Bool]): Result[String, Int32] =
+        if (tag != 15) Err("algorithm payload has no export operation (found tag ${tag})")
+        else parseNatural(bits) |> Result.flatMap(match (distance, rest) ->
+            parseExportDistance(count, distance, rest))
+
+    def parseExportDistance(count: Int32, distance: BigInt, rest: List[Bool]):
+            Result[String, Int32] =
+        if (not List.isEmpty(rest)) Err("algorithm payload has trailing bits")
+        else intValue(distance, "export reference") |> Result.flatMap(d ->
+            let root = count - d - 1;
+            if (root < 0) Err("export reference is outside the grammar") else Ok(root))
+
+    def absolutize(node: Orbit64.Algorithm.Node, index: Int32):
+            Orbit64.Algorithm.Node = match node {
+        case Orbit64.Algorithm.Node.Terminal(move) =>
+            Orbit64.Algorithm.Node.Terminal(move)
+        case Orbit64.Algorithm.Node.Concat(children) =>
+            Orbit64.Algorithm.Node.Concat(absoluteList(children, index))
+        case Orbit64.Algorithm.Node.Repeat(child, count) =>
+            Orbit64.Algorithm.Node.Repeat(absolute(child, index), count)
+        case Orbit64.Algorithm.Node.Inverse(child) =>
+            Orbit64.Algorithm.Node.Inverse(absolute(child, index))
+        case Orbit64.Algorithm.Node.Block(children) =>
+            Orbit64.Algorithm.Node.Block(absoluteList(children, index))
+        case Orbit64.Algorithm.Node.PackedBlock(alphabet, symbols) =>
+            Orbit64.Algorithm.Node.PackedBlock(absoluteList(alphabet, index), symbols)
+        case Orbit64.Algorithm.Node.Partition(sequence, boundaries) =>
+            Orbit64.Algorithm.Node.Partition(absolute(sequence, index), boundaries)
+        case Orbit64.Algorithm.Node.SliceParts(sequence, start, end) =>
+            Orbit64.Algorithm.Node.SliceParts(absolute(sequence, index), start, end)
+    }
+
+    def absoluteList(values: List[Int32], index: Int32): List[Int32] = match values {
+        case Nil => Nil
+        case value :: rest => absolute(value, index) :: absoluteList(rest, index)
+    }
+
+    def absolute(distance: Int32, index: Int32): Int32 = index - distance - 1
 
     def parseTaggedNode(n: Int32, tag: Int32, bits: List[Bool]):
             Result[String, (Orbit64.Algorithm.Node, List[Bool])] = match tag {
@@ -191,11 +248,16 @@ mod Orbit64.Algorithm.Encoding {
 
     def parseTriple(bits: List[Bool]): Result[String, (Int32, Int32, Int32, List[Bool])] =
         parseInt(bits, "slice sequence") |> Result.flatMap(match (sequence, afterSequence) ->
-            parseInt(afterSequence, "slice start") |> Result.flatMap(match (start, afterStart) ->
-                parseInt(afterStart, "slice end") |> Result.map(match (end, rest) ->
-                    (sequence, start, end, rest))))
+            parseSliceStart(sequence, afterSequence))
 
-    def parseTwoLists(bits: List[Bool]): Result[String, (List[Int32], List[Int32], List[Bool])] =
+    def parseSliceStart(sequence: Int32, bits: List[Bool]):
+            Result[String, (Int32, Int32, Int32, List[Bool])] =
+        parseInt(bits, "slice start") |> Result.flatMap(match (start, afterStart) ->
+            parseInt(afterStart, "slice end") |> Result.map(match (end, rest) ->
+                (sequence, start, end, rest)))
+
+    def parseTwoLists(bits: List[Bool]):
+            Result[String, (List[Int32], List[Int32], List[Bool])] =
         parseReferenceList(bits) |> Result.flatMap(match (first, afterFirst) ->
             parseReferenceList(afterFirst) |> Result.map(match (second, rest) ->
                 (first, second, rest)))
@@ -233,7 +295,8 @@ mod Orbit64.Algorithm.Encoding {
             case true :: _ => Ok((count, bits))
         }
 
-    def takeBits(bits: List[Bool], count: Int32): Result[String, (List[Bool], List[Bool])] =
+    def takeBits(bits: List[Bool], count: Int32):
+            Result[String, (List[Bool], List[Bool])] =
         takeBitsLoop(bits, count, Nil)
 
     def takeBitsLoop(bits: List[Bool], count: Int32, out: List[Bool]):

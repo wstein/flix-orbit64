@@ -771,8 +771,10 @@ that stronger verification; equal endpoints alone are insufficient.
 Class `01` is deliberately retained for literal algorithms: its move radix is
 exactly the reachable move alphabet, so a non-repetitive scramble never pays
 for grammar address space. Class `10` is the single structured-algorithm
-format and carries the complete typed DAG. It replaces the former binary SLP
-experiment rather than layering a second grammar class beside it.
+format. Its wire representation is a sequential operation grammar with
+backward references and a final export, which decodes to the complete typed
+DAG. It replaces the former binary SLP experiment rather than layering a
+second grammar class beside it.
 
 Class `11` is a real extension envelope:
 
