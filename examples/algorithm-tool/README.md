@@ -12,8 +12,10 @@ Run its checks from this directory with the repository wrapper:
 ../../flixw test
 ```
 
-The initial package provides the exact source AST. Parser, formatter, lowering,
-optimizer, and importer phases build on that typed boundary.
+The package now parses the native grammar: primitive WCA face moves, grouping,
+repetition, inversion, conjugates, commutators, named definitions, comments,
+and stable name slices. Formatting, lowering, optimizer, and importer phases
+build on that typed boundary.
 
 `2x2x2-devils-alg.orbit64` is a lossless recursive transcription of Bruce
 Norskog's 2x2x2 devil's algorithm. It was derived from the recursive
