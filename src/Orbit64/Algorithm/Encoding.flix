@@ -46,9 +46,18 @@ mod Orbit64.Algorithm.Encoding {
         }
 
     def nodeBits(n: Int32, nodes: List[Orbit64.Algorithm.Node], index: Int32):
-            List[Bool] = match nodes {
-        case Nil => Nil
-        case node :: rest => append(oneNodeBits(n, index, node), nodeBits(n, rest, index + 1))
+            List[Bool] =
+        nodeBitsLoop(n, nodes, index, Nil)
+
+    /// Accumulates the bit stream in reverse so large grammars never depend on
+    /// the host stack depth.
+    def nodeBitsLoop(n: Int32, nodes: List[Orbit64.Algorithm.Node], index: Int32,
+                     reversed: List[Bool]): List[Bool] = match nodes {
+        case Nil => List.reverse(reversed)
+        case node :: rest =>
+            let next = oneNodeBits(n, index, node)
+                |> List.foldLeft((out, bit) -> bit :: out, reversed);
+            nodeBitsLoop(n, rest, index + 1, next)
     }
 
     def exportBits(count: Int32, root: Int32): List[Bool] =
@@ -135,8 +144,11 @@ mod Orbit64.Algorithm.Encoding {
                    out: List[Orbit64.Algorithm.Node], index: Int32):
             Result[String, (List[Orbit64.Algorithm.Node], List[Bool])] =
         if (remaining == 0) Ok((List.reverse(out), bits))
-        else parseNode(n, index, bits) |> Result.flatMap(match (node, rest) ->
-            parseNodes(n, remaining - 1, rest, node :: out, index + 1))
+        else match parseNode(n, index, bits) {
+            case Ok((node, rest)) =>
+                parseNodes(n, remaining - 1, rest, node :: out, index + 1)
+            case Err(message) => Err(message)
+        }
 
     def parseNode(n: Int32, index: Int32, bits: List[Bool]):
             Result[String, (Orbit64.Algorithm.Node, List[Bool])] =
