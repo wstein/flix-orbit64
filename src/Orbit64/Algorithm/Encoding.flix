@@ -1,5 +1,5 @@
 ///
-/// Canonical class-`11` encoding for typed algorithm DAGs.
+/// Canonical class-`10` encoding for typed algorithm DAGs.
 ///
 /// The payload is a self-delimiting bit grammar: a leading sentinel, the node
 /// count and root, followed by each four-bit tagged node. Natural numbers use Elias
@@ -7,20 +7,20 @@
 ///
 mod Orbit64.Algorithm.Encoding {
 
-    /// Encode a valid algorithm DAG as an Orbit64 class-`11` token.
+    /// Encode a valid algorithm DAG as an Orbit64 class-`10` token.
     pub def encode(n: Int32, algorithm: Orbit64.Algorithm.Algorithm):
             Result[String, String] =
         match Orbit64.Algorithm.faultOf(n, algorithm) {
             case Some(why) => Err("algorithm DAG is invalid: ${why}")
             case None =>
                 let payload = bitsToNatural(true :: algorithmBits(n, algorithm));
-                Orbit64.Internal.Encoding.encodeDelimitedRank(3, n / 2, payload)
+                Orbit64.Internal.Encoding.encodeDelimitedRank(2, n / 2, payload)
         }
 
-    /// Decode a class-`11` token without expanding its terminal sequence.
+    /// Decode a class-`10` token without expanding its terminal sequence.
     pub def decode(token: String):
             Result[String, (Orbit64.Move.LayerClass, Orbit64.Algorithm.Algorithm)] =
-        Orbit64.Internal.Encoding.decodeDelimitedRank(3, token)
+        Orbit64.Internal.Encoding.decodeDelimitedRank(2, token)
             |> Result.flatMap(match (layers, payload) -> decodePayload(layers, payload))
 
     def decodePayload(layers: Int32, payload: BigInt):

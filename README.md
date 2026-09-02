@@ -86,9 +86,9 @@ def moves(): Result[String, String] =
     }) //=> Ok("d4")
 ```
 
-`Orbit64.Token.decode(token)` dispatches states, literal sequences, SLPs, and
-typed algorithm DAGs
-without a caller choosing a decoder first. Move tokens carry the reachable
+`Orbit64.Token.decode(token)` dispatches states, literal sequences, structured
+algorithms, and extension envelopes without a caller choosing a decoder first.
+Move tokens carry the reachable
 layer count rather than cube parity, so the same token applies to `2l x 2l x
 2l` and `(2l + 1) x (2l + 1) x (2l + 1)` cubes.
 
@@ -139,18 +139,18 @@ The first base64url sextet divides the Orbit64 family into four classes:
 |------|------------|---------|
 | `00` | `A`–`P` | state |
 | `01` | `Q`–`f` | literal move sequence |
-| `10` | `g`–`v` | move straight-line program |
-| `11` | `w`–`_` | typed algorithm DAG |
+| `10` | `g`–`v` | structured algorithm grammar |
+| `11` | `w`–`_` | future extension envelope |
 
-Move sequences and SLPs gamma-code their reachable layer count because their
+Move sequences and structured algorithms gamma-code their reachable layer count because their
 arbitrary token length cannot identify it. The exact ranks, validation rules,
 and canonical bit padding are specified in [FORMAT.md](FORMAT.md).
 
-The released SLP contains only terminal and binary-concatenation rules. The
-class-`11` typed DAG adds repetitions, inverses, stable slices, and packed
-macro streams while preserving exact primitive layer-turn sequences. Its
-source grammar, WCA notation frontend, and devil's-algorithm importer remain
-separate proposed work; see [ALGORITHM-DAG.md](ALGORITHM-DAG.md).
+Class `10` is the one structured algorithm grammar. It adds sharing,
+repetitions, inverses, stable slices, and packed macro streams while preserving
+exact primitive layer-turn sequences. Class `01` remains the dense default for
+ordinary literal scrambles. Class `11` carries a future format ID and opaque
+payload, rather than duplicating the algorithm grammar.
 
 ## The same cube, three ways
 
@@ -499,7 +499,8 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   `Orbit64.State.encode`/`decode`.
 - `src/Orbit64/Move.flix` -- primitive layer turns and literal move-sequence
   encoding.
-- `src/Orbit64/Move/Slp.flix` -- straight-line programs over primitive moves.
+- `src/Orbit64/Algorithm/Encoding.flix` -- structured algorithm grammar
+  encoding over the public DAG.
 - `src/Orbit64/Token.flix` -- first-sextet dispatch across the token family.
 - `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical
   delimiter-padded bitstream primitives.
@@ -516,11 +517,11 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   3D facelet representation, orbits found by connected components, every state
   verified to round-trip at sticker level.
 - `test/TestOrbit64.flix` -- sizes, round-trips, and error handling.
-- `test/TestMove.flix`, `test/TestMoveSlp.flix` -- primitive-move validation,
-  exact format vectors, large-size and multi-sextet headers, and malformed
-  payload rejection.
+- `test/TestMove.flix`, `test/TestAlgorithm.flix` -- primitive-move validation,
+  structured-algorithm tokens, large-size headers, and malformed payload
+  rejection.
 - `test/TestToken.flix` -- universal class dispatch, including explicit 6x6x6
-  and 7x7x7 state-class coverage and reserved-class rejection.
+  and 7x7x7 state-class coverage and extension-envelope decoding.
 - `test/TestNet4x4.flix` -- fixtures for the 4x4x4 display convention: states
   built by a separate geometric model, with that model's own nets as the
   expected output.

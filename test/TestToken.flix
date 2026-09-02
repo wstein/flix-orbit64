@@ -5,10 +5,8 @@
 use Orbit64.Move.Move.{LayerTurn}
 use Orbit64.Move.Face.U
 use Orbit64.Move.Amount.Clockwise
-use Orbit64.Move.Slp.Slp.Slp
-use Orbit64.Move.Slp.Rule.Terminal
 use Orbit64.Move.LayerClass.LayerClass
-use Orbit64.Token.Token.{StateToken, MoveSequenceToken, MoveSlpToken}
+use Orbit64.Token.Token.{StateToken, MoveSequenceToken, AlgorithmToken, ExtensionToken}
 
 @Test
 def tokenDecoderDispatchesAState(): Unit \ Assert =
@@ -40,15 +38,19 @@ def tokenDecoderDispatchesAMoveSequence(): Unit \ Assert =
     }
 
 @Test
-def tokenDecoderDispatchesAMoveSlp(): Unit \ Assert =
-    let slp = Slp(List#{Terminal(LayerTurn(U, 0, Clockwise))});
-    match Orbit64.Move.Slp.encode(3, slp) {
+def tokenDecoderDispatchesAnAlgorithm(): Unit \ Assert =
+    let algorithm = Orbit64.Algorithm.Algorithm.Algorithm(List#{
+        Orbit64.Algorithm.Node.Terminal(LayerTurn(U, 0, Clockwise))
+    }, 0);
+    match Orbit64.Algorithm.Encoding.encode(3, algorithm) {
         case Err(e) => Assert.assertTrueWithMsg(false, "encode failed: ${e}")
         case Ok(t)  => Assert.assertEq(
-            expected = Ok(MoveSlpToken(LayerClass(1), slp)), Orbit64.Token.decode(t))
+            expected = Ok(AlgorithmToken(LayerClass(1), algorithm)), Orbit64.Token.decode(t))
     }
 
 @Test
-def tokenDecoderRejectsEmptyAndReservedTokens(): Unit \ Assert =
+def tokenDecoderRejectsEmptyAndReadsExtensionTokens(): Unit \ Assert =
     Assert.assertTrue(Orbit64.Token.decode("") |> Result.isErr);
-    Assert.assertTrue(Orbit64.Token.decode("wA") |> Result.isErr)
+    Assert.assertEq(expected = Ok(ExtensionToken(0, "")), Orbit64.Token.decode("w"));
+    Assert.assertEq(expected = Ok(ExtensionToken(15, "")), Orbit64.Token.decode("_A"));
+    Assert.assertTrue(Orbit64.Token.decode("_") |> Result.isErr)

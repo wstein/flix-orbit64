@@ -67,7 +67,7 @@ is published.
 - `src/Orbit64/Move.flix`, `src/Orbit64/Move/Slp.flix` — primitive moves,
   literal sequences, and straight-line programs
 - `src/Orbit64/Algorithm.flix`, `src/Orbit64/Algorithm/Encoding.flix` — typed
-  algorithm DAGs, validation, streaming, and class-`11` encoding
+  algorithm DAGs, validation, streaming, and class-`10` encoding
 - `src/Orbit64/Token.flix` — tagged decoding across the Orbit64 token family
 - `src/Orbit64/Internal/Encoding.flix` — shared base64url and delimited-bitstream arithmetic
 - `src/Orbit64/` — the rest of the library, all nested under the `Orbit64`

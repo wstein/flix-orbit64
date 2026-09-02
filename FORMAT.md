@@ -15,13 +15,13 @@ The remaining bits belong to that class's payload.
 | ------------ | -----: | ---------- | ------------- |
 | `00xxxx`     |   0–15 | `A`–`P`    | state         |
 | `01xxxx`     |  16–31 | `Q`–`f`    | move sequence |
-| `10xxxx`     |  32–47 | `g`–`v`    | move SLP      |
-| `11xxxx`     |  48–63 | `w`–`_`    | algorithm DAG |
+| `10xxxx`     |  32–47 | `g`–`v`    | structured algorithm |
+| `11xxxx`     |  48–63 | `w`–`_`    | extension envelope |
 
-Class `11` is an exact, typed algorithm DAG. It preserves sharing, repetition,
-inversion, and stable slices without expanding its primitive terminal stream.
-It is not a source-notation format; see [ALGORITHM-DAG.md](ALGORITHM-DAG.md)
-for the node semantics and proposed source-language tool.
+Class `10` is the one structured-algorithm format. It preserves sharing,
+repetition, inversion, and stable slices without expanding its primitive
+terminal stream. Class `11` is reserved for future formats, not a second
+algorithm grammar.
 
 ## Canonical unsigned integers
 
@@ -104,39 +104,6 @@ integer, so decoding recovers `k` with the exact-integer equivalent of
 Tokens describe literal primitive sequences. Equality means the same expanded
 sequence, not the same resulting cube transformation.
 
-## Move SLP
-
-A straight-line program is a topologically ordered list of rules whose last
-rule is the root. An empty rule list denotes the empty sequence. Rule `i` is
-one of:
-
-```text
-Terminal(move)
-Concat(left, right), where left < i and right < i
-```
-
-Rule `i` has radix `A + i^2` and rank:
-
-```text
-Terminal(move)       = moveRank
-Concat(left, right)  = moveAlphabetSize(n) + left * i + right
-```
-
-The rule ranks are combined by mixed-radix Horner ranking. If `G(r)` is the
-number of structurally valid `r`-rule grammars, the wire rank skips every
-shorter grammar:
-
-```text
-G(0) = 1
-G(r) = product(i = 0 .. r - 1, A + i^2)
-slpRank = (G(0) + ... + G(r - 1)) + grammarRank
-```
-
-These ranges also partition every non-negative integer, so no rule count is
-stored. Decoding recovers the range, validates every reference, and never
-expands the root. Grammar-token equality is structural equality; different
-SLPs may expand to the same moves.
-
 ## Algorithm DAG
 
 An algorithm DAG has a topologically ordered node table and an explicit root.
@@ -145,7 +112,7 @@ The released nodes are `Terminal`, `Concat`, `Repeat`, `Inverse`, `Block`,
 layer-turn vocabulary defined above; rich WCA source notation is deliberately
 outside the library codec.
 
-The class-`11` rank is a self-delimiting bit grammar. Its first bit is `1`; it
+The class-`10` rank is a self-delimiting bit grammar. Its first bit is `1`; it
 is followed by gamma-coded non-negative node count and root, then each node's
 four-bit tag and gamma-coded fields. A natural number `v` is Elias gamma code
 for `v + 1`. Lists are encoded as their length followed by their items. The
@@ -153,10 +120,18 @@ tag order is `Terminal`, `Concat`, `Repeat`, `Inverse`, `Block`,
 `PackedBlock`, `Partition`, `SliceParts`. Tags `8` through `15` are reserved
 and rejected by this schema.
 
-As with the move classes, the outer envelope gamma-codes the reachable layer
+As with literal moves, the outer envelope gamma-codes the reachable layer
 count and uses a marker bit plus zero fill to finish a sextet. Decoding rejects
 trailing payload bits, out-of-alphabet terminals, invalid DAG structure, and
-non-canonical outer padding. DAG equality is structural equality.
+non-canonical outer padding. DAG equality is structural equality. Encoders
+should use class `01` for a literal sequence when it is shorter.
+
+## Extension envelope
+
+Class `11` reserves its low four bits as a format ID. IDs `0` through `14`
+leave the rest of the token to that future format. ID `15` consumes one more
+base64url sextet and denotes IDs `15` through `78`. `Token.decode` returns the
+format ID and opaque remaining payload; no extension format is assigned here.
 
 ## Public API
 
@@ -166,10 +141,10 @@ family, not an alias for one member:
 ```text
 Orbit64.State.encode / decode
 Orbit64.Move.encode / decode        (decode returns a layer class)
-Orbit64.Move.Slp.encode / decode    (decode returns a layer class)
 Orbit64.Algorithm.Encoding.encode / decode
 Orbit64.Token.decode
 ```
 
 `Orbit64.Token.decode` dispatches on the first two bits and returns a tagged
-value carrying `n` and the decoded state, move sequence, SLP, or algorithm DAG.
+value carrying `n` and the decoded state, move sequence, structured algorithm,
+or extension envelope.

@@ -1,13 +1,12 @@
 # Orbit64 algorithm DAG proposal
 
 Status: the typed, validated `Orbit64.Algorithm` core is implemented on the
-development branch for Orbit64 0.7.0. It represents primitive layer-turn terminals plus exact
+development branch. It represents primitive layer-turn terminals plus exact
 `Concat`, `Repeat`, `Inverse`, `Block`, `PackedBlock`, `Partition`, and
 `SliceParts` nodes. `foldTerminals` streams the exact expansion through a
-caller-supplied fold without materializing it. Canonical class-`11` token
-encoding and the source-language tool remain proposed work. The released
-`Orbit64.Move.Slp` API supports only `Terminal` and binary `Concat` rules;
-[FORMAT.md](FORMAT.md) remains the normative description of released tokens.
+caller-supplied fold without materializing it. The canonical structured
+algorithm token is class `10`; class `11` is an extension envelope. The source
+language tool remains separate; [FORMAT.md](FORMAT.md) is normative.
 
 This proposal defines an Orbit64 representation for finite algorithms that are
 too large to expand into literal move sequences. Its motivating test case is
@@ -44,7 +43,7 @@ The format must:
 - distinguish exact sequences from effect-only verification shortcuts;
 - reject cyclic definitions and every operation that would create an infinite
   expansion; and
-- leave the existing state, literal-move, and SLP token classes decodable.
+- leave the existing state and literal-move token classes decodable.
 
 The first implementation targets finite `n x n x n` algorithms. The node model
 does not assume that all future puzzle families use the same move vocabulary.
@@ -769,36 +768,22 @@ that stronger verification; equal endpoints alone are insufficient.
 
 ## Wire-format evolution
 
-The released `10` class is a complete enumerative code for `Terminal`/`Concat`
-SLPs. Every non-negative grammar rank is already meaningful, so it has no
-unused escape rank in which to add DAG opcodes compatibly.
+Class `01` is deliberately retained for literal algorithms: its move radix is
+exactly the reachable move alphabet, so a non-repetitive scramble never pays
+for grammar address space. Class `10` is the single structured-algorithm
+format and carries the complete typed DAG. It replaces the former binary SLP
+experiment rather than layering a second grammar class beside it.
 
-The expanded DAG therefore uses the `11` extension class, leaving old SLP
-tokens decodable. Its released envelope is:
-
-```text
-11iiii | extension payload
-```
-
-The payload contains, in order:
+Class `11` is a real extension envelope:
 
 ```text
-leading sentinel bit
-root node reference
-topologically ordered node table
+11iiii | payload                 IDs 0 through 14
+111111 | jjjjjj | payload        extended IDs 15 through 78
 ```
 
-The outer class-`11` envelope gamma-codes the layer count, then delimiter-pads
-the payload exactly like the other variable-width classes. The inner payload
-uses gamma-coded natural fields, a four-bit node tag, and explicit list
-lengths. Tags 8 through 15 are reserved for a successor schema. [FORMAT.md](FORMAT.md)
-is normative. State (`00`), literal move
-(`01`), and released SLP (`10`) tokens remain byte-for-byte unchanged.
-
-This first schema encodes absolute earlier-node references. Its eight defined
-node tags leave tags 8 through 15 reserved; a later rich DAG schema may assign
-one of them only with a fully specified extension payload, never by
-reinterpreting these tokens.
+The envelope deliberately has no layer-count or DAG meaning. Each assigned
+format owns its payload and validation rules. This prevents a future format
+from reinterpreting an algorithm token.
 
 ## Implementation phases
 
@@ -808,7 +793,7 @@ reinterpreting these tokens.
    generators reproduce them, and specify the construction combinators before
    freezing the IR.
 3. Implement the typed exact DAG, metadata calculation, lazy expansion,
-   partitions, packed blocks, structural validation, and class-`11` encoding.
+   partitions, packed blocks, structural validation, and class-`10` encoding.
 4. Implement the example parser, formatter, name resolution, ordinary algebra
    operators, and Norskog importers with unit and round-trip tests.
 5. Add canonical vectors, corruption tests, decoder limits, and a versioned

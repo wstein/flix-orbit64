@@ -3,12 +3,12 @@
 ///
 mod Orbit64.Token {
 
-    /// A decoded state or algorithm token with its size domain.
+    /// A decoded state, literal move sequence, structured algorithm, or extension.
     pub enum Token with Eq, ToString {
         case StateToken(Int32, List[Orbit64.Coord.Coord]),
         case MoveSequenceToken(Orbit64.Move.LayerClass, List[Orbit64.Move.Move]),
-        case MoveSlpToken(Orbit64.Move.LayerClass, Orbit64.Move.Slp.Slp),
-        case AlgorithmToken(Orbit64.Move.LayerClass, Orbit64.Algorithm.Algorithm)
+        case AlgorithmToken(Orbit64.Move.LayerClass, Orbit64.Algorithm.Algorithm),
+        case ExtensionToken(Int32, String)
     }
 
     /// Dispatch on the two most significant bits of the first sextet.
@@ -23,8 +23,8 @@ mod Orbit64.Token {
         match tokenClass {
             case 0 => decodeState(token)
             case 1 => decodeMoves(token)
-            case 2 => decodeSlp(token)
-            case _ => decodeAlgorithm(token)
+            case 2 => decodeAlgorithm(token)
+            case _ => decodeExtension(token)
         }
 
     def decodeMoves(token: String): Result[String, Token] =
@@ -32,15 +32,32 @@ mod Orbit64.Token {
             |> Result.map(match (layerClass, moves) ->
                 Token.MoveSequenceToken(layerClass, moves))
 
-    def decodeSlp(token: String): Result[String, Token] =
-        Orbit64.Move.Slp.decode(token)
-            |> Result.map(match (layerClass, slp) ->
-                Token.MoveSlpToken(layerClass, slp))
-
     def decodeAlgorithm(token: String): Result[String, Token] =
         Orbit64.Algorithm.Encoding.decode(token)
             |> Result.map(match (layerClass, algorithm) ->
                 Token.AlgorithmToken(layerClass, algorithm))
+
+    def decodeExtension(token: String): Result[String, Token] =
+        match Orbit64.Internal.Encoding.digitOf(String.charAt(0, token)) {
+            case None => Err("token contains a character outside the base64url alphabet")
+            case Some(first) =>
+                let id = first - 48;
+                if (id < 15) extensionToken(id, String.drop(1, token))
+                else decodeExtendedId(token)
+        }
+
+    def decodeExtendedId(token: String): Result[String, Token] =
+        if (String.length(token) < 2) Err("extension token ends before its extended format ID")
+        else match Orbit64.Internal.Encoding.digitOf(String.charAt(1, token)) {
+            case None => Err("token contains a character outside the base64url alphabet")
+            case Some(id) => extensionToken(15 + id, String.drop(2, token))
+        }
+
+    def extensionToken(id: Int32, payload: String): Result[String, Token] =
+        match Orbit64.Internal.Encoding.fromBase64(payload) {
+            case Some(_) => Ok(Token.ExtensionToken(id, payload))
+            case None => Err("extension payload contains a character outside the base64url alphabet")
+        }
 
     def decodeState(token: String): Result[String, Token] =
         match sizeForWidth(String.length(token), 2) {
