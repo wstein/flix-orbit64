@@ -307,9 +307,6 @@ mod Orbit64.Algorithm.Encoding {
             case bit :: rest => takeBitsLoop(rest, count - 1, bit :: out)
         }
 
-    def append(left: List[a], right: List[a]): List[a] = match left {
-        case Nil => right
-        case value :: rest => value :: append(rest, right)
-    }
+    def append(left: List[a], right: List[a]): List[a] = List.append(left, right)
 
 }

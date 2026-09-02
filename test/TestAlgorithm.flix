@@ -100,3 +100,13 @@ def algorithmTokenExportsAnEarlierOperation(): Unit \ Assert =
     Assert.assertEq(expected = Ok(dag), Orbit64.Algorithm.Encoding.encode(3, dag)
         |> Result.flatMap(token -> Orbit64.Algorithm.Encoding.decode(token)
             |> Result.map(match (_, decoded) -> decoded)))
+
+@Test
+def algorithmTokenHandlesLargeOperationStreams(): Unit \ Assert =
+    let count = 4096;
+    let nodes = List.range(0, count) |> List.map(_ ->
+        Terminal(LayerTurn(U, 0, Clockwise)));
+    let dag = Algorithm(nodes, count - 1);
+    Assert.assertEq(expected = Ok(dag), Orbit64.Algorithm.Encoding.encode(2, dag)
+        |> Result.flatMap(token -> Orbit64.Algorithm.Encoding.decode(token)
+            |> Result.map(match (_, decoded) -> decoded)))
