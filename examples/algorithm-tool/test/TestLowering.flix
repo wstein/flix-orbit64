@@ -32,3 +32,20 @@ def reconstructedSourcePreservesTheExpandedMoveSequence(): Unit \ Assert =
             |> Result.flatMap(AlgorithmTool.Lowering.lower));
     Assert.assertEq(expected = original |> Result.flatMap(Orbit64.Algorithm.expandedCount(2)),
         reconstructed |> Result.flatMap(Orbit64.Algorithm.expandedCount(2)))
+
+@Test
+def reconstructionKeepsSliceSourcesNamed(): Unit \ Assert =
+    let source = "def base = U R\ndef prefix = base[0:1]\nexport prefix";
+    let reconstructed = AlgorithmTool.RoundTrip.roundTrip(2, source) |> Result.flatMap(
+        match (_, text) -> AlgorithmTool.Parser.parse(text)
+            |> Result.flatMap(AlgorithmTool.Lowering.lower));
+    Assert.assertEq(expected = Ok(1ii), reconstructed |> Result.flatMap(
+        Orbit64.Algorithm.expandedCount(2)))
+
+@Test
+def devilsAlgorithmExpandsToTheDocumentedQuarterTurnCount(): Unit \ {Fs.FileRead, Assert} =
+    let original = Fs.FileRead.read("2x2x2-devils-alg.orbit64") |> Result.getWithDefault("");
+    let lowered = AlgorithmTool.Parser.parse(original)
+        |> Result.flatMap(AlgorithmTool.Lowering.lower);
+    Assert.assertEq(expected = Ok(3674160ii), lowered |> Result.flatMap(
+        Orbit64.Algorithm.expandedCount(2)))
