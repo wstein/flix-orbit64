@@ -14,16 +14,16 @@ def roundTrippable(): List[(Int32, String)] = List#{
     (2, "EJ6Rr"),
     (2, "DJ5Lt"),
     (3, "AAAAAAAAAAAA"),
-    (3, "AAAAAAAAAAf_"),
-    (3, "ABU68xS1q8iQ"),
-    (3, "AWMmIry_APKe"),
-    (3, "AUi1GvzQin1y"),
+    (3, "AAAAAAAAAL_o"),
+    (3, "AP7DZPiEDQ2A"),
+    (3, "EKXJoNj0C37Q"),
+    (3, "D2h9Q9nGfcKw"),
     (4, "AAAAAAAAAAAAAAAAAAAAAAAAAAA"),
     (4, "BJSsuyGPOiU06kIz-eqibqTP1th"),
     (4, "BAy4TWgX4vSZOHnM2NdN63BRWKG"),
-    (5, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-    (5, "BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS"),
-    (5, "CS4VwsPPKZmHYvHO6XpLm43iQChcG5dsI3rgJeX8ai")
+    (5, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+    (5, "AQsjv5K4-XPjKJZMNvMLvYKqohuv1x7JGUoNROgDJ2w"),
+    (5, "AbikFIS219F64tUGzq-xjsNFsQPySsJ8ciksDjY-p8w")
 }
 
 ///
@@ -38,11 +38,12 @@ def faceletsReadBackAsTheStateTheyWereDrawnFrom(): Unit \ Assert =
     roundTrippable() |> List.forEach(match (n, token) ->
         match Orbit64.State.decode(n, token) {
             case Err(e) => Assert.assertTrueWithMsg(false, "${token} did not decode: ${e}")
-            case Ok(orbits) =>
+            case Ok(state) =>
                 Assert.assertEq(
-                    expected = Ok(orbits),
-                    Orbit64.Net.toFacelets(n, orbits)
-                        |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)))
+                    expected = Ok(state),
+                    Orbit64.Net.toFacelets(n, Orbit64.State.orbits(state))
+                        |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
+                        |> Result.map(Orbit64.State.canonical))
         })
 
 ///
@@ -56,7 +57,7 @@ def faceletsReadBackAsTheStateTheyWereDrawnFrom(): Unit \ Assert =
 def faceletsSurviveBeingReadAndDrawnAgain(): Unit \ Assert =
     roundTrippable() |> List.forEach(match (n, token) ->
         match Orbit64.State.decode(n, token)
-                |> Result.flatMap(orbits -> Orbit64.Net.toFacelets(n, orbits)) {
+                |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, Orbit64.State.orbits(state))) {
             case Err(e) => Assert.assertTrueWithMsg(false, "${token} gave no facelets: ${e}")
             case Ok(fs) =>
                 Assert.assertEq(
@@ -73,8 +74,9 @@ def theSolvedCubeReadsBackSolved(): Unit \ Assert =
     List#{2, 3, 4, 5} |> List.forEach(n ->
         Assert.assertEq(
             expected = Ok(Orbit64.State.solved(n)),
-            Orbit64.Net.toFacelets(n, Orbit64.State.solved(n))
-                |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))))
+            Orbit64.Net.toFacelets(n, Orbit64.State.solved(n) |> Orbit64.State.orbits)
+                |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
+                |> Result.map(Orbit64.State.canonical)))
 
 ///
 /// A state that came from facelets encodes, which is the whole point of the
@@ -86,9 +88,10 @@ def aStateReadFromFaceletsEncodes(): Unit \ Assert =
         Assert.assertEq(
             expected = Ok(token),
             Orbit64.State.decode(n, token)
-                |> Result.flatMap(orbits -> Orbit64.Net.toFacelets(n, orbits))
+                |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, Orbit64.State.orbits(state)))
                 |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
-                |> Result.flatMap(orbits -> Orbit64.State.encode(n, orbits))))
+                |> Result.map(Orbit64.State.canonical)
+                |> Result.flatMap(state -> Orbit64.State.encode(n, state))))
 
 //
 // A seed matrix, to widen the round trip past the checked-in states.
@@ -179,7 +182,7 @@ def orbitAt(i: Int32, st: List[Orbit64.Coord.Coord]): Option[Orbit64.Coord.Coord
 @Test
 def theSeedsAreActuallyScattered(): Unit \ Assert =
     List#{2, 3, 4, 5} |> List.forEach(n -> {
-        let states = seeds() |> List.map(s -> seededState(n, s));
+        let states = seeds() |> List.map(s -> seededState(n, s) |> legalState(n));
         // Every seeded state is one the format admits, or `encode` refuses it.
         let tokens = states |> List.filterMap(st -> Orbit64.State.encode(n, st) |> Result.toOption);
         Assert.assertTrueWithMsg(
@@ -187,7 +190,8 @@ def theSeedsAreActuallyScattered(): Unit \ Assert =
             "a seeded ${n}x${n}x${n} did not encode at all");
         List.range(0, List.length(Orbit64.Orbit.layout(n))) |> List.forEach(i -> {
             let ranks = states
-                |> List.filterMap(st -> orbitAt(i, st) |> Option.map(Orbit64.Coord.rank));
+                |> List.filterMap(st -> Orbit64.State.orbits(st) |> orbitAt(i)
+                    |> Option.map(Orbit64.Coord.rank));
             Assert.assertTrueWithMsg(
                 List.toSet(ranks) |> Set.size == List.length(states),
                 "orbit ${i} of the ${n}x${n}x${n} took the same value in two samples");

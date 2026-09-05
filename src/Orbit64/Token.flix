@@ -5,7 +5,7 @@ mod Orbit64.Token {
 
     /// A decoded state, literal move sequence, structured algorithm, or extension.
     pub enum Token with Eq, ToString {
-        case StateToken(Int32, List[Orbit64.Coord.Coord]),
+        case StateToken(Int32, Orbit64.State.FramedState),
         case MoveSequenceToken(Orbit64.Move.LayerClass, List[Orbit64.Move.Move]),
         case AlgorithmToken(Orbit64.Move.LayerClass, Orbit64.Algorithm.Algorithm),
         case ExtensionToken(Int32, String)

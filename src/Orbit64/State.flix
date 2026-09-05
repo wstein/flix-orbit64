@@ -1,11 +1,12 @@
 ///
-/// A compact, URL-safe interchange format for `n x n x n` cube state.
+/// A compact, URL-safe interchange format for framed `n x n x n` cube state.
 ///
 /// The whole state is one integer. Each orbit contributes a coordinate in a
-/// range of exactly its own size (see `Orbit.radix`), the coordinates are
-/// combined by mixed radix, and the result is written in base64url at a fixed
-/// width. Nothing is spent on separators or field alignment; the two leading
-/// zero bits identify this member of the Orbit64 token family as state.
+/// range of exactly its own size (see `Orbit.radix`), and odd cubes add one of
+/// the 24 fixed-centre frames. The values are combined by mixed radix and
+/// written in base64url at a fixed width. Nothing is spent on separators or
+/// field alignment; the two leading zero bits identify this member of the
+/// Orbit64 token family as state.
 ///
 /// The encoding is canonical for a given slot convention: two coordinate states
 /// produce the same token exactly when they are the same state, so string
@@ -16,11 +17,11 @@
 /// | cube  | bits   | chars |
 /// |-------|--------|-------|
 /// | 2x2x2 |  26.39 |     5 |
-/// | 3x3x3 |  66.23 |    12 |
+/// | 3x3x3 |  69.82 |    12 |
 /// | 4x4x4 | 156.96 |    27 |
-/// | 5x5x5 | 248.32 |    42 |
+/// | 5x5x5 | 251.90 |    43 |
 /// | 6x6x6 | 390.58 |    66 |
-/// | 7x7x7 | 533.47 |    90 |
+/// | 7x7x7 | 537.05 |    90 |
 ///
 /// Widths are distinct and grow as `n^2`, so a token's length identifies the
 /// puzzle it belongs to.
@@ -59,24 +60,24 @@ mod Orbit64.State {
         let all = Orbit.layout(n) |> List.foldLeft((acc, o) -> acc * Orbit.radix(o), 1ii);
         if (carriesFrame(n)) all / 2ii else all
 
-    /// The number of frame-aware states the new state format addresses.
-    pub def framedStateCount(n: Int32): BigInt =
+    /// The number of frame-aware states the state format addresses.
+    pub def stateCount(n: Int32): BigInt =
         coordinateCount(n) * Int32.toBigInt(frameCount(n))
 
     def frameCount(n: Int32): Int32 = if (carriesFrame(n)) Orbit64.Frame.count() else 1
 
     ///
-    /// Encode a frame-aware state under the new state format.
+    /// Encode a frame-aware state.
     ///
     /// On even cubes the frame must be canonical: movable centre coordinates
     /// already determine the pose, so recording another 24-way choice would
     /// duplicate every state. Odd cubes carry one of the 24 fixed-centre
     /// frames explicitly.
     ///
-    pub def encodeFramed(n: Int32, state: FramedState): Result[String, String] =
+    pub def encode(n: Int32, state: FramedState): Result[String, String] =
         match stateFault(n, state) {
             case Some(why) => Err(why)
-            case None => Ok(Orbit64.Internal.Encoding.toBase64(encodedValue(n, state), framedWidth(n)))
+            case None => Ok(Orbit64.Internal.Encoding.toBase64(encodedValue(n, state), width(n)))
         }
 
     def stateFault(n: Int32, state: FramedState): Option[String] =
@@ -104,10 +105,10 @@ mod Orbit64.State {
         rankCoordinates(n, orbits(state)) * Int32.toBigInt(frameCount(n))
             + Int32.toBigInt(Orbit64.Frame.rank(frame(state)))
 
-    /// Decode a frame-aware state under the new state format.
-    pub def decodeFramed(n: Int32, token: String): Result[String, FramedState] =
-        let total = framedStateCount(n);
-        let width = framedWidth(n);
+    /// Decode a frame-aware state.
+    pub def decode(n: Int32, token: String): Result[String, FramedState] =
+        let total = stateCount(n);
+        let width = width(n);
         if (String.length(token) != width)
             Err("expected ${width} characters for the ${n}x${n}x${n}, got ${String.length(token)}")
         else match Orbit64.Internal.Encoding.fromBase64(token) {
@@ -123,8 +124,8 @@ mod Orbit64.State {
                     Ok(FramedState.FramedState(frame, unrankCoordinates(n, coordinate)))
         }
 
-    /// The width for `framedStateCount`, keeping the leading state class bits.
-    pub def framedWidth(n: Int32): Int32 = widthLoop(framedStateCount(n), 16ii, 1)
+    /// The width for `stateCount`, keeping the leading state class bits.
+    pub def width(n: Int32): Int32 = widthLoop(stateCount(n), 16ii, 1)
 
     def firstFault(orbits: List[Coord]): Option[String] =
         orbits |> List.filterMap(c -> Coord.faultOf(c)
@@ -135,17 +136,21 @@ mod Orbit64.State {
         if (not carriesFrame(n)) None
         else match orbits {
             case CornerCoord(corners, _) :: MidgeCoord(midges, _) :: _ =>
-                if (Orbit64.Rank.permParity(corners) == Orbit64.Rank.permParity(midges)) None
-                else Some("corner and midge permutation parity must match")
+                parityMismatch(corners, midges)
             case _ => Some("odd cubes require corner and midge coordinates")
         }
+
+    def parityMismatch(corners: Vector[Int32], midges: Vector[Int32]): Option[String] =
+        if (Orbit64.Rank.permParity(corners) == Orbit64.Rank.permParity(midges)) None
+        else Some("corner and midge permutation parity must match")
 
     def rankCoordinates(n: Int32, orbits: List[Coord]): BigInt =
         if (carriesFrame(n)) rankOddCoordinates(orbits)
         else rankAll(orbits, 0ii)
 
     def rankAll(orbits: List[Coord], initial: BigInt): BigInt =
-        orbits |> List.foldLeft((acc, c) -> acc * Orbit.radix(Coord.kind(c)) + Coord.rank(c), initial)
+        let appendRank = (acc, c) -> acc * Orbit.radix(Coord.kind(c)) + Coord.rank(c);
+        List.foldLeft(appendRank, initial, orbits)
 
     def rankOddCoordinates(orbits: List[Coord]): BigInt =
         match orbits {
@@ -162,15 +167,16 @@ mod Orbit64.State {
         case _ => 0ii
     }
 
-    def rankMidge(permutation: Vector[Int32], coordinate: Coord, parity: Int32): BigInt = match coordinate {
-        case MidgeCoord(_, flips) =>
-            Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii
-                + flipRank(flips)
-        case _ => 0ii
-    }
+    def rankMidge(permutation: Vector[Int32], coordinate: Coord, parity: Int32): BigInt =
+        match coordinate {
+            case MidgeCoord(_, flips) =>
+                Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii
+                    + flipRank(flips)
+            case _ => 0ii
+        }
 
     def flipRank(flips: Vector[Int32]): BigInt =
-        Coord.rank(MidgeCoord(Vector.range(0, 12), flips)) |> BigInt.modulo(2048ii)
+        BigInt.modulo(Coord.rank(MidgeCoord(Vector.range(0, 12), flips)), 2048ii)
 
     def midgeRadix(): BigInt = Orbit.radix(Midges) / 2ii
 
@@ -202,74 +208,8 @@ mod Orbit64.State {
         case _ => Coord.unrank(Midges, 0ii)
     }
 
-    ///
-    /// The number of states of an `n x n x n` cube.
-    ///
-    pub def stateCount(n: Int32): BigInt =
-        Orbit.layout(n) |> List.foldLeft((acc, o) -> acc * Orbit.radix(o), 1ii)
-
-    ///
-    /// The token width for an `n x n x n` cube: the fewest base64url characters
-    /// that can address every state beneath the leading `00` class tag.
-    ///
-    pub def width(n: Int32): Int32 = widthLoop(stateCount(n), 16ii, 1)
-
     def widthLoop(total: BigInt, capacity: BigInt, w: Int32): Int32 =
         if (capacity >= total) w else widthLoop(total, capacity * 64ii, w + 1)
-
-    ///
-    /// Encode `orbits` -- given in `Orbit.layout` order -- as a token.
-    ///
-    /// Fails if the orbits do not match the layout for `n`, and fails if any of
-    /// them is not a state a cube can be in.
-    ///
-    /// The second check is not politeness. A coordinate outside its own range
-    /// does not merely encode itself wrongly: the assembly below is Horner, so
-    /// the surplus carries into the *next* orbit and corrupts a coordinate that
-    /// was correct. And a coordinate inside its range but not a cube -- a
-    /// permutation with a repeat, say -- ranks as some other, legitimate state,
-    /// so nothing downstream can catch it either. `decode` bounds-checks the
-    /// whole token, which cannot see either case. This is the only place that
-    /// can.
-    ///
-    pub def encode(n: Int32, orbits: List[Coord]): Result[String, String] =
-        let expected = Orbit.layout(n);
-        let actual = List.map(Coord.kind, orbits);
-        if (actual != expected)
-            Err("expected orbits ${expected} for ${n}x${n}x${n}, got ${actual}")
-        else
-            // Every coordinate is checked before any of them is ranked, because
-            // ranking a malformed one is what would read off the end of it.
-            match orbits |> List.filterMap(c ->
-                    Coord.faultOf(c) |> Option.map(why -> (Coord.kind(c), why)))
-                    |> List.head {
-                case Some((o, why)) => Err("the ${o} coordinate is not a cube: ${why}")
-                case None =>
-                    let acc = orbits |> List.foldLeft((a, c) ->
-                        a * Orbit.radix(Coord.kind(c)) + Coord.rank(c), 0ii);
-                    Ok(Orbit64.Internal.Encoding.toBase64(acc, width(n)))
-            }
-
-    ///
-    /// Decode a token back into the orbits of an `n x n x n` cube.
-    ///
-    /// Round-trips exactly: `decode(n, encode(n, s))` returns `s` for any state
-    /// reachable on a real cube.
-    ///
-    pub def decode(n: Int32, token: String): Result[String, List[Coord]] =
-        let total = stateCount(n);
-        let w = widthLoop(total, 16ii, 1);
-        if (String.length(token) != w)
-            Err("expected ${w} characters for ${n}x${n}x${n}, got ${String.length(token)}")
-        else
-            match Orbit64.Internal.Encoding.fromBase64(token) {
-                case None => Err("token contains a character outside the base64url alphabet")
-                case Some(acc) =>
-                    if (acc >= total)
-                        Err("token is out of range for ${n}x${n}x${n}")
-                    else
-                        Ok(split(acc, List.reverse(Orbit.layout(n)), Nil))
-            }
 
     ///
     /// Peel coordinates off `acc`, least significant orbit first.
@@ -287,11 +227,11 @@ mod Orbit64.State {
         }
 
     ///
-    /// The state of a solved `n x n x n` cube.
+    /// The framed state of a solved `n x n x n` cube.
     ///
     /// Every coordinate is zero, so this always encodes to a run of `A`s.
     ///
-    pub def solved(n: Int32): List[Coord] =
-        Orbit.layout(n) |> List.map(o -> Coord.unrank(o, 0ii))
+    pub def solved(n: Int32): FramedState =
+        Orbit.layout(n) |> List.map(o -> Coord.unrank(o, 0ii)) |> canonical
 
 }
