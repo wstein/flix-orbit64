@@ -45,8 +45,8 @@ def asFacelets(s: String): Vector[Int32] =
 /// got wrong would still pass only the first.
 ///
 def bothWays(n: Int32, orbits: List[Coord], drawn: String): Unit \ Assert =
-    Assert.assertEq(expected = Ok(drawn), asString(Orbit64.Net.toFacelets(n, orbits)));
-    Assert.assertEq(expected = Ok(orbits), Orbit64.Net.fromFacelets(n, asFacelets(drawn)))
+    Assert.assertEq(expected = Ok(drawn), asString(Orbit64.Net.toFacelets(n, Orbit64.State.canonical(orbits))));
+    Assert.assertEq(expected = Ok(Orbit64.State.canonical(orbits)), Orbit64.Net.fromFacelets(n, asFacelets(drawn)))
 
 @Test
 def faceletsOfFourByFourSolved(): Unit \ Assert =

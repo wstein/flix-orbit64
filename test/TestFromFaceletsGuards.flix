@@ -12,7 +12,7 @@
 def readable(): List[Int32] = List#{2, 3, 4, 5}
 
 def stickersOf(n: Int32): Vector[Int32] =
-    match Orbit64.Net.toFacelets(n, Orbit64.State.solved(n) |> Orbit64.State.orbits) {
+    match Orbit64.Net.toFacelets(n, Orbit64.State.solved(n)) {
         case Ok(fs) => fs
         case Err(_) => Vector#{}
     }
@@ -70,19 +70,15 @@ def fromFaceletsDeclinesAFaceletThatIsNoFace(): Unit \ Assert =
     })
 
 ///
-/// The fixed centres of an odd cube are the frame, and a state whose frame has
-/// moved has nowhere in a token to say so.
-///
-/// Only the centres are disturbed here -- every corner, midge, wing and movable
-/// centre still reads back as the solved cube -- so nothing but the frame check
-/// can be what refuses it.
+/// Fixed centres select one of 24 whole-cube frames. A swap of two centres is
+/// not one of those right-handed orientations, so it remains invalid.
 ///
 @Test
-def fromFaceletsDeclinesADisplacedFrame(): Unit \ Assert =
+def fromFaceletsDeclinesAnImpossibleFixedCentreFrame(): Unit \ Assert =
     // The U and R centres, at both odd sizes this module reads.
-    refuses(said = "the frame this format is written in",
+    refuses(said = "not a right-handed whole-cube frame",
             "a 3x3x3 with its U and R centres exchanged", 3, swapFacelets(4, 13, stickersOf(3)));
-    refuses(said = "the frame this format is written in",
+    refuses(said = "not a right-handed whole-cube frame",
             "a 5x5x5 with its U and R centres exchanged", 5, swapFacelets(12, 37, stickersOf(5)))
 
 ///

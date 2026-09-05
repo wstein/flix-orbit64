@@ -71,7 +71,7 @@ compiler this project pins.
 `Orbit64.State.decode(n, token)` is the exact inverse and returns a
 `FramedState`. Construct coordinate data with `Orbit64.State.canonical`, use
 `Orbit64.State.frame` to read its reference frame, and pass
-`Orbit64.State.orbits(state)` to geometry APIs such as `Net`. Everything the
+the whole `FramedState` to geometry APIs such as `Net`. Everything the
 package defines nests under the `Orbit64` module, so nothing it ships can
 collide with names of yours -- and it defines no top-level `main`, so yours
 still compiles.
@@ -232,8 +232,7 @@ $ cd examples/cli-tool && flix run -- A4iEhgha0UAo
 
 The faces are coloured on a terminal; `NO_COLOR=1` gives the plain letters
 above. On odd cubes the token records the six fixed centres as a frame rank.
-`Net` renders coordinates under its canonical frame, so the demo supplies that
-reference when it draws the facelets.
+`Net` applies the token's stored frame when it draws the facelets.
 
 The 2x2x2 through 5x5x5 are drawn, each under a convention the command line
 names beneath the net -- `orbit64-3x3-draft@1`, `orbit64-4x4-draft@1`,
@@ -326,7 +325,7 @@ changes only the token:
 
 ```
              sgn(cp)  sgn(ep)  sum(co)%3  sum(eo)%2  token
-original          -1       -1          0          0  EKXJoNj0C37Q
+original          -1       -1          0          0  EKYDgqvYC5rw
 relabelled        -1       -1          0          0  DS62VXC8BapI
 ```
 
@@ -368,7 +367,7 @@ order to convert into it.
 
 ## Facelets, and talking to other projects
 
-`Orbit64.Net.toFacelets(n, orbits)` gives the state as `6 * n * n` face indices,
+`Orbit64.Net.toFacelets(n, state)` gives the state as `6 * n * n` face indices,
 laid out `face * n * n + row * n + col` with faces `U R F D L B` -- the layout
 [`flix-cube`](https://github.com/wstein/flix-cube)'s `BigCube` and
 `cube-solvers`' `Facelets` both use. Slot orders differ between implementations
@@ -382,7 +381,6 @@ rather than merely draw one:
 ```flix
 // a cube some other engine turned, as face indices
 Orbit64.Net.fromFacelets(4, stickers)
-    |> Result.map(Orbit64.State.canonical)
     |> Result.flatMap(state -> Orbit64.State.encode(4, state))
 ```
 
@@ -397,13 +395,10 @@ that project, by an engine sharing no code with this one, and every fixture has
 to both draw to those stickers and read back from them, at the 4x4x4 and the
 5x5x5 alike.
 
-Two things this deliberately does not do:
-
-- It does not transform coordinates between reference frames. `fromFacelets`
-  returns a canonical `FramedState` and refuses a 3x3x3 or 5x5x5 whose fixed
-  centres have moved -- a slice turn or whole-cube rotation. Recovering a
-  noncanonical frame requires rotating the coordinate convention as well, and
-  that geometry is deliberately outside `Net`.
+On odd cubes, `fromFacelets` accepts one of the 24 right-handed fixed-centre
+orientations, normalizes facelets for coordinate recovery, and returns the
+corresponding `FramedState`. It rejects centre arrangements that are not a
+whole-cube rotation.
 
 ## Design decisions
 

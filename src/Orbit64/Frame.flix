@@ -1,10 +1,7 @@
 /// Whole-cube reference frames in canonical `U R F D L B` slot order.
 ///
 /// A frame says which physical face occupies each Orbit64 reference slot. The
-/// 24 right-handed cube orientations are ranked by their `U` face, then a
-/// deterministic adjacent `F` face order. Geometry that applies a frame to cubie
-/// coordinates belongs in a later layer; this module only defines its compact,
-/// deterministic vocabulary.
+/// ranks are Orbit64's wire order: `x` turns, then `z` turns, then `y` turns.
 mod Orbit64.Frame {
 
     use Orbit64.Move.Face
@@ -36,58 +33,57 @@ mod Orbit64.Frame {
         case Frame.Frame(value) => value
     }
 
-    /// The physical faces occupying the reference slots `U R F D L B`.
+    /// The number of clockwise `x` rotations in the wire transform.
+    pub def xTurns(frame: Frame): Int32 = match frame {
+        case Frame.Frame(value) => if (value < 16) value / 4 else 0
+    }
+
+    /// The number of clockwise `z` rotations in the wire transform.
+    pub def zTurns(frame: Frame): Int32 = match frame {
+        case Frame.Frame(value) => if (value >= 16 and value < 20) 1
+                                    else if (value >= 20) 3 else 0
+    }
+
+    /// The number of clockwise `y` rotations in the wire transform.
+    pub def yTurns(frame: Frame): Int32 = match frame {
+        case Frame.Frame(value) => Int32.modulo(value, 4)
+    }
+
+    /// The physical faces occupying the reference slots `U R F D L B` after
+    /// applying the frame's `x`, `z`, then `y` rotations.
     pub def faces(frame: Frame): List[Face] = match frame {
-        case Frame.Frame(value) =>
-            let up = faceAt(value / 4);
-            let offset = value - (value / 4) * 4;
-            let front = frontAt(up, offset);
-            let right = rightAt(up, offset);
-            up :: right :: front :: opposite(up) :: opposite(right) :: opposite(front) :: Nil
+        case Frame.Frame(value) => facesAt(value)
     }
 
     /// Render `faces(frame)` in compact spaced WCA notation.
     pub def notation(frame: Frame): String =
         faces(frame) |> List.map(Orbit64.Move.notation) |> List.join(" ")
 
-    /// The four faces adjacent to `up`. The first choice makes frame zero the
-    /// canonical `U R F D L B` reference list.
-    def fronts(up: Face): List[Face] = match up {
-        case Face.U => Face.F :: Face.R :: Face.B :: Face.L :: Nil
-        case Face.R => Face.U :: Face.F :: Face.D :: Face.B :: Nil
-        case Face.F => Face.U :: Face.R :: Face.D :: Face.L :: Nil
-        case Face.D => Face.F :: Face.R :: Face.B :: Face.L :: Nil
-        case Face.L => Face.U :: Face.F :: Face.D :: Face.B :: Nil
-        case Face.B => Face.U :: Face.R :: Face.D :: Face.L :: Nil
-    }
-
-    def faceAt(index: Int32): Face =
-        Orbit64.Move.faces() |> List.drop(index) |> List.head |> Option.getWithDefault(Face.U)
-
-    def frontAt(up: Face, index: Int32): Face =
-        fronts(up) |> List.drop(index) |> List.head |> Option.getWithDefault(Face.F)
-
-    /// The physical `R` face paired with each choice in `fronts(up)`. The
-    /// aligned tables embody `right = up × front` without a 24-case branch.
-    def rights(up: Face): List[Face] = match up {
-        case Face.U => Face.R :: Face.B :: Face.L :: Face.F :: Nil
-        case Face.R => Face.F :: Face.D :: Face.B :: Face.U :: Nil
-        case Face.F => Face.L :: Face.U :: Face.R :: Face.D :: Nil
-        case Face.D => Face.L :: Face.F :: Face.R :: Face.B :: Nil
-        case Face.L => Face.B :: Face.U :: Face.F :: Face.D :: Nil
-        case Face.B => Face.R :: Face.D :: Face.L :: Face.U :: Nil
-    }
-
-    def rightAt(up: Face, index: Int32): Face =
-        rights(up) |> List.drop(index) |> List.head |> Option.getWithDefault(Face.R)
-
-    def opposite(face: Face): Face = match face {
-        case Face.U => Face.D
-        case Face.R => Face.L
-        case Face.F => Face.B
-        case Face.D => Face.U
-        case Face.L => Face.R
-        case Face.B => Face.F
+    def facesAt(value: Int32): List[Face] = match value {
+        case 0  => Face.U :: Face.R :: Face.F :: Face.D :: Face.L :: Face.B :: Nil
+        case 1  => Face.U :: Face.B :: Face.R :: Face.D :: Face.F :: Face.L :: Nil
+        case 2  => Face.U :: Face.L :: Face.B :: Face.D :: Face.R :: Face.F :: Nil
+        case 3  => Face.U :: Face.F :: Face.L :: Face.D :: Face.B :: Face.R :: Nil
+        case 4  => Face.F :: Face.R :: Face.D :: Face.B :: Face.L :: Face.U :: Nil
+        case 5  => Face.F :: Face.U :: Face.R :: Face.B :: Face.D :: Face.L :: Nil
+        case 6  => Face.F :: Face.L :: Face.U :: Face.B :: Face.R :: Face.D :: Nil
+        case 7  => Face.F :: Face.D :: Face.L :: Face.B :: Face.U :: Face.R :: Nil
+        case 8  => Face.D :: Face.R :: Face.B :: Face.U :: Face.L :: Face.F :: Nil
+        case 9  => Face.D :: Face.F :: Face.R :: Face.U :: Face.B :: Face.L :: Nil
+        case 10 => Face.D :: Face.L :: Face.F :: Face.U :: Face.R :: Face.B :: Nil
+        case 11 => Face.D :: Face.B :: Face.L :: Face.U :: Face.F :: Face.R :: Nil
+        case 12 => Face.B :: Face.R :: Face.U :: Face.F :: Face.L :: Face.D :: Nil
+        case 13 => Face.B :: Face.D :: Face.R :: Face.F :: Face.U :: Face.L :: Nil
+        case 14 => Face.B :: Face.L :: Face.D :: Face.F :: Face.R :: Face.U :: Nil
+        case 15 => Face.B :: Face.U :: Face.L :: Face.F :: Face.D :: Face.R :: Nil
+        case 16 => Face.L :: Face.U :: Face.F :: Face.R :: Face.D :: Face.B :: Nil
+        case 17 => Face.L :: Face.B :: Face.U :: Face.R :: Face.F :: Face.D :: Nil
+        case 18 => Face.L :: Face.D :: Face.B :: Face.R :: Face.U :: Face.F :: Nil
+        case 19 => Face.L :: Face.F :: Face.D :: Face.R :: Face.B :: Face.U :: Nil
+        case 20 => Face.R :: Face.D :: Face.F :: Face.L :: Face.U :: Face.B :: Nil
+        case 21 => Face.R :: Face.B :: Face.D :: Face.L :: Face.F :: Face.U :: Nil
+        case 22 => Face.R :: Face.U :: Face.B :: Face.L :: Face.D :: Face.F :: Nil
+        case _  => Face.R :: Face.F :: Face.U :: Face.L :: Face.B :: Face.D :: Nil
     }
 
 }

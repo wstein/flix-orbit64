@@ -1,11 +1,8 @@
 ///
 /// Draws a decoded cube as a net, and reads one back out of its facelets.
 ///
-/// A token carries every *movable* piece and nothing besides. An odd cube's six
-/// fixed centres are deliberately outside the format -- they never move
-/// relative to one another, so they fix the frame of reference rather than
-/// carry information -- which means this module supplies them itself before it
-/// can draw anything. They are the first thing `draw` puts down.
+/// A token carries every movable piece and, on an odd cube, the fixed-centre
+/// frame. This module applies that frame while crossing the facelet boundary.
 ///
 /// This is the only module in the package that knows where a cube's pieces and
 /// facelets sit. State ranking is pure arithmetic in `n`; `Orbit64.Move` names
@@ -411,8 +408,12 @@ mod Orbit64.Net {
     /// says what the state looks like *if* its producer numbered slots the way
     /// `convention(n)` says. It is a rendering, not a proof of agreement.
     ///
-    pub def toFacelets(n: Int32, orbits: List[Coord]): Result[String, Vector[Int32]] =
-        validate(n, orbits) |> Result.flatMap(_ -> dispatch(n, orbits))
+    pub def toFacelets(n: Int32, state: Orbit64.State.FramedState): Result[String, Vector[Int32]] =
+        let orbits = Orbit64.State.orbits(state);
+        validate(n, orbits)
+            |> Result.flatMap(_ -> frameFault(n, Orbit64.State.frame(state)))
+            |> Result.flatMap(_ -> dispatch(n, orbits))
+            |> Result.map(fs -> applyFrame(n, fs, Orbit64.State.frame(state)))
 
     ///
     /// The three checks any drawable state must pass regardless of size: this
@@ -440,6 +441,13 @@ mod Orbit64.Net {
             Err("that state is not a cube")
         else Ok(())
 
+    def frameFault(n: Int32, frame: Orbit64.Frame.Frame): Result[String, Unit] =
+        if (not (Orbit64.Frame.faultOf(frame) |> Option.isEmpty))
+            Err("the state frame is not a right-handed cube frame")
+        else if (not Orbit64.State.carriesFrame(n) and frame != Orbit64.Frame.canonical())
+            Err("an even cube carries its frame in its movable centres")
+        else Ok(())
+
     ///
     /// `toFacelets`'s size dispatch, once `validate` has fixed `orbits`'
     /// shape.
@@ -458,8 +466,8 @@ mod Orbit64.Net {
     ///
     /// The net for `orbits`, or why there isn't one.
     ///
-    pub def draw(n: Int32, orbits: List[Coord], colour: Bool): Result[String, String] =
-        toFacelets(n, orbits)
+    pub def draw(n: Int32, state: Orbit64.State.FramedState, colour: Bool): Result[String, String] =
+        toFacelets(n, state)
             |> Result.map(fs -> render(n, fs, colour))
 
     ///
@@ -476,14 +484,10 @@ mod Orbit64.Net {
     /// still gets the same cube, described in Orbit64's terms, which is exactly
     /// what makes the facelet layer the place two such projects can meet.
     ///
-    /// It refuses a state whose fixed centres have moved. An odd cube's six
-    /// single centres are the frame this format is written in rather than state
-    /// it carries, so a slice turn or a whole-cube rotation leaves something a
-    /// token has nowhere to record. Normalising it silently would return a
-    /// different state than the caller handed over; saying so is the honest
-    /// answer, and the caller knows which turn to undo.
-    ///
-    pub def fromFacelets(n: Int32, facelets: Vector[Int32]): Result[String, List[Coord]] =
+    /// On an odd cube the fixed centres select the stored frame. The reader
+    /// restores the canonical facelet orientation before it reads coordinates,
+    /// then returns both those coordinates and that frame.
+    pub def fromFacelets(n: Int32, facelets: Vector[Int32]): Result[String, Orbit64.State.FramedState] =
         if (not canDraw(n))
             Err("no slot convention for the ${n}x${n}x${n}: this module has one "
                 + "only up to the 5x5x5")
@@ -493,9 +497,10 @@ mod Orbit64.Net {
         else if (not Vector.forAll(f -> f >= 0 and f < 6, facelets))
             Err("every facelet must name a face, 0 to 5")
         else
-            checkFrame(n, facelets)
-                |> Result.flatMap(_ -> readOrbits(n, facelets))
+            normalizeFrame(n, facelets)
+                |> Result.flatMap(match (frame, canonical) -> readOrbits(n, canonical)
                 |> Result.flatMap(allCubes)
+                |> Result.map(orbits -> Orbit64.State.FramedState.FramedState(frame, orbits)))
 
     ///
     /// The 2x2x2 and 3x3x3.
@@ -788,28 +793,102 @@ mod Orbit64.Net {
                 |> Option.map(o -> (p, o)))
 
     ///
-    /// An odd cube's six single centres are the frame this format is written
-    /// in, not state it carries. A slice turn or a whole-cube rotation moves
-    /// them, and a token has nowhere to record where they went, so such a state
-    /// can be drawn but not read back. Turning it back into the frame is the
-    /// caller's to do: doing it here would hand back a different state than the
-    /// one that arrived, without saying so.
-    ///
-    def checkFrame(n: Int32, fs: Vector[Int32]): Result[String, Unit] =
+    /// Find an odd cube's prescribed whole-cube frame, then undo it so the
+    /// coordinate reader can use its canonical tables.
+    def normalizeFrame(n: Int32, fs: Vector[Int32]): Result[String, (Orbit64.Frame.Frame, Vector[Int32])] =
         match fixedFacelets(n) {
-            case None => Ok(())
+            case None => Ok((Orbit64.Frame.canonical(), fs))
             case Some(centres) =>
-                match List.range(0, 6)
-                        |> List.find(f -> Vector.get(Vector.get(f, centres), fs) != f) {
-                    case None    => Ok(())
-                    case Some(f) =>
-                        let shows = Vector.get(Vector.get(Vector.get(f, centres), fs), faces());
-                        Err("the ${Vector.get(f, faces())} centre shows ${shows}: the six fixed "
-                            + "centres are the frame this format is written in, so a state whose "
-                            + "centres have moved has to be turned back into that frame before it "
-                            + "can be read")
+                match List.range(0, Orbit64.Frame.count())
+                        |> List.map(Orbit64.Frame.unrank)
+                        |> List.find(frame -> canonicalCentres(centres, unapplyFrame(n, fs, frame))) {
+                    case Some(frame) => Ok((frame, unapplyFrame(n, fs, frame)))
+                    case None => Err("the six fixed centres are not a right-handed whole-cube frame")
                 }
         }
+
+    def canonicalCentres(centres: Vector[Int32], fs: Vector[Int32]): Bool =
+        List.range(0, 6) |> List.forAll(f -> Vector.get(Vector.get(f, centres), fs) == f)
+
+    /// Apply Rosetta's whole-cube transform: `x` turns, then `z`, then `y`.
+    def applyFrame(n: Int32, fs: Vector[Int32], frame: Orbit64.Frame.Frame): Vector[Int32] =
+        transformFacelets(n, fs, Orbit64.Frame.xTurns(frame), Orbit64.Frame.zTurns(frame),
+            Orbit64.Frame.yTurns(frame))
+
+    /// Undo a whole-cube transform, reversing its axis order and turn counts.
+    def unapplyFrame(n: Int32, fs: Vector[Int32], frame: Orbit64.Frame.Frame): Vector[Int32] =
+        transformFaceletsInverse(n, fs, Orbit64.Frame.xTurns(frame), Orbit64.Frame.zTurns(frame),
+            Orbit64.Frame.yTurns(frame))
+
+    def transformFacelets(n: Int32, fs: Vector[Int32], x: Int32, z: Int32, y: Int32): Vector[Int32] =
+        Vector.init(index -> {
+            let sticker = faceletSticker(n, index);
+            let source = rotateX(n, rotateZ(n, rotateY(n, sticker, inverseTurns(y)),
+                inverseTurns(z)), inverseTurns(x));
+            Vector.get(stickerFacelet(n, source), fs)
+        }, Vector.length(fs))
+
+    def transformFaceletsInverse(n: Int32, fs: Vector[Int32], x: Int32, z: Int32, y: Int32): Vector[Int32] =
+        Vector.init(index -> {
+            let sticker = faceletSticker(n, index);
+            let source = rotateY(n, rotateZ(n, rotateX(n, sticker, x), z), y);
+            Vector.get(stickerFacelet(n, source), fs)
+        }, Vector.length(fs))
+
+    def inverseTurns(turns: Int32): Int32 = Int32.modulo(4 - turns, 4)
+
+    /// A facelet as its cubie-grid position followed by its outward normal.
+    def faceletSticker(n: Int32, index: Int32): (Int32, Int32, Int32, Int32, Int32, Int32) =
+        let last = n - 1;
+        let face = index / (n * n);
+        let row = Int32.modulo(index / n, n);
+        let col = Int32.modulo(index, n);
+        match face {
+            case 0 => (col, last, row, 0, 1, 0)
+            case 1 => (last, last - row, last - col, 1, 0, 0)
+            case 2 => (col, last - row, last, 0, 0, 1)
+            case 3 => (col, 0, last - row, 0, -1, 0)
+            case 4 => (0, last - row, col, -1, 0, 0)
+            case _ => (last - col, last - row, 0, 0, 0, -1)
+        }
+
+    def stickerFacelet(n: Int32, sticker: (Int32, Int32, Int32, Int32, Int32, Int32)): Int32 =
+        let (x, y, z, nx, ny, nz) = sticker;
+        let last = n - 1;
+        if (ny == 1) z * n + x
+        else if (ny == -1) 3 * n * n + (last - z) * n + x
+        else if (nz == 1) 2 * n * n + (last - y) * n + x
+        else if (nz == -1) 5 * n * n + (last - y) * n + last - x
+        else if (nx == 1) n * n + (last - y) * n + last - z
+        else 4 * n * n + (last - y) * n + z
+
+    def rotateX(n: Int32, sticker: (Int32, Int32, Int32, Int32, Int32, Int32),
+                turns: Int32): (Int32, Int32, Int32, Int32, Int32, Int32) =
+        if (turns == 0) sticker else rotateX(n, rotateXOnce(n, sticker), turns - 1)
+
+    def rotateZ(n: Int32, sticker: (Int32, Int32, Int32, Int32, Int32, Int32),
+                turns: Int32): (Int32, Int32, Int32, Int32, Int32, Int32) =
+        if (turns == 0) sticker else rotateZ(n, rotateZOnce(n, sticker), turns - 1)
+
+    def rotateY(n: Int32, sticker: (Int32, Int32, Int32, Int32, Int32, Int32),
+                turns: Int32): (Int32, Int32, Int32, Int32, Int32, Int32) =
+        if (turns == 0) sticker else rotateY(n, rotateYOnce(n, sticker), turns - 1)
+
+    /// One Rosetta clockwise whole-cube turn about each axis.
+    def rotateXOnce(n: Int32, sticker: (Int32, Int32, Int32, Int32, Int32, Int32)):
+            (Int32, Int32, Int32, Int32, Int32, Int32) =
+        let (x, y, z, nx, ny, nz) = sticker;
+        (x, z, n - 1 - y, nx, nz, -ny)
+
+    def rotateZOnce(n: Int32, sticker: (Int32, Int32, Int32, Int32, Int32, Int32)):
+            (Int32, Int32, Int32, Int32, Int32, Int32) =
+        let (x, y, z, nx, ny, nz) = sticker;
+        (y, n - 1 - x, z, ny, -nx, nz)
+
+    def rotateYOnce(n: Int32, sticker: (Int32, Int32, Int32, Int32, Int32, Int32)):
+            (Int32, Int32, Int32, Int32, Int32, Int32) =
+        let (x, y, z, nx, ny, nz) = sticker;
+        (n - 1 - z, y, x, -nz, ny, nx)
 
     ///
     /// Where the six fixed centres sit at size `n`, or `None` for an even cube,

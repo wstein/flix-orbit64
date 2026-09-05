@@ -20,14 +20,14 @@ def aMidge(): Orbit64.Coord.Coord =
 def netAcceptsExactlyTheLayout(): Unit \ Assert =
     drawable() |> List.forEach(n ->
         Assert.assertTrueWithMsg(
-            Result.isOk(Orbit64.Net.draw(n, Orbit64.State.solved(n) |> Orbit64.State.orbits, false)),
+            Result.isOk(Orbit64.Net.draw(n, Orbit64.State.solved(n), false)),
             "declined the solved ${n}x${n}x${n}"))
 
 @Test
 def netDeclinesAnEmptyOrbitList(): Unit \ Assert =
     drawable() |> List.forEach(n ->
         Assert.assertTrueWithMsg(
-            Result.isErr(Orbit64.Net.draw(n, Nil, false)),
+            Result.isErr(Orbit64.Net.draw(n, Orbit64.State.canonical(Nil), false)),
             "drew a ${n}x${n}x${n} from no orbits at all"))
 
 @Test
@@ -37,7 +37,7 @@ def netDeclinesAnIncompleteOrbitList(): Unit \ Assert =
         // every proper prefix, so "one orbit short" and "corners only" both count
         List.range(0, List.length(full)) |> List.forEach(k ->
             Assert.assertTrueWithMsg(
-                Result.isErr(Orbit64.Net.draw(n, List.take(k, full), false)),
+                Result.isErr(Orbit64.Net.draw(n, Orbit64.State.canonical(List.take(k, full)), false)),
                 "drew a ${n}x${n}x${n} from only ${k} of its ${List.length(full)} orbits"))
     })
 
@@ -48,7 +48,7 @@ def netDeclinesADuplicatedOrbit(): Unit \ Assert =
         match full {
             case first :: _ =>
                 Assert.assertTrueWithMsg(
-                    Result.isErr(Orbit64.Net.draw(n, first :: full, false)),
+                    Result.isErr(Orbit64.Net.draw(n, Orbit64.State.canonical(first :: full), false)),
                     "drew a ${n}x${n}x${n} with an orbit repeated")
             case Nil => ()
         }
@@ -61,7 +61,7 @@ def netDeclinesAnOrbitThatSizeDoesNotHave(): Unit \ Assert =
     List#{2, 4} |> List.forEach(n ->
         Assert.assertTrueWithMsg(
             Result.isErr(Orbit64.Net.draw(n,
-                List.append(Orbit64.State.solved(n) |> Orbit64.State.orbits, List#{aMidge()}), false)),
+                Orbit64.State.canonical(List.append(Orbit64.State.solved(n) |> Orbit64.State.orbits, List#{aMidge()})), false)),
             "drew a ${n}x${n}x${n} carrying a midge orbit"))
 
 @Test
@@ -70,7 +70,7 @@ def netDeclinesAReorderedOrbitList(): Unit \ Assert =
     List#{3, 4, 5} |> List.forEach(n ->
         Assert.assertTrueWithMsg(
             Result.isErr(Orbit64.Net.draw(n,
-                List.reverse(Orbit64.State.solved(n) |> Orbit64.State.orbits), false)),
+                Orbit64.State.canonical(List.reverse(Orbit64.State.solved(n) |> Orbit64.State.orbits)), false)),
             "drew a ${n}x${n}x${n} with its orbits back to front"))
 
 ///

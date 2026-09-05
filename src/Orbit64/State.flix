@@ -145,7 +145,8 @@ mod Orbit64.State {
         else Some("corner and midge permutation parity must match")
 
     def rankCoordinates(n: Int32, orbits: List[Coord]): BigInt =
-        if (carriesFrame(n)) rankOddCoordinates(orbits)
+        if (n == 3) rankOddCoordinates(orbits)
+        else if (carriesFrame(n)) rankLegacyOddCoordinates(orbits)
         else rankAll(orbits, 0ii)
 
     def rankAll(orbits: List[Coord], initial: BigInt): BigInt =
@@ -158,30 +159,66 @@ mod Orbit64.State {
             case _ => 0ii
         }
 
+    /// The wider odd-cube drafts retain their original coordinate ordering.
+    def rankLegacyOddCoordinates(orbits: List[Coord]): BigInt =
+        match orbits {
+            case corner :: midge :: tail => match (corner, midge) {
+                case (CornerCoord(corners, _), MidgeCoord(midges, _)) =>
+                    let parity = Orbit64.Rank.permParity(corners);
+                    let initial = Coord.rank(corner) * midgeRadix()
+                        + rankMidgeLegacy(midges, midge, parity);
+                    rankAll(tail, initial)
+                case _ => 0ii
+            }
+            case _ => 0ii
+        }
+
     def rankOddHead(corner: Coord, midge: Coord, tail: List[Coord]): BigInt = match (corner, midge) {
-        case (CornerCoord(corners, _), MidgeCoord(midges, _)) =>
+        case (CornerCoord(corners, twists), MidgeCoord(midges, _)) =>
             let cornerParity = Orbit64.Rank.permParity(corners);
-            let initial = Coord.rank(corner) * midgeRadix()
+            let initial = cornerRank(corners, twists) * midgeRadix()
                 + rankMidge(midges, midge, cornerParity);
             rankAll(tail, initial)
         case _ => 0ii
     }
 
+    /// Orbit64's 3x3x3 contract ranks the seven stored corner orientations
+    /// little-endian: the first orientation is the units digit.
+    def cornerRank(permutation: Vector[Int32], twists: Vector[Int32]): BigInt =
+        Orbit64.Rank.permRank(permutation) * 2187ii + orientationRank(twists, 7, 3)
+
     def rankMidge(permutation: Vector[Int32], coordinate: Coord, parity: Int32): BigInt =
         match coordinate {
             case MidgeCoord(_, flips) =>
                 Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii
-                    + flipRank(flips)
+                    + orientationRank(flips, 11, 2)
             case _ => 0ii
         }
 
-    def flipRank(flips: Vector[Int32]): BigInt =
-        BigInt.modulo(Coord.rank(MidgeCoord(Vector.range(0, 12), flips)), 2048ii)
+    def rankMidgeLegacy(permutation: Vector[Int32], coordinate: Coord, parity: Int32): BigInt =
+        match coordinate {
+            case MidgeCoord(_, flips) =>
+                Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii
+                    + BigInt.modulo(Coord.rank(MidgeCoord(Vector.range(0, 12), flips)), 2048ii)
+            case _ => 0ii
+        }
+
+    /// Rank the first `count` orientation digits with the first at units.
+    def orientationRank(values: Vector[Int32], count: Int32, radix: Int32): BigInt =
+        orientationRankLoop(values, count, radix, 0, 1ii, 0ii)
+
+    def orientationRankLoop(values: Vector[Int32], count: Int32, radix: Int32,
+                            index: Int32, place: BigInt, out: BigInt): BigInt =
+        if (index == count) out
+        else orientationRankLoop(values, count, radix, index + 1,
+                place * Int32.toBigInt(radix),
+                out + Int32.toBigInt(Vector.get(index, values)) * place)
 
     def midgeRadix(): BigInt = Orbit.radix(Midges) / 2ii
 
     def unrankCoordinates(n: Int32, value: BigInt): List[Coord] =
-        if (carriesFrame(n)) unrankOddCoordinates(n, value)
+        if (n == 3) unrankOddCoordinates(n, value)
+        else if (carriesFrame(n)) unrankLegacyOddCoordinates(n, value)
         else split(value, List.reverse(Orbit.layout(n)), Nil)
 
     def unrankOddCoordinates(n: Int32, value: BigInt): List[Coord] =
@@ -191,22 +228,62 @@ mod Orbit64.State {
         let tailValue = BigInt.modulo(value, tailRadix);
         let cornerRank = header / midgeRadix();
         let midgeValue = BigInt.modulo(header, midgeRadix());
-        let corner = Coord.unrank(Corners, cornerRank);
+        let corner = unrankCorner(cornerRank);
         let midge = unrankMidge(midgeValue, corner);
         corner :: midge :: split(tailValue, List.reverse(tail), Nil)
+
+    def unrankCorner(value: BigInt): Coord =
+        let permutation = value / 2187ii;
+        let twists = unrankOrientations(BigInt.modulo(value, 2187ii), 7, 3);
+        CornerCoord(Orbit64.Rank.permUnrank(permutation, 8), twists)
 
     def unrankMidge(value: BigInt, corner: Coord): Coord = match corner {
         case CornerCoord(permutation, _) =>
             let permutationRank = value / 2048ii;
+            let orientations = unrankOrientations(BigInt.modulo(value, 2048ii), 11, 2);
+            MidgeCoord(Orbit64.Rank.permUnrankWithParity(permutationRank, 12,
+                Orbit64.Rank.permParity(permutation)), orientations)
+        case _ => Coord.unrank(Midges, 0ii)
+    }
+
+    def unrankLegacyOddCoordinates(n: Int32, value: BigInt): List[Coord] =
+        let tail = List.drop(2, Orbit.layout(n));
+        let tailRadix = tail |> List.foldLeft((acc, o) -> acc * Orbit.radix(o), 1ii);
+        let header = value / tailRadix;
+        let tailValue = BigInt.modulo(value, tailRadix);
+        let cornerRank = header / midgeRadix();
+        let midgeValue = BigInt.modulo(header, midgeRadix());
+        let corner = Coord.unrank(Corners, cornerRank);
+        let midge = unrankMidgeLegacy(midgeValue, corner);
+        corner :: midge :: split(tailValue, List.reverse(tail), Nil)
+
+    def unrankMidgeLegacy(value: BigInt, corner: Coord): Coord = match corner {
+        case CornerCoord(permutation, _) =>
             let flips = Coord.unrank(Midges, BigInt.modulo(value, 2048ii));
             match flips {
                 case MidgeCoord(_, orientations) =>
-                    MidgeCoord(Orbit64.Rank.permUnrankWithParity(permutationRank, 12,
+                    MidgeCoord(Orbit64.Rank.permUnrankWithParity(value / 2048ii, 12,
                         Orbit64.Rank.permParity(permutation)), orientations)
                 case _ => Coord.unrank(Midges, 0ii)
             }
         case _ => Coord.unrank(Midges, 0ii)
     }
+
+    /// Inverse of `orientationRank`, restoring the forced final orientation.
+    def unrankOrientations(value: BigInt, count: Int32, radix: Int32): Vector[Int32] =
+        let digits = unrankOrientationDigits(value, count, radix, 0, Vector#{});
+        let sum = Vector.foldLeft((acc, digit) -> acc + digit, 0, digits);
+        Vector.append(digits, Vector#{Int32.modulo(radix - Int32.modulo(sum, radix), radix)})
+
+    def unrankOrientationDigits(value: BigInt, count: Int32, radix: Int32,
+                                index: Int32, out: Vector[Int32]): Vector[Int32] =
+        if (index == count) out
+        else
+            let divisor = Int32.toBigInt(radix);
+            let digit = BigInt.modulo(value, divisor) |> BigInt.tryToInt32
+                |> Option.getWithDefault(0);
+            unrankOrientationDigits(value / divisor, count, radix, index + 1,
+                Vector.append(out, Vector#{digit}))
 
     def widthLoop(total: BigInt, capacity: BigInt, w: Int32): Int32 =
         if (capacity >= total) w else widthLoop(total, capacity * 64ii, w + 1)

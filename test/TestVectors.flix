@@ -96,7 +96,7 @@ def test3x3SuneEncodes(): Unit \ Assert =
         CornerCoord(Vector#{0, 1, 7, 6, 4, 5, 3, 2}, Vector#{0, 0, 1, 1, 0, 0, 0, 1}),
         MidgeCoord(Vector#{0, 1, 2, 6, 4, 5, 11, 7, 8, 9, 10, 3}, Vector#{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0})
     };
-    Assert.assertEq(expected = Ok("AP7DZPiEDQ2A"), Orbit64.State.encode(3, Orbit64.State.canonical(orbits)))
+    Assert.assertEq(expected = Ok("AP7AYhnwDQbA"), Orbit64.State.encode(3, Orbit64.State.canonical(orbits)))
 
 @Test
 def test3x3SuneDecodes(): Unit \ Assert =
@@ -104,7 +104,7 @@ def test3x3SuneDecodes(): Unit \ Assert =
         CornerCoord(Vector#{0, 1, 7, 6, 4, 5, 3, 2}, Vector#{0, 0, 1, 1, 0, 0, 0, 1}),
         MidgeCoord(Vector#{0, 1, 2, 6, 4, 5, 11, 7, 8, 9, 10, 3}, Vector#{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0})
     };
-    Assert.assertEq(expected = Ok(Orbit64.State.canonical(orbits)), Orbit64.State.decode(3, "AP7DZPiEDQ2A"))
+    Assert.assertEq(expected = Ok(Orbit64.State.canonical(orbits)), Orbit64.State.decode(3, "AP7AYhnwDQbA"))
 
 
 @Test
@@ -113,7 +113,7 @@ def test3x3Scramble0Encodes(): Unit \ Assert =
         CornerCoord(Vector#{2, 3, 5, 4, 0, 1, 6, 7}, Vector#{0, 1, 2, 0, 1, 1, 2, 2}),
         MidgeCoord(Vector#{5, 11, 3, 2, 10, 7, 1, 0, 9, 8, 4, 6}, Vector#{0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0})
     };
-    Assert.assertEq(expected = Ok("EKXJoNj0C37Q"), Orbit64.State.encode(3, Orbit64.State.canonical(orbits)))
+    Assert.assertEq(expected = Ok("EKYDgqvYC5rw"), Orbit64.State.encode(3, Orbit64.State.canonical(orbits)))
 
 @Test
 def test3x3Scramble0Decodes(): Unit \ Assert =
@@ -121,7 +121,7 @@ def test3x3Scramble0Decodes(): Unit \ Assert =
         CornerCoord(Vector#{2, 3, 5, 4, 0, 1, 6, 7}, Vector#{0, 1, 2, 0, 1, 1, 2, 2}),
         MidgeCoord(Vector#{5, 11, 3, 2, 10, 7, 1, 0, 9, 8, 4, 6}, Vector#{0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0})
     };
-    Assert.assertEq(expected = Ok(Orbit64.State.canonical(orbits)), Orbit64.State.decode(3, "EKXJoNj0C37Q"))
+    Assert.assertEq(expected = Ok(Orbit64.State.canonical(orbits)), Orbit64.State.decode(3, "EKYDgqvYC5rw"))
 
 
 @Test
@@ -130,7 +130,7 @@ def test3x3Scramble1Encodes(): Unit \ Assert =
         CornerCoord(Vector#{2, 1, 4, 0, 3, 5, 6, 7}, Vector#{0, 1, 0, 0, 0, 2, 2, 1}),
         MidgeCoord(Vector#{5, 1, 3, 2, 0, 6, 10, 7, 8, 4, 11, 9}, Vector#{1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0})
     };
-    Assert.assertEq(expected = Ok("D2h9Q9nGfcKw"), Orbit64.State.encode(3, Orbit64.State.canonical(orbits)))
+    Assert.assertEq(expected = Ok("D2jEMhvWfXr4"), Orbit64.State.encode(3, Orbit64.State.canonical(orbits)))
 
 @Test
 def test3x3Scramble1Decodes(): Unit \ Assert =
@@ -138,7 +138,7 @@ def test3x3Scramble1Decodes(): Unit \ Assert =
         CornerCoord(Vector#{2, 1, 4, 0, 3, 5, 6, 7}, Vector#{0, 1, 0, 0, 0, 2, 2, 1}),
         MidgeCoord(Vector#{5, 1, 3, 2, 0, 6, 10, 7, 8, 4, 11, 9}, Vector#{1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0})
     };
-    Assert.assertEq(expected = Ok(Orbit64.State.canonical(orbits)), Orbit64.State.decode(3, "D2h9Q9nGfcKw"))
+    Assert.assertEq(expected = Ok(Orbit64.State.canonical(orbits)), Orbit64.State.decode(3, "D2jEMhvWfXr4"))
 
 
 @Test

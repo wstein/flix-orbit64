@@ -37,9 +37,12 @@ match; that removes the unreachable half of the coordinate space, and the 24
 fixed-centre frames are then recorded explicitly. On even cubes, movable
 centres already determine the pose, so the frame is required to be canonical.
 
-Coordinates are combined by mixed-radix Horner ranking. For odd cubes, the
+Coordinates are combined by mixed-radix Horner ranking. For the normative
+3×3×3 contract in `cube-rosetta/docs/orbit64.md`, corner twists and edge flips
+are little-endian: the first stored orientation is the units digit. The
 parity-selected midge permutation rank is used before the frame rank is added
-as the least-significant factor.
+as the least-significant factor. Wider-cube drafts retain their existing
+coordinate ordering.
 
 The width is the smallest positive `w` for which every state fits while the
 first sextet remains in class `00`:
@@ -97,23 +100,29 @@ for 6×6×6 or 7×7×7 yet.
 | Cube | Orbit64 state token | Spaced facelet notation (`U R F D L B`) |
 | ---- | ------------------- | --------------------------------------- |
 | 2×2×2 | `EJ6Rr` | `LFLD BLRD BLBU RFRR UUDU DFFB` |
-| 3×3×3 | `AAAAAAAAB-go` | `UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB` |
+| 3×3×3 | `AAAAAAAACC-Y` | `UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB` |
 | 4×4×4 | `BJSsuyGPOiU06kIz-eqibqTP1th` | `DLLDLLDLBFLFLRBR DRDLFBRLUURUUDDU FUUFLDFDRBUFURRL LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU` |
 | 5×5×5 | `AQsjv5K4-XPjKJZMNvMLvYKqohuv1x7JGUoNROgDJ2w` | `DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU` |
 
-These are face colours, not move labels. `Net` renders coordinates in the
-canonical `U R F D L B` reference frame, so converting facelets to a state
-constructs a canonical `FramedState`; the facelet convention alone does not
-recover an arbitrary stored frame.
+These are face colours, not move labels. `Net` applies a state's frame when it
+writes facelets, and derives that frame from an odd cube's fixed centres before
+it reads coordinates.
 
 ## Whole-cube frame reference
 
 `Orbit64.Frame` enumerates the 24 right-handed whole-cube frames. A frame is
 written as the six physical faces occupying the reference slots, in the same
-spaced order `U R F D L B`. Frame rank zero is therefore `U R F D L B`; ranks
-are ordered by the `U` face and then a deterministic adjacent `F` face order.
-Odd-cube state tokens store this rank after their coordinate rank. Even-cube
-state tokens always use rank zero because their movable centres carry pose.
+spaced order `U R F D L B`. Frame rank zero is therefore `U R F D L B`. The
+normative wire order is `x` turns, then `z` turns, then `y` turns: ranks 0–15
+are `(x, 0, y)` for `x = 0..3`, then ranks 16–19 are `(0, 1, y)`, and ranks
+20–23 are `(0, 3, y)`, with `y = 0..3` in every group. `Net` applies those
+rotations at its facelet boundary. Odd-cube state tokens store this rank after
+their coordinate rank. Even-cube state tokens always use rank zero because
+their movable centres carry pose.
+
+For 3×3×3, the normative compatibility vectors are `AAAAAAAAAAAA` (solved),
+`AAAAAAAAAAAE` (solved after `x`), `AAAAAAAAAL_o` (superflip), and
+`FRot3QyvoAAA` (`U`).
 
 Two cubes have the same primitive vocabulary whenever they have the same
 reachable layer count `l = floor(n / 2)`. A move token therefore identifies

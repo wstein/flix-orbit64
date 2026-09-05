@@ -15,9 +15,9 @@ def roundTrippable(): List[(Int32, String)] = List#{
     (2, "DJ5Lt"),
     (3, "AAAAAAAAAAAA"),
     (3, "AAAAAAAAAL_o"),
-    (3, "AP7DZPiEDQ2A"),
-    (3, "EKXJoNj0C37Q"),
-    (3, "D2h9Q9nGfcKw"),
+    (3, "AP7AYhnwDQbA"),
+    (3, "EKYDgqvYC5rw"),
+    (3, "D2jEMhvWfXr4"),
     (4, "AAAAAAAAAAAAAAAAAAAAAAAAAAA"),
     (4, "BJSsuyGPOiU06kIz-eqibqTP1th"),
     (4, "BAy4TWgX4vSZOHnM2NdN63BRWKG"),
@@ -41,9 +41,8 @@ def faceletsReadBackAsTheStateTheyWereDrawnFrom(): Unit \ Assert =
             case Ok(state) =>
                 Assert.assertEq(
                     expected = Ok(state),
-                    Orbit64.Net.toFacelets(n, Orbit64.State.orbits(state))
-                        |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
-                        |> Result.map(Orbit64.State.canonical))
+                    Orbit64.Net.toFacelets(n, state)
+                        |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)))
         })
 
 ///
@@ -57,13 +56,13 @@ def faceletsReadBackAsTheStateTheyWereDrawnFrom(): Unit \ Assert =
 def faceletsSurviveBeingReadAndDrawnAgain(): Unit \ Assert =
     roundTrippable() |> List.forEach(match (n, token) ->
         match Orbit64.State.decode(n, token)
-                |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, Orbit64.State.orbits(state))) {
+                |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, state)) {
             case Err(e) => Assert.assertTrueWithMsg(false, "${token} gave no facelets: ${e}")
             case Ok(fs) =>
                 Assert.assertEq(
                     expected = Ok(fs),
                     Orbit64.Net.fromFacelets(n, fs)
-                        |> Result.flatMap(orbits -> Orbit64.Net.toFacelets(n, orbits)))
+                        |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, state)))
         })
 
 ///
@@ -74,9 +73,8 @@ def theSolvedCubeReadsBackSolved(): Unit \ Assert =
     List#{2, 3, 4, 5} |> List.forEach(n ->
         Assert.assertEq(
             expected = Ok(Orbit64.State.solved(n)),
-            Orbit64.Net.toFacelets(n, Orbit64.State.solved(n) |> Orbit64.State.orbits)
-                |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
-                |> Result.map(Orbit64.State.canonical)))
+            Orbit64.Net.toFacelets(n, Orbit64.State.solved(n))
+                |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))))
 
 ///
 /// A state that came from facelets encodes, which is the whole point of the
@@ -88,9 +86,8 @@ def aStateReadFromFaceletsEncodes(): Unit \ Assert =
         Assert.assertEq(
             expected = Ok(token),
             Orbit64.State.decode(n, token)
-                |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, Orbit64.State.orbits(state)))
+                |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, state))
                 |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
-                |> Result.map(Orbit64.State.canonical)
                 |> Result.flatMap(state -> Orbit64.State.encode(n, state))))
 
 //
@@ -137,8 +134,8 @@ def seededStatesReadBackFromTheirFacelets(): Unit \ Assert =
         seeds() |> List.forEach(s -> {
             let orbits = seededState(n, s);
             Assert.assertTrueWithMsg(
-                Orbit64.Net.toFacelets(n, orbits)
-                    |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)) == Ok(orbits),
+                Orbit64.Net.toFacelets(n, Orbit64.State.canonical(orbits))
+                    |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)) == Ok(Orbit64.State.canonical(orbits)),
                 "seed ${s} of the ${n}x${n}x${n} did not read back")
         }))
 
@@ -150,12 +147,12 @@ def seededStatesReadBackFromTheirFacelets(): Unit \ Assert =
 def seededFaceletsSurviveBeingReadAndDrawn(): Unit \ Assert =
     List#{2, 3, 4, 5} |> List.forEach(n ->
         seeds() |> List.forEach(s ->
-            match Orbit64.Net.toFacelets(n, seededState(n, s)) {
+            match Orbit64.Net.toFacelets(n, Orbit64.State.canonical(seededState(n, s))) {
                 case Err(why) => Assert.assertTrueWithMsg(false,
                     "seed ${s} of the ${n}x${n}x${n} gave no facelets: ${why}")
                 case Ok(fs) => Assert.assertTrueWithMsg(
                     Orbit64.Net.fromFacelets(n, fs)
-                        |> Result.flatMap(orbits -> Orbit64.Net.toFacelets(n, orbits)) == Ok(fs),
+                        |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, state)) == Ok(fs),
                     "seed ${s} of the ${n}x${n}x${n} did not draw the same stickers twice")
             }))
 
