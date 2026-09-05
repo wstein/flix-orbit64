@@ -71,6 +71,15 @@ wire order for moves and the reference order for future whole-cube frames:
 
 In compact form, the list is `U R F D L B`.
 
+## Whole-cube frame reference
+
+`Orbit64.Frame` enumerates the 24 right-handed whole-cube frames. A frame is
+written as the six physical faces occupying the reference slots, in the same
+spaced order `U R F D L B`. Frame rank zero is therefore `U R F D L B`; ranks
+are ordered by the `U` face and then a deterministic adjacent `F` face order.
+This is shared reference data for the proposed oriented-state codec; it does
+not yet alter any state token.
+
 Two cubes have the same primitive vocabulary whenever they have the same
 reachable layer count `l = floor(n / 2)`. A move token therefore identifies
 the layer class `{2l, 2l + 1}`, not one exact cube size. The alphabet has
