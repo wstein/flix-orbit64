@@ -21,9 +21,9 @@ classes; see the [wire-format specification](FORMAT.md).
 ```
 2x2x2  AAAAA                                       (solved)
 2x2x2  AAAVW                                       (every corner twisted)
-3x3x3  AAAAAAAAAAf_                                (superflip)
+3x3x3  AAAAAAAAAL_o                                (superflip)
 4x4x4  BUt6SRL-hJFWEmpUa2zYHsiSLJb                 (stripes)
-5x5x5  AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA  (superflip)
+5x5x5  AAAAAAAAAAzL6QkSbjC7FwAwV9zTa9kKK6ImtYAAAAA  (superflip)
 ```
 
 The project carries its own compiler, so there is nothing to install but a
@@ -57,9 +57,9 @@ def demo(): Unit \ IO =
     let superflip = List#{
         CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
         MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
-    };
+    } |> Orbit64.State.canonical;
     match Orbit64.State.encode(3, superflip) {
-        case Ok(token) => println(token)          //=> AAAAAAAAAAf_
+        case Ok(token) => println(token)          //=> AAAAAAAAAL_o
         case Err(e)    => println("nope: ${e}")
     }
 ```
@@ -68,9 +68,13 @@ The API documentation is published at
 <https://wstein.github.io/flix-orbit64/>, rendered by `flix doc` from the
 compiler this project pins.
 
-`Orbit64.State.decode(n, token)` is the exact inverse. Everything the package
-defines nests under the `Orbit64` module, so nothing it ships can collide with
-names of yours -- and it defines no top-level `main`, so yours still compiles.
+`Orbit64.State.decode(n, token)` is the exact inverse and returns a
+`FramedState`. Construct coordinate data with `Orbit64.State.canonical`, use
+`Orbit64.State.frame` to read its reference frame, and pass
+`Orbit64.State.orbits(state)` to geometry APIs such as `Net`. Everything the
+package defines nests under the `Orbit64` module, so nothing it ships can
+collide with names of yours -- and it defines no top-level `main`, so yours
+still compiles.
 
 Literal moves are type-safe values rather than notation strings:
 
@@ -120,11 +124,11 @@ it has no notion of a face, an axis, or a turn.
 | cube  | bits   | chars |
 |-------|--------|-------|
 | 2x2x2 |  26.39 |     5 |
-| 3x3x3 |  66.23 |    12 |
+| 3x3x3 |  69.82 |    12 |
 | 4x4x4 | 156.96 |    27 |
-| 5x5x5 | 248.32 |    42 |
+| 5x5x5 | 251.90 |    43 |
 | 6x6x6 | 390.58 |    66 |
-| 7x7x7 | 533.47 |    90 |
+| 7x7x7 | 537.05 |    90 |
 
 Widths are distinct and grow as `n^2`, so a state token's length identifies its
 puzzle. Width is the fewest characters that fit every state beneath the `00`
@@ -174,12 +178,13 @@ orbit64   AAAAAAAAAAAA
 facelets  UBULURUFURURFRBRDRFUFLFRFDFDFDLDRDBDLULBLFLDLBUBRBLBDB
 pieces    cp 0 1 2 3 4 5 6 7           co 0 0 0 0 0 0 0 0
           ep 0 1 2 3 4 5 6 7 8 9 10 11 eo 1 1 1 1 1 1 1 1 1 1 1 1
-orbit64   AAAAAAAAAAf_
+orbit64   AAAAAAAAAL_o
 ```
 
-The superflip's coordinate is exactly 2047 -- the eleven free flip bits all set
-and nothing else -- which is why ten `A`s are followed by `f_`. It is a fair
-advertisement for what mixed-radix packing buys over fixed-width fields.
+The superflip's coordinate has its eleven free flip bits all set. The framed
+encoding then multiplies that coordinate by 24 for the stored frame, which is
+why its compact rank ends in `L_o`. It is a fair advertisement for what
+mixed-radix packing buys over fixed-width fields.
 
 | representation | size | bits | over the floor |
 |----------------|------|------|----------------|
@@ -187,7 +192,7 @@ advertisement for what mixed-radix packing buys over fixed-width fields.
 | pieces, `cp` `co` `ep` `eo`| 40 values, packed at 3, 2, 4 and 1 bits | 100.0 | 1.51x |
 | orbit64                    | 12 base64url characters | 72.0 | 1.09x |
 
-The floor is 66.23 bits, and no base64url encoding can spend fewer than 12
+The framed-state floor is 69.82 bits, and no base64url encoding can spend fewer than 12
 characters on it. The other two are not wasteful by accident: facelets describe
 stickers rather than pieces, so most 54-character strings are not cubes at all,
 and the piece arrays pay index width for permutations whose ranks are much
@@ -205,8 +210,8 @@ Well-known 3x3x3 patterns as tokens -- each is the algorithm applied to a solved
 cube, then encoded. Paste one back in and the command line draws it:
 
 ```
-$ cd examples/cli-tool && flix run -- AEtgYICyPB1X
-3x3x3, 2 orbits:
+$ cd examples/cli-tool && flix run -- A4iEhgha0UAo
+3x3x3, 2 orbits, Frame(0):
   Corners: CornerCoord(Vector#{0, 4, 5, 1, 3, 7, 6, 2}, ...)
   Midges: MidgeCoord(Vector#{1, 8, 5, 9, 3, 11, 7, 10, 0, 4, 6, 2}, ...)
 
@@ -226,9 +231,9 @@ $ cd examples/cli-tool && flix run -- AEtgYICyPB1X
 ```
 
 The faces are coloured on a terminal; `NO_COLOR=1` gives the plain letters
-above. Note that the six fixed centres are not in the token at all -- the format
-leaves them out because they fix the frame rather than carry information -- so
-the renderer supplies them before drawing anything.
+above. On odd cubes the token records the six fixed centres as a frame rank.
+`Net` renders coordinates under its canonical frame, so the demo supplies that
+reference when it draws the facelets.
 
 The 2x2x2 through 5x5x5 are drawn, each under a convention the command line
 names beneath the net -- `orbit64-3x3-draft@1`, `orbit64-4x4-draft@1`,
@@ -263,12 +268,12 @@ something traceable rather than merely noticeable. See
 | pattern | token | algorithm |
 |---------|-------|-----------|
 | Solved         | `AAAAAAAAAAAA` | |
-| Superflip      | `AAAAAAAAAAf_` | `U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2` |
-| Checkerboard   | `AAAAAH1cCIAA` | `U2 D2 F2 B2 L2 R2` |
-| Four Spots     | `AVd4zWoSqIAA` | `F2 B2 U D' R2 L2 U D'` |
-| Six Spots      | `AEtgYICyPB1X` | `U D' R L' F B' U D'` |
-| Cube in a Cube | `AEtd1CzDOflC` | `F L F U' R U F2 L2 U' L' B D' B' L2 U` |
-| Tetris         | `AW622DQhY0VX` | `L R F B U' D' L' R'` |
+| Superflip      | `AAAAAAAAAL_o` | `U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2` |
+| Checkerboard   | `AAAABeBQZgAA` | `U2 D2 F2 B2 L2 R2` |
+| Four Spots     | `EBmpoPjf5gAA` | `F2 B2 U D' R2 L2 U D'` |
+| Six Spots      | `A4iEhgha0UAo` | `U D' R L' F B' U D'` |
+| Cube in a Cube | `A4hl8hkmt14w` | `F L F U' R U F2 L2 U' L' B D' B' L2 U` |
+| Tetris         | `ETCSInGQp4Ao` | `L R F B U' D' L' R'` |
 
 Two larger cubes, which the examples at the top of this file use:
 
@@ -277,7 +282,7 @@ Two larger cubes, which the examples at the top of this file use:
 | 2x2x2 | Solved               | `AAAAA`                                      | every coordinate zero, so every character is the padding one |
 | 2x2x2 | Every corner twisted | `AAAVW`                                      | identity permutation, twists `1 2 1 2 1 2 1 2` |
 | 4x4x4 | Stripes              | `BUt6SRL-hJFWEmpUa2zYHsiSLJb`                | `L2 2R2 U2 2D2` |
-| 5x5x5 | Superflip            | `AAAAAAAAACIfwsLb0IHy6ACA6kzedO1wdFsR5AAAAA` | every midge flipped in place, everything else solved |
+| 5x5x5 | Superflip            | `AAAAAAAAAAzL6QkSbjC7FwAwV9zTa9kKK6ImtYAAAAA` | every midge flipped in place, everything else solved |
 
 `L2 2R2 U2 2D2` turns alternate slices on two axes, which bands every face: the
 faces perpendicular to neither axis get stripes running one way and the rest the
@@ -321,8 +326,8 @@ changes only the token:
 
 ```
              sgn(cp)  sgn(ep)  sum(co)%3  sum(eo)%2  token
-original          -1       -1          0          0  AWMmIry_APKe
-relabelled        -1       -1          0          0  ARk53HQPqynD
+original          -1       -1          0          0  EKXJoNj0C37Q
+relabelled        -1       -1          0          0  DS62VXC8BapI
 ```
 
 So the vectors pin this codec's arithmetic exactly, which is what they are for,
@@ -377,7 +382,8 @@ rather than merely draw one:
 ```flix
 // a cube some other engine turned, as face indices
 Orbit64.Net.fromFacelets(4, stickers)
-    |> Result.flatMap(orbits -> Orbit64.State.encode(4, orbits))
+    |> Result.map(Orbit64.State.canonical)
+    |> Result.flatMap(state -> Orbit64.State.encode(4, state))
 ```
 
 Both directions read one set of tables, which is why the inverse lives here
@@ -393,19 +399,11 @@ to both draw to those stickers and read back from them, at the 4x4x4 and the
 
 Two things this deliberately does not do:
 
-- It does not say whether a state is **reachable**. The format admits
-  coordinates outside the physical move group, because it does not enforce
-  coupled orbit parity -- see the design note below. A solver may reject a state
-  `toFacelets` will happily draw, and that is the format's choice rather than a
-  bug in the adapter.
-- It does not put an odd cube's **fixed centres** back. `fromFacelets` refuses a
-  3x3x3 or 5x5x5 whose six single centres have moved -- a slice turn, a
-  whole-cube rotation -- and says that is why. Those centres are the frame this
-  format is written in rather than state it carries, so a token has nowhere to
-  record where they went. Turning such a state back into the frame is a decision
-  about which cube was meant, and making it here would hand back a state other
-  than the one that arrived, without saying so. An even cube has no fixed
-  centre, so nothing about its centres is a frame and no such refusal applies.
+- It does not transform coordinates between reference frames. `fromFacelets`
+  returns a canonical `FramedState` and refuses a 3x3x3 or 5x5x5 whose fixed
+  centres have moved -- a slice turn or whole-cube rotation. Recovering a
+  noncanonical frame requires rotating the coordinate convention as well, and
+  that geometry is deliberately outside `Net`.
 
 ## Design decisions
 
@@ -413,18 +411,17 @@ Two things this deliberately does not do:
 the sum-mod-3 rule and the last edge flip by parity, so `rank` drops them and
 `unrank` reconstructs them. Free, and it is what turns `3^8` into `3^7`.
 
-**Permutation parity is *not* enforced.** Corner and edge permutation parity are
-coupled on a 3x3x3; using that would save exactly one bit at the cost of
-interleaving the two orbits' encodings. At 66.23 bits the token is 12
-characters either way. Dropped. The consequence is that a few tokens decode to
-states no sequence of turns can reach, which is a decoder's problem rather than
-a format's -- `Orbit64.Coord.isValid` is there for callers who care.
+**Odd-cube permutation parity is enforced.** Corner and midge permutations must
+have the same parity. The codec ranks the midge permutation in the matching
+half of its range, reclaiming that bit, then records one of 24 fixed-centre
+frames. The frame makes 5x5x5 one character wider; other supported odd sizes
+still fit their existing widths.
 
 **`encode` refuses coordinates that are not a cube.** That is a different
 question from the one above, and the two are worth keeping apart. Parity says
-whether a cube could have been *reached* by turning; this says whether it is a
-cube at all -- eight distinct corners, twists that sum to zero mod three, four
-centres of each colour. `encode` checks the second and not the first.
+whether a cube could have been *reached* by turning; this says whether each
+coordinate is a cube at all -- eight distinct corners, twists that sum to zero
+mod three, four centres of each colour. `encode` checks both.
 
 It has to. A coordinate above its own range does not merely encode itself
 wrongly: the assembly is Horner, so the surplus carries into the next orbit and
@@ -495,8 +492,8 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   integers appear only in the final assembly.
 - `src/Orbit64/Orbit.flix` -- which orbits a cube has and how large each one is.
 - `src/Orbit64/Coord.flix` -- one orbit's state and its rank/unrank.
-- `src/Orbit64/State.flix` -- mixed-radix state assembly and
-  `Orbit64.State.encode`/`decode`.
+- `src/Orbit64/State.flix` -- framed mixed-radix state assembly and
+  `Orbit64.State.canonical`, `encode`, and `decode`.
 - `src/Orbit64/Move.flix` -- primitive layer turns and literal move-sequence
   encoding.
 - `src/Orbit64/Algorithm/Encoding.flix` -- structured algorithm grammar

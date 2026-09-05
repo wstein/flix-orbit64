@@ -30,9 +30,16 @@ A field whose range contains only one value has width zero.
 
 ## State
 
-A state contains the coordinates in `Orbit.layout(n)` order. Each coordinate
-has range `Orbit.radix(orbit)`. They are combined by mixed-radix Horner ranking,
-exactly as before the token family gained move formats.
+A state is a `FramedState`: coordinates in `Orbit.layout(n)` order together
+with a whole-cube reference frame. Each coordinate has range
+`Orbit.radix(orbit)`. On odd cubes, corner and midge permutation parity must
+match; that removes the unreachable half of the coordinate space, and the 24
+fixed-centre frames are then recorded explicitly. On even cubes, movable
+centres already determine the pose, so the frame is required to be canonical.
+
+Coordinates are combined by mixed-radix Horner ranking. For odd cubes, the
+parity-selected midge permutation rank is used before the frame rank is added
+as the least-significant factor.
 
 The width is the smallest positive `w` for which every state fits while the
 first sextet remains in class `00`:
@@ -41,20 +48,18 @@ first sextet remains in class `00`:
 stateCount(n) <= 16 * 64^(w - 1)
 ```
 
-This keeps existing state tokens unchanged whenever their first two bits were
-already zero. It deliberately makes a 7x7x7 state 90 characters rather than
-89: the family tag is part of the format, not an out-of-band guess. Token
-length continues to identify `n`, and the decoder still rejects values at or
-above `stateCount(n)`.
+The family tag is part of the format, not an out-of-band guess. Token length
+continues to identify `n`, and the decoder rejects values at or above
+`stateCount(n)`.
 
 | Cube | State space (bits) | Token width (base64url chars) |
 | ---- | -----------------: | ----------------------------: |
 | 2×2×2 | 26.39 | 5 |
-| 3×3×3 | 66.23 | 12 |
+| 3×3×3 | 69.82 | 12 |
 | 4×4×4 | 156.96 | 27 |
-| 5×5×5 | 248.32 | 42 |
+| 5×5×5 | 251.90 | 43 |
 | 6×6×6 | 390.58 | 66 |
-| 7×7×7 | 533.47 | 90 |
+| 7×7×7 | 537.05 | 90 |
 
 ## Move vocabulary
 
@@ -67,7 +72,7 @@ amounts  clockwise, half, counter-clockwise
 ```
 
 The shared face reference list is written in spaced WCA notation. It is the
-wire order for moves and the reference order for future whole-cube frames:
+wire order for moves and the reference order for whole-cube frames:
 
 | Orbit64 face | Spaced face notation |
 | ------------ | -------------------- |
@@ -92,13 +97,14 @@ for 6×6×6 or 7×7×7 yet.
 | Cube | Orbit64 state token | Spaced facelet notation (`U R F D L B`) |
 | ---- | ------------------- | --------------------------------------- |
 | 2×2×2 | `EJ6Rr` | `LFLD BLRD BLBU RFRR UUDU DFFB` |
-| 3×3×3 | `AAAAAAAAAKRX` | `UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB` |
+| 3×3×3 | `AAAAAAAAB-go` | `UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB` |
 | 4×4×4 | `BJSsuyGPOiU06kIz-eqibqTP1th` | `DLLDLLDLBFLFLRBR DRDLFBRLUURUUDDU FUUFLDFDRBUFURRL LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU` |
-| 5×5×5 | `BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS` | `DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU` |
+| 5×5×5 | `AQsjv5K4-XPjKJZMNvMLvYKqohuv1x7JGUoNROgDJ2w` | `DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU` |
 
-These are face colours, not move labels. On odd cubes the centre of each
-field remains its field's face letter because the canonical state format does
-not carry a whole-cube frame.
+These are face colours, not move labels. `Net` renders coordinates in the
+canonical `U R F D L B` reference frame, so converting facelets to a state
+constructs a canonical `FramedState`; the facelet convention alone does not
+recover an arbitrary stored frame.
 
 ## Whole-cube frame reference
 
@@ -106,8 +112,8 @@ not carry a whole-cube frame.
 written as the six physical faces occupying the reference slots, in the same
 spaced order `U R F D L B`. Frame rank zero is therefore `U R F D L B`; ranks
 are ordered by the `U` face and then a deterministic adjacent `F` face order.
-This is shared reference data for the proposed oriented-state codec; it does
-not yet alter any state token.
+Odd-cube state tokens store this rank after their coordinate rank. Even-cube
+state tokens always use rank zero because their movable centres carry pose.
 
 Two cubes have the same primitive vocabulary whenever they have the same
 reachable layer count `l = floor(n / 2)`. A move token therefore identifies
@@ -204,12 +210,12 @@ State operations live under `Orbit64.State`; the package root is the format
 family, not an alias for one member:
 
 ```text
-Orbit64.State.encode / decode
+Orbit64.State.canonical / frame / orbits / encode / decode
 Orbit64.Move.encode / decode        (decode returns a layer class)
 Orbit64.Algorithm.Encoding.encode / decode
 Orbit64.Token.decode
 ```
 
 `Orbit64.Token.decode` dispatches on the first two bits and returns a tagged
-value carrying `n` and the decoded state, move sequence, structured algorithm,
+value carrying `n` and a `FramedState`, move sequence, structured algorithm,
 or extension envelope.

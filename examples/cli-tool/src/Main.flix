@@ -44,7 +44,7 @@ def demo(colour: Bool): Unit \ IO =
     let superflip = List#{
         Orbit64.Coord.Coord.CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
         Orbit64.Coord.Coord.MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
-    };
+    } |> Orbit64.State.canonical;
     match Orbit64.State.encode(3, superflip) {
         case Err(e) => println("encode failed: ${e}")
         case Ok(token) =>
@@ -53,7 +53,7 @@ def demo(colour: Bool): Unit \ IO =
                 case Err(e) => println("  decode failed: ${e}")
                 case Ok(back) =>
                     println("  decodes back identically: ${back == superflip}");
-                    draw(3, back, colour)
+                    draw(3, Orbit64.State.orbits(back), colour)
             }
     }
 
@@ -65,8 +65,9 @@ def report(token: String, colour: Bool): Unit \ IO =
         case None => println("no cube size uses a ${String.length(token)}-character token")
         case Some(n) => match Orbit64.State.decode(n, token) {
             case Err(e) => println("not a valid ${n}x${n}x${n} token: ${e}")
-            case Ok(orbits) =>
-                println("${n}x${n}x${n}, ${List.length(orbits)} orbits:");
+            case Ok(state) =>
+                let orbits = Orbit64.State.orbits(state);
+                println("${n}x${n}x${n}, ${List.length(orbits)} orbits, ${Orbit64.State.frame(state)}:");
                 orbits |> List.forEach(c -> println("  ${Orbit64.Coord.kind(c)}: ${c}"));
                 draw(n, orbits, colour)
         }
