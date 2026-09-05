@@ -244,6 +244,28 @@ def parityRestrictedPermutationRanksRoundTrip(): Unit \ Assert =
                 Orbit64.Rank.permRankWithParity(p, parity))
         }))
 
+///
+/// An odd cube carries its fixed-centre frame while retaining only legal
+/// corner/midge parity pairs.
+///
+@Test
+def framedOddStatesRoundTripWithoutGrowingTheThreeByThreeWidth(): Unit \ Assert =
+    let state = Orbit64.State.FramedState.FramedState(
+        Orbit64.Frame.unrank(17), Orbit64.State.solved(3));
+    Assert.assertEq(expected = 12, Orbit64.State.framedWidth(3));
+    Assert.assertEq(expected = 1038048078587756544000ii, Orbit64.State.framedStateCount(3));
+    match Orbit64.State.encodeFramed(3, state) {
+        case Err(e) => Assert.assertTrueWithMsg(false, "framed state did not encode: ${e}")
+        case Ok(token) => Assert.assertEq(expected = Ok(state), Orbit64.State.decodeFramed(3, token))
+    }
+
+/// Even cubes keep frame in their movable centre coordinates rather than duplicating it.
+@Test
+def framedEvenStatesRequireTheCanonicalFrame(): Unit \ Assert =
+    let state = Orbit64.State.FramedState.FramedState(
+        Orbit64.Frame.unrank(1), Orbit64.State.solved(4));
+    Assert.assertTrue(Orbit64.State.encodeFramed(4, state) |> Result.isErr)
+
 @Test
 def combRankUnrankRoundTrip(): Unit \ Assert =
     List.range(0, 10626) |> List.forEach(r ->

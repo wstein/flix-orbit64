@@ -28,7 +28,179 @@
 mod Orbit64.State {
 
     use Orbit64.Coord.Coord
+    use Orbit64.Coord.Coord.{CornerCoord, MidgeCoord}
     use Orbit64.Orbit.Orbit
+    use Orbit64.Orbit.Orbit.{Corners, Midges}
+
+    /// A coordinate state together with its whole-cube reference frame.
+    pub enum FramedState with Eq, ToString {
+        case FramedState(Orbit64.Frame.Frame, List[Coord])
+    }
+
+    /// Construct a state in the canonical reference frame.
+    pub def canonical(orbits: List[Coord]): FramedState =
+        FramedState.FramedState(Orbit64.Frame.canonical(), orbits)
+
+    /// The reference frame recorded by `state`.
+    pub def frame(state: FramedState): Orbit64.Frame.Frame = match state {
+        case FramedState.FramedState(value, _) => value
+    }
+
+    /// The orbit coordinates recorded by `state`.
+    pub def orbits(state: FramedState): List[Coord] = match state {
+        case FramedState.FramedState(_, value) => value
+    }
+
+    /// Whether `n` has fixed centres whose physical frame must be carried.
+    pub def carriesFrame(n: Int32): Bool = Int32.modulo(n, 2) == 1 and n >= 3
+
+    /// The number of legal coordinate states before the optional frame factor.
+    pub def coordinateCount(n: Int32): BigInt =
+        let all = Orbit.layout(n) |> List.foldLeft((acc, o) -> acc * Orbit.radix(o), 1ii);
+        if (carriesFrame(n)) all / 2ii else all
+
+    /// The number of frame-aware states the new state format addresses.
+    pub def framedStateCount(n: Int32): BigInt =
+        coordinateCount(n) * Int32.toBigInt(frameCount(n))
+
+    def frameCount(n: Int32): Int32 = if (carriesFrame(n)) Orbit64.Frame.count() else 1
+
+    ///
+    /// Encode a frame-aware state under the new state format.
+    ///
+    /// On even cubes the frame must be canonical: movable centre coordinates
+    /// already determine the pose, so recording another 24-way choice would
+    /// duplicate every state. Odd cubes carry one of the 24 fixed-centre
+    /// frames explicitly.
+    ///
+    pub def encodeFramed(n: Int32, state: FramedState): Result[String, String] =
+        match stateFault(n, state) {
+            case Some(why) => Err(why)
+            case None => Ok(Orbit64.Internal.Encoding.toBase64(encodedValue(n, state), framedWidth(n)))
+        }
+
+    def stateFault(n: Int32, state: FramedState): Option[String] =
+        List#{
+            frameFault(n, frame(state)),
+            layoutFault(n, orbits(state)),
+            firstFault(orbits(state)),
+            parityFault(n, orbits(state))
+        } |> List.filterMap(x -> x) |> List.head
+
+    def frameFault(n: Int32, value: Orbit64.Frame.Frame): Option[String] =
+        if (not (Orbit64.Frame.faultOf(value) |> Option.isEmpty))
+            Some("the state frame is not a right-handed cube frame")
+        else if (not carriesFrame(n) and value != Orbit64.Frame.canonical())
+            Some("an even cube carries its frame in its movable centres")
+        else None
+
+    def layoutFault(n: Int32, actual: List[Coord]): Option[String] =
+        let expected = Orbit.layout(n);
+        let kinds = List.map(Coord.kind, actual);
+        if (kinds == expected) None
+        else Some("expected orbits ${expected} for ${n}x${n}x${n}, got ${kinds}")
+
+    def encodedValue(n: Int32, state: FramedState): BigInt =
+        rankCoordinates(n, orbits(state)) * Int32.toBigInt(frameCount(n))
+            + Int32.toBigInt(Orbit64.Frame.rank(frame(state)))
+
+    /// Decode a frame-aware state under the new state format.
+    pub def decodeFramed(n: Int32, token: String): Result[String, FramedState] =
+        let total = framedStateCount(n);
+        let width = framedWidth(n);
+        if (String.length(token) != width)
+            Err("expected ${width} characters for the ${n}x${n}x${n}, got ${String.length(token)}")
+        else match Orbit64.Internal.Encoding.fromBase64(token) {
+            case None => Err("token contains a character outside the base64url alphabet")
+            case Some(value) =>
+                if (value >= total) Err("token is out of range for the ${n}x${n}x${n}")
+                else
+                    let count = Int32.toBigInt(frameCount(n));
+                    let coordinate = value / count;
+                    let frame = BigInt.modulo(value, count)
+                        |> BigInt.tryToInt32 |> Option.getWithDefault(0)
+                        |> Orbit64.Frame.unrank;
+                    Ok(FramedState.FramedState(frame, unrankCoordinates(n, coordinate)))
+        }
+
+    /// The width for `framedStateCount`, keeping the leading state class bits.
+    pub def framedWidth(n: Int32): Int32 = widthLoop(framedStateCount(n), 16ii, 1)
+
+    def firstFault(orbits: List[Coord]): Option[String] =
+        orbits |> List.filterMap(c -> Coord.faultOf(c)
+            |> Option.map(why -> "the ${Coord.kind(c)} coordinate is not a cube: ${why}"))
+            |> List.head
+
+    def parityFault(n: Int32, orbits: List[Coord]): Option[String] =
+        if (not carriesFrame(n)) None
+        else match orbits {
+            case CornerCoord(corners, _) :: MidgeCoord(midges, _) :: _ =>
+                if (Orbit64.Rank.permParity(corners) == Orbit64.Rank.permParity(midges)) None
+                else Some("corner and midge permutation parity must match")
+            case _ => Some("odd cubes require corner and midge coordinates")
+        }
+
+    def rankCoordinates(n: Int32, orbits: List[Coord]): BigInt =
+        if (carriesFrame(n)) rankOddCoordinates(orbits)
+        else rankAll(orbits, 0ii)
+
+    def rankAll(orbits: List[Coord], initial: BigInt): BigInt =
+        orbits |> List.foldLeft((acc, c) -> acc * Orbit.radix(Coord.kind(c)) + Coord.rank(c), initial)
+
+    def rankOddCoordinates(orbits: List[Coord]): BigInt =
+        match orbits {
+            case corner :: midge :: tail => rankOddHead(corner, midge, tail)
+            case _ => 0ii
+        }
+
+    def rankOddHead(corner: Coord, midge: Coord, tail: List[Coord]): BigInt = match (corner, midge) {
+        case (CornerCoord(corners, _), MidgeCoord(midges, _)) =>
+            let cornerParity = Orbit64.Rank.permParity(corners);
+            let initial = Coord.rank(corner) * midgeRadix()
+                + rankMidge(midges, midge, cornerParity);
+            rankAll(tail, initial)
+        case _ => 0ii
+    }
+
+    def rankMidge(permutation: Vector[Int32], coordinate: Coord, parity: Int32): BigInt = match coordinate {
+        case MidgeCoord(_, flips) =>
+            Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii
+                + flipRank(flips)
+        case _ => 0ii
+    }
+
+    def flipRank(flips: Vector[Int32]): BigInt =
+        Coord.rank(MidgeCoord(Vector.range(0, 12), flips)) |> BigInt.modulo(2048ii)
+
+    def midgeRadix(): BigInt = Orbit.radix(Midges) / 2ii
+
+    def unrankCoordinates(n: Int32, value: BigInt): List[Coord] =
+        if (carriesFrame(n)) unrankOddCoordinates(n, value)
+        else split(value, List.reverse(Orbit.layout(n)), Nil)
+
+    def unrankOddCoordinates(n: Int32, value: BigInt): List[Coord] =
+        let tail = List.drop(2, Orbit.layout(n));
+        let tailRadix = tail |> List.foldLeft((acc, o) -> acc * Orbit.radix(o), 1ii);
+        let header = value / tailRadix;
+        let tailValue = BigInt.modulo(value, tailRadix);
+        let cornerRank = header / midgeRadix();
+        let midgeValue = BigInt.modulo(header, midgeRadix());
+        let corner = Coord.unrank(Corners, cornerRank);
+        let midge = unrankMidge(midgeValue, corner);
+        corner :: midge :: split(tailValue, List.reverse(tail), Nil)
+
+    def unrankMidge(value: BigInt, corner: Coord): Coord = match corner {
+        case CornerCoord(permutation, _) =>
+            let permutationRank = value / 2048ii;
+            let flips = Coord.unrank(Midges, BigInt.modulo(value, 2048ii));
+            match flips {
+                case MidgeCoord(_, orientations) =>
+                    MidgeCoord(Orbit64.Rank.permUnrankWithParity(permutationRank, 12,
+                        Orbit64.Rank.permParity(permutation)), orientations)
+                case _ => Coord.unrank(Midges, 0ii)
+            }
+        case _ => Coord.unrank(Midges, 0ii)
+    }
 
     ///
     /// The number of states of an `n x n x n` cube.
