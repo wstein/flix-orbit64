@@ -47,6 +47,15 @@ already zero. It deliberately makes a 7x7x7 state 90 characters rather than
 length continues to identify `n`, and the decoder still rejects values at or
 above `stateCount(n)`.
 
+| Cube | State space (bits) | Token width (base64url chars) |
+| ---- | -----------------: | ----------------------------: |
+| 2×2×2 | 26.39 | 5 |
+| 3×3×3 | 66.23 | 12 |
+| 4×4×4 | 156.96 | 27 |
+| 5×5×5 | 248.32 | 42 |
+| 6×6×6 | 390.58 | 66 |
+| 7×7×7 | 533.47 | 90 |
+
 ## Move vocabulary
 
 A primitive move is a face, a layer depth, and a turn amount:
@@ -75,8 +84,10 @@ In compact form, the list is `U R F D L B`.
 
 `Orbit64.Net.toFacelets` writes six face fields in `U R F D L B` order. Each
 field has `n * n` letters, and a space separates fields. These checked vectors
-make the state-token-to-facelet mapping concrete for every small cube the net
-supports:
+make the state-token-to-facelet mapping concrete for every size the net
+supports (2×2×2 through 5×5×5). The state-width table above covers the full
+2×2×2 through 7×7×7 codec range; `Net` deliberately has no facelet convention
+for 6×6×6 or 7×7×7 yet.
 
 | Cube | Orbit64 state token | Spaced facelet notation (`U R F D L B`) |
 | ---- | ------------------- | --------------------------------------- |
