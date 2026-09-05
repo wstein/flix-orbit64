@@ -71,16 +71,23 @@ wire order for moves and the reference order for future whole-cube frames:
 
 In compact form, the list is `U R F D L B`.
 
-The mapping is independent of cube size. This reference lists the six Orbit64
-face slots in their corresponding spaced face notation for the currently
-documented small-cube sizes:
+## Spaced facelet reference vectors
 
-| Cube | Orbit64 slots | Spaced face notation |
-| ---- | ------------- | -------------------- |
-| 2×2×2 | `U R F D L B` | `U R F D L B` |
-| 3×3×3 | `U R F D L B` | `U R F D L B` |
-| 4×4×4 | `U R F D L B` | `U R F D L B` |
-| 5×5×5 | `U R F D L B` | `U R F D L B` |
+`Orbit64.Net.toFacelets` writes six face fields in `U R F D L B` order. Each
+field has `n * n` letters, and a space separates fields. These checked vectors
+make the state-token-to-facelet mapping concrete for every small cube the net
+supports:
+
+| Cube | Orbit64 state token | Spaced facelet notation (`U R F D L B`) |
+| ---- | ------------------- | --------------------------------------- |
+| 2×2×2 | `EJ6Rr` | `LFLD BLRD BLBU RFRR UUDU DFFB` |
+| 3×3×3 | `AAAAAAAAAKRX` | `UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB` |
+| 4×4×4 | `BJSsuyGPOiU06kIz-eqibqTP1th` | `DLLDLLDLBFLFLRBR DRDLFBRLUURUUDDU FUUFLDFDRBUFURRL LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU` |
+| 5×5×5 | `BZC-qGPah6s_QRSpZqYwHRBzEXMajtc7pIOYt8AIaS` | `DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU` |
+
+These are face colours, not move labels. On odd cubes the centre of each
+field remains its field's face letter because the canonical state format does
+not carry a whole-cube frame.
 
 ## Whole-cube frame reference
 
