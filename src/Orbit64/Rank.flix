@@ -76,6 +76,74 @@ mod Orbit64.Rank {
         List.reverse(rev) |> List.toVector
 
     ///
+    /// The inversion parity of `p`: `0` for even and `1` for odd.
+    ///
+    /// This is kept beside permutation ranking because a cube's corner and
+    /// midge permutations must have the same parity. It deliberately says
+    /// nothing about whether `p` is a permutation; callers validate that
+    /// separately before using a rank.
+    ///
+    pub def permParity(p: Vector[Int32]): Int32 =
+        Int32.modulo(inversionCount(p), 2)
+
+    def inversionCount(p: Vector[Int32]): Int32 =
+        Vector.range(0, Vector.length(p)) |> Vector.foldLeft((acc, i) ->
+            acc + inversionsAfter(p, i), 0)
+
+    def inversionsAfter(p: Vector[Int32], i: Int32): Int32 =
+        Vector.range(i + 1, Vector.length(p))
+            |> Vector.count(j -> Vector.get(i, p) > Vector.get(j, p))
+
+    ///
+    /// Rank a permutation known to have `parity` into the contiguous range
+    /// `[0, n! / 2)`.
+    ///
+    /// The first `n - 2` Lehmer digits select every element but the final two.
+    /// Their order is then forced by parity, so it costs no digit. This is a
+    /// bijection for either parity class and is the compact coordinate used by
+    /// odd-cube state packing.
+    ///
+    pub def permRankWithParity(p: Vector[Int32], parity: Int32): BigInt =
+        let n = Vector.length(p);
+        let rank = Vector.range(0, n - 2) |> Vector.foldLeft((acc, i) ->
+            let smaller = Vector.range(i + 1, n)
+                |> Vector.count(j -> Vector.get(j, p) < Vector.get(i, p));
+            acc * Int32.toBigInt(n - i) + Int32.toBigInt(smaller), 0ii);
+        if (permParity(p) == parity) rank else 0ii
+
+    ///
+    /// Recover the `rank`-th permutation of `n` elements with `parity`.
+    ///
+    /// `rank` must be below `n! / 2`; state decoding establishes that bound
+    /// before calling this primitive.
+    ///
+    pub def permUnrankWithParity(rank: BigInt, n: Int32, parity: Int32): Vector[Int32] =
+        permUnrankParityLoop(rank, List.range(0, n), Nil, parity)
+
+    def permUnrankParityLoop(rank: BigInt, available: List[Int32], picked: List[Int32],
+                             parity: Int32): Vector[Int32] =
+        if (List.length(available) == 2)
+            match available {
+                case first :: second :: Nil =>
+                    let prefix = List.reverse(picked);
+                    let direct = List.append(prefix, first :: second :: Nil) |> List.toVector;
+                    if (permParity(direct) == parity) direct
+                    else List.append(prefix, second :: first :: Nil) |> List.toVector
+                case _ => Vector.empty()
+            }
+        else
+            let remaining = List.length(available);
+            let divisor = factorial(remaining - 1) / 2ii;
+            let digit = BigInt.modulo(rank / divisor, Int32.toBigInt(remaining))
+                |> BigInt.tryToInt32 |> Option.getWithDefault(0);
+            let (before, after) = List.splitAt(digit, available);
+            match after {
+                case value :: rest =>
+                    permUnrankParityLoop(rank, List.append(before, rest), value :: picked, parity)
+                case Nil => Vector.empty()
+            }
+
+    ///
     /// Mixed-radix digits of `r` for radices `1, 2, ..., n`, most significant
     /// first. Split out so `permUnrank` reads as a single fold.
     ///
@@ -86,6 +154,10 @@ mod Orbit64.Rank {
             let q = r / b;
             let d = (r - q * b) |> BigInt.tryToInt32 |> Option.getWithDefault(0);
             digitsOf(q, n, i + 1, d :: acc)
+
+    def factorial(n: Int32): BigInt =
+        List.range(1, n + 1)
+            |> List.foldLeft((acc, i) -> acc * Int32.toBigInt(i), 1ii)
 
     ///
     /// Colexicographic rank of a `k`-subset of `0..n-1`, in `[0, C(n, k))`.

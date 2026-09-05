@@ -231,6 +231,19 @@ def permRankUnrankRoundTrip(): Unit \ Assert =
         Assert.assertEq(expected = r, Orbit64.Rank.permRank(p))
     })
 
+///
+/// Each parity class is compactly ranked without spending a redundant bit.
+///
+@Test
+def parityRestrictedPermutationRanksRoundTrip(): Unit \ Assert =
+    List#{0, 1} |> List.forEach(parity ->
+        List.range(0, 12) |> List.forEach(rank -> {
+            let p = Orbit64.Rank.permUnrankWithParity(Int32.toBigInt(rank), 4, parity);
+            Assert.assertEq(expected = parity, Orbit64.Rank.permParity(p));
+            Assert.assertEq(expected = Int32.toBigInt(rank),
+                Orbit64.Rank.permRankWithParity(p, parity))
+        }))
+
 @Test
 def combRankUnrankRoundTrip(): Unit \ Assert =
     List.range(0, 10626) |> List.forEach(r ->
