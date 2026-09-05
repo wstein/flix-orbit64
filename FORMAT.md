@@ -57,6 +57,20 @@ depths   0 .. floor(n / 2) - 1
 amounts  clockwise, half, counter-clockwise
 ```
 
+The shared face reference list is written in spaced WCA notation. It is the
+wire order for moves and the reference order for future whole-cube frames:
+
+| Orbit64 face | Spaced face notation |
+| ------------ | -------------------- |
+| `Face.U`     | `U`                  |
+| `Face.R`     | `R`                  |
+| `Face.F`     | `F`                  |
+| `Face.D`     | `D`                  |
+| `Face.L`     | `L`                  |
+| `Face.B`     | `B`                  |
+
+In compact form, the list is `U R F D L B`.
+
 Two cubes have the same primitive vocabulary whenever they have the same
 reachable layer count `l = floor(n / 2)`. A move token therefore identifies
 the layer class `{2l, 2l + 1}`, not one exact cube size. The alphabet has

@@ -22,6 +22,21 @@ mod Orbit64.Move {
         case B
     }
 
+    /// The six faces in the canonical Orbit64 and spaced WCA notation order:
+    /// `U R F D L B`.
+    pub def faces(): List[Face] =
+        Face.U :: Face.R :: Face.F :: Face.D :: Face.L :: Face.B :: Nil
+
+    /// The one-letter WCA face label used in spaced face notation.
+    pub def notation(face: Face): String = match face {
+        case Face.U => "U"
+        case Face.R => "R"
+        case Face.F => "F"
+        case Face.D => "D"
+        case Face.L => "L"
+        case Face.B => "B"
+    }
+
     /// Non-identity turn amounts in clockwise, half, inverse order.
     pub enum Amount with Eq, ToString {
         case Clockwise,

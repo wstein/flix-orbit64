@@ -8,6 +8,12 @@ use Orbit64.Move.Amount.{Clockwise, Half, CounterClockwise}
 use Orbit64.Move.LayerClass.LayerClass
 
 @Test
+def facesHaveOneCanonicalSpacedNotationOrder(): Unit \ Assert =
+    Assert.assertEq(
+        expected = "U R F D L B",
+        Orbit64.Move.faces() |> List.map(Orbit64.Move.notation) |> List.join(" "))
+
+@Test
 def moveAlphabetGrowsWithReachableLayers(): Unit \ Assert =
     Assert.assertEq(expected = 18ii, Orbit64.Move.alphabetSize(2));
     Assert.assertEq(expected = 18ii, Orbit64.Move.alphabetSize(3));
