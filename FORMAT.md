@@ -37,12 +37,10 @@ match; that removes the unreachable half of the coordinate space, and the 24
 fixed-centre frames are then recorded explicitly. On even cubes, movable
 centres already determine the pose, so the frame is required to be canonical.
 
-Coordinates are combined by mixed-radix Horner ranking. For the normative
-3×3×3 contract in `cube-rosetta/docs/orbit64.md`, corner twists and edge flips
-are little-endian: the first stored orientation is the units digit. The
-parity-selected midge permutation rank is used before the frame rank is added
-as the least-significant factor. Wider-cube drafts retain their existing
-coordinate ordering.
+Coordinates are combined by mixed-radix Horner ranking. Corner twists and
+midge flips are little-endian at every supported size: the first stored
+orientation is the units digit. The parity-selected midge permutation rank is
+used before the frame rank is added as the least-significant factor.
 
 The width is the smallest positive `w` for which every state fits while the
 first sextet remains in class `00`:
@@ -99,10 +97,10 @@ for 6×6×6 or 7×7×7 yet.
 
 | Cube | Orbit64 state token | Spaced facelet notation (`U R F D L B`) |
 | ---- | ------------------- | --------------------------------------- |
-| 2×2×2 | `EJ6Rr` | `LFLD BLRD BLBU RFRR UUDU DFFB` |
+| 2×2×2 | `EJ6kr` | `LFLD BLRD BLBU RFRR UUDU DFFB` |
 | 3×3×3 | `AAAAAAAACC-Y` | `UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB` |
-| 4×4×4 | `BJSsuyGPOiU06kIz-eqibqTP1th` | `DLLDLLDLBFLFLRBR DRDLFBRLUURUUDDU FUUFLDFDRBUFURRL LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU` |
-| 5×5×5 | `AQsjv5K4-XPjKJZMNvMLvYKqohuv1x7JGUoNROgDJ2w` | `DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU` |
+| 4×4×4 | `BJStkD4cayBhsWj6eHgDZLTP1th` | `DLLDLLDLBFLFLRBR DRDLFBRLUURUUDDU FUUFLDFDRBUFURRL LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU` |
+| 5×5×5 | `AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w` | `DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU` |
 
 These are face colours, not move labels. `Net` applies a state's frame when it
 writes facelets, and derives that frame from an odd cube's fixed centres before

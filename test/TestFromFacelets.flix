@@ -11,7 +11,7 @@
 
 def roundTrippable(): List[(Int32, String)] = List#{
     (2, "AAAAA"),
-    (2, "EJ6Rr"),
+    (2, "EJ6kr"),
     (2, "DJ5Lt"),
     (3, "AAAAAAAAAAAA"),
     (3, "AAAAAAAAAL_o"),
@@ -19,11 +19,11 @@ def roundTrippable(): List[(Int32, String)] = List#{
     (3, "EKYDgqvYC5rw"),
     (3, "D2jEMhvWfXr4"),
     (4, "AAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-    (4, "BJSsuyGPOiU06kIz-eqibqTP1th"),
-    (4, "BAy4TWgX4vSZOHnM2NdN63BRWKG"),
+    (4, "BJStkD4cayBhsWj6eHgDZLTP1th"),
+    (4, "BAyxsFqZwWIK0XBrB-XoD7hRWKG"),
     (5, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-    (5, "AQsjv5K4-XPjKJZMNvMLvYKqohuv1x7JGUoNROgDJ2w"),
-    (5, "AbikFIS219F64tUGzq-xjsNFsQPySsJ8ciksDjY-p8w")
+    (5, "AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w"),
+    (5, "Abimx5h-4SZfPgXACHZ7cp7AnOpGx_9I5uksDjY-p8w")
 }
 
 ///

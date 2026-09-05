@@ -120,17 +120,18 @@ mod Orbit64.Coord {
     }
 
     ///
-    /// The first `k` entries of `xs` read as a base-`b` numeral, most
-    /// significant first. The dropped tail is exactly the redundant entry.
+    /// The first `k` entries of `xs` read as a little-endian base-`b` numeral.
+    /// The dropped tail is exactly the redundant entry.
     ///
     def baseN(b: Int32, k: Int32, xs: Vector[Int32]): Int32 =
-        Vector.range(0, k) |> Vector.foldLeft((acc, i) -> acc * b + Vector.get(i, xs), 0)
+        Vector.range(0, k) |> Vector.foldLeft((acc, i) ->
+            acc + Vector.get(i, xs) * Int32.pow(base = b, i), 0)
 
     ///
-    /// The inverse of `baseN`: `k` base-`b` digits of `v`, most significant first.
+    /// The inverse of `baseN`: `k` little-endian base-`b` digits of `v`.
     ///
     def unBaseN(b: Int32, k: Int32, v: Int32): Vector[Int32] =
-        Vector.range(0, k) |> Vector.map(i -> Int32.modulo(v / Int32.pow(base = b, k - 1 - i), b))
+        Vector.range(0, k) |> Vector.map(i -> Int32.modulo(v / Int32.pow(base = b, i), b))
 
     ///
     /// Append the entry that the orientation-sum constraint forces.
