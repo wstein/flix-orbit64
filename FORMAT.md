@@ -71,6 +71,17 @@ wire order for moves and the reference order for future whole-cube frames:
 
 In compact form, the list is `U R F D L B`.
 
+The mapping is independent of cube size. This reference lists the six Orbit64
+face slots in their corresponding spaced face notation for the currently
+documented small-cube sizes:
+
+| Cube | Orbit64 slots | Spaced face notation |
+| ---- | ------------- | -------------------- |
+| 2×2×2 | `U R F D L B` | `U R F D L B` |
+| 3×3×3 | `U R F D L B` | `U R F D L B` |
+| 4×4×4 | `U R F D L B` | `U R F D L B` |
+| 5×5×5 | `U R F D L B` | `U R F D L B` |
+
 ## Whole-cube frame reference
 
 `Orbit64.Frame` enumerates the 24 right-handed whole-cube frames. A frame is
