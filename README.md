@@ -9,14 +9,12 @@
 A canonical, URL-safe family of compact encodings for `n x n x n` twisty-cube
 states, literal move sequences, and straight-line programs over moves.
 
-Read under the same slot convention, two identical cubes always produce the
-same token, so string equality is state equality. That qualifier is load-bearing
-rather than lawyerly: a token records ordinals and carries no geometry of its
-own, so two implementations that number their slots differently will describe
-one physical cube with two tokens. [Slot numbering](#slot-numbering) says what
-follows from that. State tokens reserve two leading type bits and are otherwise
-as narrow as the state count permits. Move formats use the other leading-bit
-classes; see the [wire-format specification](FORMAT.md).
+Under the published Orbit64 coordinate and facelet conventions, two identical
+cubes produce the same token, so string equality is state equality. State
+tokens reserve two leading type bits and are otherwise as narrow as the state
+count permits. `FORMAT.md` defines the `U R F D L B` facelet boundary and the
+whole-cube frame order used for cross-language interchange. Move formats use
+the other leading-bit classes; see the [wire-format specification](FORMAT.md).
 
 ```
 2x2x2  AAAAA                                       (solved)
@@ -38,7 +36,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                    # 153 tests
+./flixw test                                    # 166 tests
 (cd examples/cli-tool && flix run)              # size table, round-trip
 (cd examples/cli-tool && flix run -- <token>)   # decode; length picks n
 ```
@@ -198,181 +196,42 @@ stickers rather than pieces, so most 54-character strings are not cubes at all,
 and the piece arrays pay index width for permutations whose ranks are much
 smaller than their alphabets.
 
-One caveat on reading the tables across: the piece arrays use the standard slot
-numbering, and the format itself prescribes none. For these two states that makes
-no difference -- both are the same under any consistent labelling -- but for a
-general state the convention has to be agreed before the arrays can be compared
-entry by entry. [Slot numbering](#slot-numbering) says what follows from that.
+The piece arrays use `Net`'s published slot numbering. For a general state,
+compare or exchange facelets at the `U R F D L B` boundary unless both sides
+explicitly use that coordinate convention.
 
-## Patterns
+## Examples
 
-Well-known 3x3x3 patterns as tokens -- each is the algorithm applied to a solved
-cube, then encoded. Paste one back in and the command line draws it:
+The full [100 checked Orbit64 examples](ORBIT64-EXAMPLES.md) pair each token with its spaced `U R F D L B` facelets: 20 familiar 3x3x3 patterns (solved first), followed by 80 deterministic random states across 2x2x2–5x5x5.
 
-```
-$ cd examples/cli-tool && flix run -- A4iEhgha0UAo
-3x3x3, 2 orbits, Frame(0):
-  Corners: CornerCoord(Vector#{0, 4, 5, 1, 3, 7, 6, 2}, ...)
-  Midges: MidgeCoord(Vector#{1, 8, 5, 9, 3, 11, 7, 10, 0, 4, 6, 2}, ...)
+`test/TestReadmeExamples.flix` decodes, re-encodes, renders, and reads every example back from its facelets.
 
-             F  F  F 
-             F  U  F 
-             F  F  F 
+## Coordinate and facelet conventions
 
- D  D  D     R  R  R     U  U  U     L  L  L 
- D  L  D     R  F  R     U  R  U     L  B  L 
- D  D  D     R  R  R     U  U  U     L  L  L 
+The codec ranks coordinate ordinals, but the published state contract includes
+their geometry at the facelet boundary. `Orbit64.Net` defines the supported
+2x2x2–5x5x5 layouts: facelets are indexed as `face * n * n + row * n + col`
+in `U R F D L B` order; corners and midges use their standard orders; wings
+and centres are ordered by their reference facelet index. `FORMAT.md` and the
+Cube Rosetta compatibility vectors are normative for that interchange.
 
-             B  B  B 
-             B  D  B 
-             B  B  B 
+Constructing `Coord` values manually still requires that same convention:
+`WingCoord` entry 17 means the wing selected by `Net`'s table, not a
+caller-defined ordinal. Applications with a different internal model should
+convert at the facelet boundary with `Net.toFacelets` and `Net.fromFacelets`,
+rather than translate coordinate arrays themselves.
 
-  drawn as orbit64-3x3-draft@1
-```
-
-The faces are coloured on a terminal; `NO_COLOR=1` gives the plain letters
-above. On odd cubes the token records the six fixed centres as a frame rank.
-`Net` applies the token's stored frame when it draws the facelets.
-
-The 2x2x2 through 5x5x5 are drawn, each under a convention the command line
-names beneath the net -- `orbit64-3x3-draft@1`, `orbit64-4x4-draft@1`,
-`orbit64-5x5-draft@1` and so on:
-
-```
-$ cd examples/cli-tool && flix run -- BUt6SRL-hJFWEmpUa2zYHsiSLJb
-4x4x4, 3 orbits:
-  ...
-                U  D  U  D
-                U  D  U  D
-                U  D  U  D
-                U  D  U  D
-
- R  R  R  R     B  F  B  F     L  L  L  L     B  F  B  F
- L  L  L  L     B  F  B  F     R  R  R  R     B  F  B  F
- R  R  R  R     B  F  B  F     L  L  L  L     B  F  B  F
- L  L  L  L     B  F  B  F     R  R  R  R     B  F  B  F
-
-                U  D  U  D
-                U  D  U  D
-                U  D  U  D
-                U  D  U  D
-
-  drawn as orbit64-4x4-draft@1
-```
-
-A token carries no geometry, so that name is what turns a disagreement into
-something traceable rather than merely noticeable. See
-[Slot numbering](#slot-numbering).
-
-| pattern | token | algorithm |
-|---------|-------|-----------|
-| Solved         | `AAAAAAAAAAAA` | |
-| Superflip      | `AAAAAAAAAL_o` | `U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2` |
-| Checkerboard   | `AAAABeBQZgAA` | `U2 D2 F2 B2 L2 R2` |
-| Four Spots     | `EBmpoPjf5gAA` | `F2 B2 U D' R2 L2 U D'` |
-| Six Spots      | `A4iEhgha0UAo` | `U D' R L' F B' U D'` |
-| Cube in a Cube | `A4hl8hkmt14w` | `F L F U' R U F2 L2 U' L' B D' B' L2 U` |
-| Tetris         | `ETCSInGQp4Ao` | `L R F B U' D' L' R'` |
-
-Two larger cubes, which the examples at the top of this file use:
-
-| cube  | pattern              | token                                        | how |
-|-------|----------------------|----------------------------------------------|-----|
-| 2x2x2 | Solved               | `AAAAA`                                      | every coordinate zero, so every character is the padding one |
-| 2x2x2 | Every corner twisted | `AAAVW`                                      | identity permutation, twists `1 2 1 2 1 2 1 2` |
-| 4x4x4 | Stripes              | `BUt6SRL-hJFWEmpUa2zYHsiSLJb`                | `L2 2R2 U2 2D2` |
-| 5x5x5 | Superflip            | `AAAAAAAAAAzL6QkSbjC7FwAwV9zTa9kKK6ImtYAAAAA` | every midge flipped in place, everything else solved |
-
-`L2 2R2 U2 2D2` turns alternate slices on two axes, which bands every face: the
-faces perpendicular to neither axis get stripes running one way and the rest the
-other, so adjacent faces disagree about which way their stripes run.
-
-The two 2x2x2 states are given as coordinates rather than algorithms, as is the
-5x5x5 superflip. A 2x2x2 has nothing but corners, so its recognisable states are
-about orientation -- and its whole token is five characters. The 5x5x5 superflip
-is corners, wings and both centre orbits identity with every midge flip set,
-which is the 3x3x3 superflip's analogue one size up.
-
-The two built from half turns alone, Checkerboard and Four Spots, leave every
-corner twist and edge flip at zero -- a half turn applies its orientation change
-twice -- so all that survives is permutation. Checkerboard's coordinate is small
-enough to leave five leading `A`s, which is the mixed radix showing through: the
-orientation digits sit at the bottom of the number and both are zero.
-
-These tokens use the same slot numbering as the arrays in the previous section
-and as the nets the command line draws, so all three agree with each other. A model that numbers its slots differently will produce different tokens
-for the same picture -- see [Slot numbering](#slot-numbering).
-
-## Slot numbering
-
-The format stores ordinals. Entry 17 of a wing vector says "wing slot 17 holds
-wing piece 4", and *which physical sticker pair* slot 17 is, and *which physical
-wing* piece 4 is, are not in the format and never were. That absence is the
-point: it is what lets `layout` be arithmetic in `n` and cover every size. Both
-halves must be agreed out of band before a token can be drawn, or compared entry
-by entry against another implementation's arrays.
-
-The pattern tokens above, the piece arrays beside them, and the nets the command
-line draws all use the same numbering, so they agree with one another.
-
-What is *not* established is that the reference implementation behind
-`test/TestVectors.flix` used that same numbering -- and it cannot be established
-from the vectors. Relabelling slots and pieces by any bijection conjugates every
-permutation, and conjugation preserves everything the arrays can be asked: cycle
-structure, permutation parity, the orientation sums, and so reachability.
-Relabelling a checked-in 3x3x3 vector leaves every invariant identical and
-changes only the token:
-
-```
-             sgn(cp)  sgn(ep)  sum(co)%3  sum(eo)%2  token
-original          -1       -1          0          0  EKYDgqvYC5rw
-relabelled        -1       -1          0          0  DS62VXC8BapI
-```
-
-So the vectors pin this codec's arithmetic exactly, which is what they are for,
-and carry no geometry whatsoever. Drawing a checked-in token therefore assumes a
-correspondence that nothing here verifies. Settling it needs something the
-vectors do not contain -- the generator's slot table, or the move sequences that
-produced them, from which the relabelling could be solved for and then checked
-against every vector at once.
-
-The nets are drawn under conventions of Orbit64's own -- `orbit64-3x3-draft@1`
-through `orbit64-5x5-draft@1` -- and every table behind them is derived from
-cube geometry alone. Nothing is read from another project's puzzle definition,
-which is deliberate: the projects that describe these same shapes are GPL, and
-this package is Apache-2.0.
-
-The derivation needs three things. A cube is `n^3` cubies. A face turn rotates a
-layer. A facelet is `face * n * n + row * n + col` over `U R F D L B`. From
-those, corners and midges take the standard names in their standard order, and
-wings and centres are ordered by the facelet index of each piece's reference
-sticker -- which makes slot order a consequence of the facelet layout rather
-than a second thing to agree on, and makes a centre's colour index simply its
-face index.
-
-That the 3x3x3 tables come out as the ones in wide use is not borrowing. Given
-the standard facelet numbering and the standard piece names there is exactly one
-right answer, and deriving it from geometry reproduces those values bit for bit.
-
-Naming a convention still does not make existing tokens obey it. If the
-implementation that produced a 4x4x4 token numbered its slots differently, the
-net will be a correct drawing of the wrong state -- which is why the command
-line prints the name it used.
-
-That same gap is why the nets stop at the 5x5x5. Conventions for larger cubes do
-exist, and one of them is a close structural match (see
-[References](#references)); adopting it would either reinterpret what existing
-4x4x4 and 5x5x5 tokens mean, or require exactly the mapping that is missing in
-order to convert into it.
+`Net` deliberately supports facelet conversion only through 5x5x5. State
+ranking remains defined through 7x7x7; extending the facelet convention beyond
+5x5x5 is a separate published-contract change.
 
 ## Facelets, and talking to other projects
 
 `Orbit64.Net.toFacelets(n, state)` gives the state as `6 * n * n` face indices,
 laid out `face * n * n + row * n + col` with faces `U R F D L B` -- the layout
 [`flix-cube`](https://github.com/wstein/flix-cube)'s `BigCube` and
-`cube-solvers`' `Facelets` both use. Slot orders differ between implementations
-and always will; sticker colours do not, so this is the layer at which two
-projects can be compared.
+`cube-solvers`' `Facelets` both use. An engine may use different internal slot
+orders, but its facelets remain the portable comparison and interchange layer.
 
 `Orbit64.Net.fromFacelets(n, facelets)` is its exact inverse, and the direction
 a project carrying a cube engine of its own needs in order to *produce* a token
