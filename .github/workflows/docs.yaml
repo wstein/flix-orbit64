@@ -85,6 +85,24 @@ jobs:
           # filename anyway.
           pages=$(printf '%s\n' "$matched" | grep -vx 'index.html' || true)
 
+          # Namespace pages such as Orbit64.html have no definitions and hence
+          # no project Source link. Include every generated parent of a matched
+          # page so its navigation links stay local, without naming a module.
+          parents=""
+          while IFS= read -r p; do
+            stem=${p%.html}
+            while [[ "$stem" == *.* ]]; do
+              stem=${stem%.*}
+              parent="$stem.html"
+              if [ ! -f "build/doc/$parent" ]; then
+                echo "::error::missing parent page $parent for $p"
+                exit 1
+              fi
+              parents="$parents$parent"$'\n'
+            done
+          done <<<"$pages"
+          pages=$(printf '%s\n%s' "$pages" "$parents" | sed '/^$/d' | sort -u)
+
           # Fail closed. If the source-link format ever changes upstream this
           # finds nothing, and publishing an empty site quietly would be far
           # worse than stopping here.
