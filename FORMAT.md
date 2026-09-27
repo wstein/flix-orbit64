@@ -91,9 +91,8 @@ In compact form, the list is `U R F D L B`.
 `Orbit64.Net.toFacelets` writes six face fields in `U R F D L B` order. Each
 field has `n * n` letters, and a space separates fields. These checked vectors
 make the state-token-to-facelet mapping concrete for every size the net
-supports (2×2×2 through 5×5×5). The state-width table above covers the full
-2×2×2 through 7×7×7 codec range; `Net` deliberately has no facelet convention
-for 6×6×6 or 7×7×7 yet.
+supports (2×2×2 through 7×7×7). The 6×6×6 and 7×7×7 entries are solved
+states; the smaller entries also exercise scrambled coordinates.
 
 | Cube | Orbit64 state token | Spaced facelet notation (`U R F D L B`) |
 | ---- | ------------------- | --------------------------------------- |
@@ -101,10 +100,38 @@ for 6×6×6 or 7×7×7 yet.
 | 3×3×3 | `AAAAAAAACC-Y` | `UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB` |
 | 4×4×4 | `BJStkD4cayBhsWj6eHgDZLTP1th` | `DLLDLLDLBFLFLRBR DRDLFBRLUURUUDDU FUUFLDFDRBUFURRL LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU` |
 | 5×5×5 | `AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w` | `DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU` |
+| 6×6×6 | `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA` | `UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB` |
+| 7×7×7 | `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA` | `UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB` |
 
 These are face colours, not move labels. `Net` applies a state's frame when it
 writes facelets, and derives that frame from an odd cube's fixed centres before
 it reads coordinates.
+
+### 6×6×6 and 7×7×7 slot order
+
+The larger tables extend the 4×4×4 (even) and 5×5×5 (odd) reference slots.
+For a reference facelet `face * b² + row * b + col`, replace each axis
+coordinate with the following value and keep the face index:
+
+| Reference coordinate | Expanded coordinate |
+| -------------------- | ------------------- |
+| `0` | `0` |
+| `1` | `d` |
+| `2`, when `b = 5` | `n / 2` |
+| `b - 2` | `n - 1 - d` |
+| `b - 1` | `n - 1` |
+
+Here `b = 4` for `n = 6`, `b = 5` for `n = 7`, and wing depth `d` runs
+from 1 to 2. Corners use `d = 1`; the 7×7×7 midges use `d = 1`.
+This mapping keeps each wing's reference sticker and the established slot
+order. The first wing orbit is depth 1 and the second is depth 2.
+
+For centres, rotate an interior face cell `(row, col)` through its four
+quarter-turn positions. Each distinct group is one centre orbit; omit the
+fixed middle cell on 7×7×7. Order the orbits by their lowest reference
+facelet index, and order the 24 slots within each orbit by facelet index.
+The six fixed centre facelets on 7×7×7 are `face * 49 + 24` and determine
+the whole-cube frame, as on 3×3×3 and 5×5×5.
 
 ## Whole-cube frame reference
 

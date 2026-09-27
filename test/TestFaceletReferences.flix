@@ -40,6 +40,26 @@ def spacedFaceletsLoop(values: List[String], fieldWidth: Int32,
                 String.concat(out, String.concat(separator, value)))
     }
 
+/// The two larger solved vectors also pin their published token widths.
+@Test
+def documentedLargeSolvedFaceletVectors(): Unit \ Assert =
+    List#{
+        (6, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+        (7, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    } |> List.forEach(match (n, token) -> {
+        let reference = List#{"U", "R", "F", "D", "L", "B"}
+            |> List.map(face -> String.repeat(n * n, face))
+            |> List.join(" ");
+        let facelets = Orbit64.State.decode(n, token)
+            |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, state));
+        Assert.assertEq(expected = Ok(reference),
+            facelets |> Result.map(fs -> spacedFacelets(fs, n)));
+        Assert.assertEq(expected = Ok(token),
+            facelets |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
+                |> Result.flatMap(state -> Orbit64.State.encode(n, state)))
+    })
+
 ///
 /// Every published state token renders to its published spaced facelets.
 ///
