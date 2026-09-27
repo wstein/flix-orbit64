@@ -1,0 +1,22 @@
+name: Bug report
+description: Report incorrect tokens, facelets, or library behavior
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Describe the actual result and the result you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include the cube size, relevant token, facelets, move sequence, or coordinate state, plus the wrapper commands or Flix code needed to reproduce the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include your operating system, JDK version, and relevant ./flixw doctor output if the problem may depend on the wrapper or compiler. Remove private paths or other sensitive information before posting logs.
