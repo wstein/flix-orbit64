@@ -1,5 +1,7 @@
 name: Feature request
 description: Suggest a library feature or documentation improvement
+title: "feat: "
+labels: [enhancement]
 body:
   - type: textarea
     id: use_case

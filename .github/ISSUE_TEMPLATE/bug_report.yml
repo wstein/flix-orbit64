@@ -1,5 +1,7 @@
 name: Bug report
 description: Report incorrect tokens, facelets, or library behavior
+title: "bug: "
+labels: [bug]
 body:
   - type: textarea
     id: behavior
@@ -19,4 +21,4 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Include your operating system, JDK version, and relevant ./flixw doctor output if the problem may depend on the wrapper or compiler. Remove private paths or other sensitive information before posting logs.
+      description: Include your operating system, JDK version, and relevant ./flixw doctor output. Remove private paths or sensitive information before posting logs.
