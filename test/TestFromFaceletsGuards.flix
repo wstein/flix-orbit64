@@ -40,7 +40,7 @@ def refuses(said: {said = String}, what: String, n: Int32, fs: Vector[Int32]): U
 ///
 @Test
 def fromFaceletsDeclinesASizeWithNoConvention(): Unit \ Assert =
-    List#{1, 6, 7} |> List.forEach(n ->
+    List#{1, 8} |> List.forEach(n ->
         refuses(said = "no slot convention",
                 "a size with no slot convention", n, Vector.repeat(6 * n * n, 0)))
 

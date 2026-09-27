@@ -11,7 +11,7 @@
 
 use Orbit64.Coord.Coord.{CornerCoord, MidgeCoord, WingCoord, CenterCoord}
 
-def drawable(): List[Int32] = List#{2, 3, 4, 5}
+def drawable(): List[Int32] = List#{2, 3, 4, 5, 6, 7}
 
 def aMidge(): Orbit64.Coord.Coord =
     MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 0))
@@ -67,7 +67,7 @@ def netDeclinesAnOrbitThatSizeDoesNotHave(): Unit \ Assert =
 @Test
 def netDeclinesAReorderedOrbitList(): Unit \ Assert =
     // Reversal only changes the layout where the orbits are not all alike.
-    List#{3, 4, 5} |> List.forEach(n ->
+    List#{3, 4, 5, 6, 7} |> List.forEach(n ->
         Assert.assertTrueWithMsg(
             Result.isErr(Orbit64.Net.draw(n,
                 Orbit64.State.canonical(List.reverse(Orbit64.State.solved(n) |> Orbit64.State.orbits)), false)),
@@ -80,7 +80,7 @@ def netDeclinesAReorderedOrbitList(): Unit \ Assert =
 ///
 @Test
 def everyFaceletIsWrittenExactlyOnce(): Unit \ Assert =
-    List#{3, 4, 5} |> List.forEach(n ->
+    List#{3, 4, 5, 6, 7} |> List.forEach(n ->
         match Orbit64.Net.writtenFacelets(n) {
             case None     => Assert.assertEq(expected = "tables for ${n}", "none")
             case Some(fs) =>

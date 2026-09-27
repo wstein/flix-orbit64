@@ -23,7 +23,11 @@ def roundTrippable(): List[(Int32, String)] = List#{
     (4, "BAyxsFqZwWIK0XBrB-XoD7hRWKG"),
     (5, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
     (5, "AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w"),
-    (5, "Abimx5h-4SZfPgXACHZ7cp7AnOpGx_9I5uksDjY-p8w")
+    (5, "Abimx5h-4SZfPgXACHZ7cp7AnOpGx_9I5uksDjY-p8w"),
+    (6, "A3aocAddmej0hGjOwe9lM25dHkohbB0JPB1zmbgUP6kaP6479xVsJGiNBL5DSU0WyT"),
+    (6, "A6Nb35lYNtGK2C6U34A4G0BpXQ8daRZyrr8Wpwj020-30euw4zLqBg9qEFUNrCB5-0"),
+    (7, "HGZiRBHyAvBeyPJYeQr8LLNmE7sB1-f4zgKgzw3fNRBFRyOB6jCsq4FgNyX5MUI_oHyctGUzsDRN98MqB2rVbi0ymA"),
+    (7, "FnDspI3AJZn7ygtxjZXj40PrT5eZ0uiIM-JWMcqI744YTU_R410nHDfnXnEXg8O8wcT_eDrBVYZn_LbkOymKEsrL5g")
 }
 
 ///
@@ -70,7 +74,7 @@ def faceletsSurviveBeingReadAndDrawnAgain(): Unit \ Assert =
 ///
 @Test
 def theSolvedCubeReadsBackSolved(): Unit \ Assert =
-    List#{2, 3, 4, 5} |> List.forEach(n ->
+    List#{2, 3, 4, 5, 6, 7} |> List.forEach(n ->
         Assert.assertEq(
             expected = Ok(Orbit64.State.solved(n)),
             Orbit64.Net.toFacelets(n, Orbit64.State.solved(n))

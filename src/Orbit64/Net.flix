@@ -51,7 +51,7 @@
 /// preserves cycle structure, permutation parity and the orientation sums, so
 /// no property of the arrays tells one labelling from another.
 ///
-/// The 6x6x6 and up are neither drawn nor read.
+/// The 6x6x6 and 7x7x7 use the same geometric rules as the smaller cubes.
 ///
 ///
 mod Orbit64.Net {
@@ -335,6 +335,82 @@ mod Orbit64.Net {
     /// frame of reference rather than carry information.
     def fixedFacelet5(): Vector[Int32] = Vector#{12, 37, 62, 87, 112, 137}
 
+    /// Move a reference table's sticker to the same slot at the given depth.
+    def expandFacelet(n: Int32, depth: Int32, index: Int32): Int32 =
+        let base = if (Int32.modulo(n, 2) == 0) 4 else 5;
+        let face = index / (base * base);
+        let row = Int32.modulo(index / base, base);
+        let col = Int32.modulo(index, base);
+        face * n * n + expandAxis(base, n, depth, row) * n
+            + expandAxis(base, n, depth, col)
+
+    def expandAxis(base: Int32, n: Int32, depth: Int32, value: Int32): Int32 =
+        let mapped = if (base == 4)
+            Vector#{0, depth, n - 1 - depth, n - 1}
+        else
+            Vector#{0, depth, n / 2, n - 1 - depth, n - 1};
+        Vector.get(value, mapped)
+
+    def expandedTable(n: Int32, depth: Int32,
+                      table: Vector[Vector[Int32]]): Vector[Vector[Int32]] =
+        Vector.map(row -> Vector.map(i -> expandFacelet(n, depth, i), row), table)
+
+    def cornerTable(n: Int32): Vector[Vector[Int32]] =
+        expandedTable(n, 1, if (Int32.modulo(n, 2) == 0) cornerFacelet4()
+                            else cornerFacelet5())
+
+    def wingTable(n: Int32, depth: Int32): Vector[Vector[Int32]] =
+        expandedTable(n, depth, if (Int32.modulo(n, 2) == 0) wingFacelet4()
+                               else wingFacelet5())
+
+    def wingColours(n: Int32): Vector[Vector[Int32]] =
+        if (Int32.modulo(n, 2) == 0) wingColour4() else wingColour5()
+
+    def centreRepresentative(n: Int32, row: Int32, col: Int32): Bool =
+        let last = n - 1;
+        let rank = row * n + col;
+        rank <= col * n + last - row and
+        rank <= (last - row) * n + last - col and
+        rank <= (last - col) * n + row
+
+    /// Four rotational partners on each face, listed by facelet index.
+    def centreTable(n: Int32, row: Int32, col: Int32): Vector[Int32] =
+        let last = n - 1;
+        List.range(0, 6 * n * n)
+            |> List.filter(i -> {
+                let cell = Int32.modulo(i, n * n);
+                cell == row * n + col or cell == col * n + last - row or
+                cell == (last - row) * n + last - col or
+                cell == (last - col) * n + row
+            })
+            |> List.toVector
+
+    /// Centre orbits are ordered by their lowest reference facelet index.
+    def centreTables(n: Int32): List[Vector[Int32]] =
+        List.range(1, n - 1) |> List.flatMap(row ->
+            List.range(1, n - 1) |> List.filterMap(col ->
+                if (centreRepresentative(n, row, col) and
+                    not (Int32.modulo(n, 2) == 1 and row == n / 2 and col == n / 2))
+                    Some(centreTable(n, row, col))
+                else None))
+
+    def writtenLarge(n: Int32): Vector[Int32] =
+        let corners = Vector.flatten(cornerTable(n));
+        let midges = if (Int32.modulo(n, 2) == 1)
+            Vector.flatten(expandedTable(n, 1, midgeFacelet5()))
+            else Vector.empty();
+        let wings = List.range(1, (n - 2) / 2 + 1)
+            |> List.foldLeft((all, d) ->
+                Vector.append(all, Vector.flatten(wingTable(n, d))), Vector.empty());
+        let centres = centreTables(n)
+            |> List.foldLeft((all, table) -> Vector.append(all, table), Vector.empty());
+        let fixed = match fixedFacelets(n) {
+            case Some(fs) => fs
+            case None => Vector.empty()
+        };
+        Vector.append(corners, Vector.append(midges,
+            Vector.append(wings, Vector.append(centres, fixed))))
+
     ///
     /// The name of the slot convention `draw` assumes at size `n`.
     ///
@@ -348,6 +424,8 @@ mod Orbit64.Net {
         case 3 => "orbit64-3x3-draft@1"
         case 4 => "orbit64-4x4-draft@1"
         case 5 => "orbit64-5x5-draft@1"
+        case 6 => "orbit64-6x6-draft@1"
+        case 7 => "orbit64-7x7-draft@1"
         case _ => "none for the ${n}x${n}x${n}"
     }
 
@@ -382,6 +460,8 @@ mod Orbit64.Net {
                         Vector.append(flat(wingFacelet5()),
                         Vector.append(xFacelet5(),
                         Vector.append(plusFacelet5(), fixedFacelet5()))))))
+            case 6 => Some(writtenLarge(6))
+            case 7 => Some(writtenLarge(7))
             case _ => None
         }
 
@@ -393,7 +473,7 @@ mod Orbit64.Net {
     /// wants to know which without building a state should not have to guess
     /// from `n`.
     ///
-    pub def canDraw(n: Int32): Bool = n >= 2 and n <= 5
+    pub def canDraw(n: Int32): Bool = n >= 2 and n <= 7
 
     ///
     /// The cube's stickers, as `6 * n * n` face indices.
@@ -426,7 +506,7 @@ mod Orbit64.Net {
         let got = List.map(Orbit64.Coord.kind, orbits);
         if (not canDraw(n))
             Err("no slot convention for the ${n}x${n}x${n}: this module has one "
-                + "only up to the 5x5x5")
+                + "only up to the 7x7x7")
         // Each orbit being individually valid is not enough. A list that is
         // short, reordered, or carries an orbit this size does not have leaves
         // stickers nothing ever writes to, and the result would be a tidy
@@ -453,15 +533,18 @@ mod Orbit64.Net {
     /// shape.
     ///
     def dispatch(n: Int32, orbits: List[Coord]): Result[String, Vector[Int32]] =
-        if (n == 4) Ok(facelets4(orbits))
-        else if (n == 5)
-            match facelets5(orbits) {
+        match n {
+            case 4 => Ok(facelets4(orbits))
+            case 5 => match facelets5(orbits) {
                 case Some(fs) => Ok(fs)
                 // Unreachable: validate already fixed the shape.
                 case None     =>
                     Err("expected orbits ${Orbit64.Orbit.layout(n)} for the ${n}x${n}x${n}")
             }
-        else Ok(facelets3(n, orbits))
+            case 6 => Ok(faceletsLarge(n, orbits))
+            case 7 => Ok(faceletsLarge(n, orbits))
+            case _ => Ok(facelets3(n, orbits))
+        }
 
     ///
     /// The net for `orbits`, or why there isn't one.
@@ -490,7 +573,7 @@ mod Orbit64.Net {
     pub def fromFacelets(n: Int32, facelets: Vector[Int32]): Result[String, Orbit64.State.FramedState] =
         if (not canDraw(n))
             Err("no slot convention for the ${n}x${n}x${n}: this module has one "
-                + "only up to the 5x5x5")
+                + "only up to the 7x7x7")
         else if (Vector.length(facelets) != 6 * n * n)
             Err("expected ${6 * n * n} facelets for the ${n}x${n}x${n}, "
                 + "got ${Vector.length(facelets)}")
@@ -613,6 +696,74 @@ mod Orbit64.Net {
             Array.toVector(sticker)
         }
 
+    /// Tables grow by carrying the established reference slots outward.
+    def faceletsLarge(n: Int32, orbits: List[Coord]): Vector[Int32] =
+        region rc {
+            let sticker = Array.repeat(rc, 6 * n * n, 0);
+            match fixedFacelets(n) {
+                case Some(fixed) => Vector.range(0, 6) |> Vector.forEach(f ->
+                    Array.put(f, Vector.get(f, fixed), sticker))
+                case None => ()
+            };
+            writeLarge(n, orbits, sticker);
+            Array.toVector(sticker)
+        }
+
+    def writeLarge(n: Int32, orbits: List[Coord], sticker: Array[Int32, r]): Unit \ r =
+        match orbits {
+            case CornerCoord(cp, co) :: rest =>
+                writeOriented(sticker, cornerTable(n), cornerColour5(), cp, co);
+                writeLargeTail(n, rest, 1, 0, sticker)
+            case _ => ()
+        }
+
+    def writeLargeTail(n: Int32, orbits: List[Coord], depth: Int32,
+                       centre: Int32, sticker: Array[Int32, r]): Unit \ r =
+        match orbits {
+            case MidgeCoord(ep, eo) :: rest =>
+                writeOriented(sticker, expandedTable(n, 1, midgeFacelet5()),
+                    midgeColour5(), ep, eo);
+                writeLargeTail(n, rest, depth, centre, sticker)
+            case WingCoord(wp) :: rest =>
+                writeWings(sticker, wingTable(n, depth), wingColours(n), wp);
+                writeLargeTail(n, rest, depth + 1, centre, sticker)
+            case CenterCoord(cols) :: rest =>
+                let table = centreTables(n) |> List.drop(centre) |> List.head;
+                match table {
+                    case Some(t) => writeCentres(sticker, t, cols)
+                    case None => ()
+                };
+                writeLargeTail(n, rest, depth, centre + 1, sticker)
+            case Nil => ()
+            case _ => ()
+        }
+
+    def writeOriented(sticker: Array[Int32, r], table: Vector[Vector[Int32]],
+                      colours: Vector[Vector[Int32]], permutation: Vector[Int32],
+                      orientations: Vector[Int32]): Unit \ r =
+        Vector.range(0, Vector.length(table)) |> Vector.forEach(slot ->
+            Vector.range(0, Vector.length(Vector.get(slot, table))) |> Vector.forEach(k -> {
+                let at = Vector.get(k, Vector.get(slot, table));
+                let m = Vector.length(Vector.get(slot, table));
+                let piece = Vector.get(Vector.get(slot, permutation), colours);
+                let col = Vector.get(Int32.modulo(k - Vector.get(slot, orientations) + m, m), piece);
+                Array.put(col, at, sticker)
+            }))
+
+    def writeWings(sticker: Array[Int32, r], table: Vector[Vector[Int32]],
+                   colours: Vector[Vector[Int32]], permutation: Vector[Int32]): Unit \ r =
+        Vector.range(0, 24) |> Vector.forEach(slot ->
+            Vector.range(0, 2) |> Vector.forEach(k -> {
+                let at = Vector.get(k, Vector.get(slot, table));
+                let col = Vector.get(k, Vector.get(Vector.get(slot, permutation), colours));
+                Array.put(col, at, sticker)
+            }))
+
+    def writeCentres(sticker: Array[Int32, r], table: Vector[Int32],
+                     colours: Vector[Int32]): Unit \ r =
+        Vector.range(0, 24) |> Vector.forEach(slot ->
+            Array.put(Vector.get(slot, colours), Vector.get(slot, table), sticker))
+
     def placeCorners(sticker: Array[Int32, r], cp: Vector[Int32], co: Vector[Int32]): Unit \ r =
         Vector.range(0, 8) |> Vector.forEach(slot ->
             Vector.range(0, 3) |> Vector.forEach(k -> {
@@ -636,9 +787,13 @@ mod Orbit64.Net {
     /// the input is the right length and made of face indices.
     ///
     def readOrbits(n: Int32, fs: Vector[Int32]): Result[String, List[Coord]] =
-        if (n == 4) orbits4(fs)
-        else if (n == 5) orbits5(fs)
-        else orbits3(n, fs)
+        match n {
+            case 4 => orbits4(fs)
+            case 5 => orbits5(fs)
+            case 6 => orbitsLarge(n, fs)
+            case 7 => orbitsLarge(n, fs)
+            case _ => orbits3(n, fs)
+        }
 
     ///
     /// A 2x2x2 or 3x3x3, read off the 3x3x3 grid the tables are written for.
@@ -681,6 +836,29 @@ mod Orbit64.Net {
             ps       <- readCentres("plus-centre", plusFacelet5(), centreColour5(), fs)
         ) yield CornerCoord(cp, co) :: MidgeCoord(ep, eo) :: WingCoord(wp)
                     :: CenterCoord(xs) :: CenterCoord(ps) :: Nil
+
+    def orbitsLarge(n: Int32, fs: Vector[Int32]): Result[String, List[Coord]] =
+        forM ((cp, co) <- readOriented("corner", cornerTable(n), cornerColour5(), fs);
+              tail <- readLargeTail(n, fs))
+            yield CornerCoord(cp, co) :: tail
+
+    def readLargeTail(n: Int32, fs: Vector[Int32]): Result[String, List[Coord]] =
+        let wings = List.range(1, (n - 2) / 2 + 1)
+            |> Result.traverse(d -> readUnoriented("wing", wingTable(n, d),
+                wingColours(n), fs));
+        let centres = centreTables(n)
+            |> Result.traverse(table -> readCentres("centre", table,
+                centreColour5(), fs));
+        let midge = if (Int32.modulo(n, 2) == 1)
+            readOriented("midge", expandedTable(n, 1, midgeFacelet5()),
+                midgeColour5(), fs)
+                |> Result.map(match (ep, eo) -> List#{MidgeCoord(ep, eo)})
+            else Ok(Nil);
+        forM (head <- midge;
+              wp <- wings;
+              cs <- centres)
+            yield List.append(head, List.append(List.map(w -> WingCoord(w), wp),
+                List.map(c -> CenterCoord(c), cs)))
 
     ///
     /// A 2x2x2's 24 stickers, spread back over the 3x3x3 grid its tables index.
@@ -897,6 +1075,8 @@ mod Orbit64.Net {
     def fixedFacelets(n: Int32): Option[Vector[Int32]] = match n {
         case 3 => Some(Vector.range(0, 6) |> Vector.map(f -> f * 9 + 4))
         case 5 => Some(fixedFacelet5())
+        case 7 => Some(Vector.range(0, 6)
+            |> Vector.map(f -> f * 49 + 24))
         case _ => None
     }
 

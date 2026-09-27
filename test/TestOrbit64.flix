@@ -449,7 +449,7 @@ def solved2x2DrawsFourStickersPerFace(): Unit \ Assert =
 
 @Test
 def sizesWithoutAConventionAreNotDrawn(): Unit \ Assert =
-    List.range(6, 8) |> List.forEach(n -> {
+    List#{1, 8} |> List.forEach(n -> {
         Assert.assertEq(expected = false, Orbit64.Net.canDraw(n));
         Assert.assertEq(expected = true, Result.isErr(Orbit64.Net.draw(n, Orbit64.State.solved(n), false)))
     })
