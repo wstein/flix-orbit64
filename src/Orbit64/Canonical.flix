@@ -6,7 +6,7 @@
 /// held, mirrored or colored. `fromFacelets` maps all such cubes to a single
 /// ordinary state token, so string equality is pattern equality.
 ///
-/// The definition, in four steps:
+/// The definition, in three steps:
 ///
 ///   1. Take the least sticker string of the cube over the 48 symmetries
 ///      (rotations and mirrors), each with its colors renamed in order of first
@@ -18,14 +18,15 @@
 ///      and the stored frame is 0. An even cube has no centers: the colors of
 ///      the corner in the URF slot become `U R F` in turning order, and the
 ///      three colors that share no corner with them become `D L B`.
-///   3. If the result is not a cube, mirror the step 1 string across the R/L
-///      plane (a mirror image has its corner colors in reversed turning order)
-///      and repeat step 2. The first attempt that encodes is used.
-///   4. Encode it with `Orbit64.State.encode`. A state that is no cube in
-///      either attempt is an error, with the reason of the first attempt.
+///   3. Encode it with `Orbit64.State.encode`. A state that is no cube is an
+///      error.
 ///
-/// The token depends only on step 1's string, so it is invariant, and distinct
-/// color states of different classes get distinct tokens. Mirror images get the
+/// No mirroring step is needed after step 2. The renaming depends only on
+/// which stickers share a color, and the reachable states are closed under
+/// mirroring, so the mirror image of a cube renames to a cube as well.
+///
+/// The token depends only on the string of step 1, so it is invariant, and
+/// distinct color states of different classes get distinct tokens. Mirror images get the
 /// same token: the 48 symmetries include the mirrors. The solved cube of every
 /// size is the token of `A` repeated.
 ///
@@ -35,11 +36,12 @@
 /// color and no token.
 ///
 /// The token also depends on the slot convention `Orbit64.Net.convention(n)`
-/// names (`orbit64-Nxn-draft@1`), on the sticker order `U R F D L B`, on the
-/// choice of the R/L mirror and on the URF corner. Changing any of them
+/// names (`orbit64-Nxn-draft@1`), on the sticker order `U R F D L B` and its
+/// geometry (see FORMAT.md), and on the URF corner. Changing any of them
 /// renames every canonical token, so a stored token should carry the
 /// convention name. This is an addition to the format: tokens that
-/// `Orbit64.State.encode` writes are unchanged, and the output here is one of them.
+/// `Orbit64.State.encode` writes are unchanged, and the output here is one
+/// of them.
 ///
 mod Orbit64.Canonical {
 
@@ -56,15 +58,8 @@ mod Orbit64.Canonical {
         match checkFacelets(n, facelets) {
             case Some(why) => Err(why)
             case None =>
-                Symmetry.leastImage(n, facelets) |> Result.flatMap(least -> {
-                    let mirrored = Symmetry.image(n, Symmetry.mirrorAcrossRL(), least);
-                    match standardToken(n, least) {
-                        case Ok(token) => Ok(token)
-                        case Err(why)  => mirrored
-                            |> Result.flatMap(m -> standardToken(n, m))
-                            |> Result.mapErr(_ -> why)
-                    }
-                })
+                Symmetry.leastImage(n, facelets)
+                    |> Result.flatMap(least -> standardToken(n, least))
         }
 
     ///
