@@ -7,6 +7,8 @@
 // `test/TestFromFacelets.flix`.
 //
 
+use Orbit64.Internal.Symmetry
+
 def canonFace(letter: Char): Int32 = match letter {
     case 'U' => 0
     case 'R' => 1
@@ -90,10 +92,10 @@ def aCanonicalTokenIsInTheStandardScheme(): Unit \ Assert =
     roundTrippable() |> List.forEach(match (n, token) -> {
         let fs = canonFaceletsOf(n, canonOf(n, token));
         let anchors = if (Int32.modulo(n, 2) == 1)
-            List.range(0, 6) |> List.map(f -> Orbit64.Symmetry.centerFacelet(n, f))
+            List.range(0, 6) |> List.filterMap(f -> Symmetry.centerFacelet(n, f))
         else
-            Orbit64.Symmetry.cornerStickers(n) |> List.head |> Option.map(Vector.toList)
-                |> Option.getWithDefault(Nil);
+            Symmetry.cornerStickers(n) |> List.head
+                |> Option.map(Vector.toList) |> Option.getWithDefault(Nil);
         let expected = if (Int32.modulo(n, 2) == 1) List.range(0, 6) else List#{0, 1, 2};
         Assert.assertEq(expected = expected, List.map(i -> Vector.get(i, fs), anchors))
     })
@@ -103,9 +105,9 @@ def allFortyEightSymmetriesAndRenamingsGiveOneToken(): Unit \ Assert =
     roundTrippable() |> List.forEach(match (n, token) -> {
         let canonical = canonOf(n, token);
         let fs = canonFaceletsOf(n, token);
-        List.range(0, Orbit64.Symmetry.count()) |> List.forEach(g ->
+        List.range(0, Symmetry.count()) |> List.forEach(g ->
             canonRenamings() |> List.forEach(names -> {
-                let moved = Orbit64.Symmetry.image(n, g, fs)
+                let moved = symmetryImage(n, g, fs)
                     |> Vector.map(c -> Vector.get(c, names));
                 Assert.assertEq(expected = Ok(canonical),
                                 Orbit64.Canonical.fromFacelets(n, moved))
@@ -143,14 +145,15 @@ def differentColorStatesGetDifferentTokens(): Unit \ Assert =
 
 @Test
 def aSliceTurnThatMovesTheCentersHasAToken(): Unit \ Assert =
-    // The last two 3x3x3 facelet vectors are slice scrambles: the centers are
-    // not home, so the cube is recolored before it is encoded.
-    let slices = canonicalFaceletVectors() |> List.filter(match (n, _, _) -> n == 3)
-        |> List.drop(3);
+    // The fourth and fifth 3x3x3 facelet vectors are slice scrambles: the
+    // centers are not home, so the cube is recolored before it is encoded.
+    let slices = faceletVectors3() |> List.drop(3);
     Assert.assertEq(expected = 2, List.length(slices));
     slices |> List.forEach(match (n, faces, expected) -> {
         let fs = canonStickers(faces);
-        Assert.assertTrue(Vector.get(Orbit64.Symmetry.centerFacelet(n, 0), fs) != 0);
+        let centerColor = Symmetry.centerFacelet(n, 0)
+            |> Option.map(at -> Vector.get(at, fs));
+        Assert.assertTrue(centerColor != Some(0));
         Assert.assertEq(expected = Ok(expected), Orbit64.Canonical.fromFacelets(n, fs))
     })
 
