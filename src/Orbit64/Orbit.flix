@@ -12,7 +12,7 @@ mod Orbit64.Orbit {
     ///
     /// The four kinds of orbit.
     ///
-    /// Fixed centres -- the single stickers at the middle of each face on an
+    /// Fixed centers -- the single stickers at the middle of each face on an
     /// odd cube -- are deliberately absent. They never move relative to one
     /// another, so they define the reference frame rather than carrying any
     /// information of their own.
@@ -24,7 +24,7 @@ mod Orbit64.Orbit {
         case Midges,
         /// Twenty-four distinguishable wings. Orientation is fixed by position.
         case Wings,
-        /// Twenty-four centres, four of each colour and indistinguishable within a face.
+        /// Twenty-four centers, four of each color and indistinguishable within a face.
         case Centers
     }
 
@@ -32,14 +32,14 @@ mod Orbit64.Orbit {
     /// The orbits of an `n x n x n` cube, in the order the codec packs them.
     ///
     /// The counts are pure arithmetic in `n`: a cube has `(n-2)/2` wing orbits
-    /// and `(n-2)^2/4` centre orbits, both truncating. Midges exist only when
+    /// and `(n-2)^2/4` center orbits, both truncating. Midges exist only when
     /// `n` is odd. So `layout` needs no geometry -- which is why this module
     /// carries no notion of a face, an axis, or a turn.
     ///
     /// Nothing below the 2x2x2 has an orbit. A 1x1x1 is one cubie with nothing
     /// to permute, and there is no such thing as a 0x0x0. Without that floor
     /// the arithmetic keeps going and answers anyway: `(0-2)^2/4` is 1, so a
-    /// 0x0x0 came back with a centre orbit, and a 1x1x1 came back with corners
+    /// 0x0x0 came back with a center orbit, and a 1x1x1 came back with corners
     /// -- which gave it the same state count as a 2x2x2 and therefore the same
     /// token width, breaking the one property the format leans on, that a
     /// token's length says which puzzle it is.
@@ -65,7 +65,7 @@ mod Orbit64.Orbit {
         case Midges  => factorial(12) * BigInt.pow(base = 2ii, 11)
         // Wings carry no orientation, so this is a bare permutation.
         case Wings   => factorial(24)
-        // Four indistinguishable copies of each of six colours.
+        // Four indistinguishable copies of each of six colors.
         case Centers =>
             List.range(0, 5)
                 |> List.foldLeft((acc, t) -> acc * Int32.toBigInt(Rank.binomial(24 - 4 * t, 4)), 1ii)

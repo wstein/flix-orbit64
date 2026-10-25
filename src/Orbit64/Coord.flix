@@ -27,7 +27,7 @@ mod Orbit64.Coord {
         case MidgeCoord(Vector[Int32], Vector[Int32]),
         /// Wing permutation of twenty-four distinguishable pieces.
         case WingCoord(Vector[Int32]),
-        /// Centre colours in `0..5`, four slots of each colour.
+        /// Center colors in `0..5`, four slots of each color.
         case CenterCoord(Vector[Int32])
     }
 
@@ -68,10 +68,10 @@ mod Orbit64.Coord {
             case WingCoord(p) =>
                 (isPermutation(p, 24), "the wing permutation is not a permutation of 0..23") :: Nil
             case CenterCoord(cols) =>
-                (Vector.length(cols) == 24, "there must be exactly 24 centre slots") ::
-                (Vector.forAll(x -> x >= 0 and x < 6, cols), "every centre colour must be 0..5") ::
+                (Vector.length(cols) == 24, "there must be exactly 24 center slots") ::
+                (Vector.forAll(x -> x >= 0 and x < 6, cols), "every center color must be 0..5") ::
                 (List.range(0, 6) |> List.forAll(col -> Vector.count(x -> x == col, cols) == 4),
-                 "each of the six centre colours must appear exactly four times") :: Nil
+                 "each of the six center colors must appear exactly four times") :: Nil
         };
         List.filterMap(match (ok, why) -> if (ok) None else Some(why), checks) |> List.head
 

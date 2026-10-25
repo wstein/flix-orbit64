@@ -100,7 +100,7 @@ def aStateReadFromFaceletsEncodes(): Unit \ Assert =
 // The vectors above are real scrambles, which is what makes them worth having,
 // but there are only a handful of them and every one came from the same
 // generator. These states come from `Coord.unrank` on spread-out coordinates
-// instead: arbitrary wing permutations, arbitrary centre colourings, arbitrary
+// instead: arbitrary wing permutations, arbitrary center colorings, arbitrary
 // twists, none of them reachable-looking and all of them valid, since `unrank`
 // is onto exactly the coordinates the format admits.
 //
@@ -173,7 +173,7 @@ def orbitAt(i: Int32, st: List[Orbit64.Coord.Coord]): Option[Orbit64.Coord.Coord
 /// the two laws above eight copies of the same cube, and they would pass on it
 /// without having tested anything. Distinct *states* are not enough to rule
 /// that out: a matrix that varied only the corners would still give eight
-/// distinct 4x4x4s while every wing and every centre stood still, and the
+/// distinct 4x4x4s while every wing and every center stood still, and the
 /// readers for those orbits would go untested. So the claim is made where it
 /// is meant -- each orbit takes eight different values of its own.
 ///

@@ -1,7 +1,7 @@
 ///
 /// Draws a decoded cube as a net, and reads one back out of its facelets.
 ///
-/// A token carries every movable piece and, on an odd cube, the fixed-centre
+/// A token carries every movable piece and, on an odd cube, the fixed-center
 /// frame. This module applies that frame while crossing the facelet boundary.
 ///
 /// This is the only module in the package that knows where a cube's pieces and
@@ -25,7 +25,7 @@
 ///   corners   the standard URF UFL ULB UBR DFR DLF DBL DRB
 ///   midges    the standard UR UF UL UB DR DF DL DB FR FL BL BR
 ///   wings     by the facelet index of the piece's reference sticker
-///   centres   by facelet index, each orbit separately
+///   centers   by facelet index, each orbit separately
 ///
 /// Orientation counts clockwise seen from outside: for a corner from its U or D
 /// facelet, for a midge from U or D where it has one and F or B otherwise. A
@@ -34,9 +34,9 @@
 /// stickers fall into two orbits of 24, and that picks the reference without
 /// anyone choosing.
 ///
-/// Ordering wings and centres by facelet index makes slot order a consequence
+/// Ordering wings and centers by facelet index makes slot order a consequence
 /// of the facelet layout rather than a second thing to agree on. It also makes
-/// a centre's colour index its face index, so a solved cube is
+/// a center's color index its face index, so a solved cube is
 /// `0 0 0 0 1 1 1 1 ...` with no lookup in between.
 ///
 /// The 3x3x3 tables come out as the ones in wide use. That is not borrowing:
@@ -46,10 +46,10 @@
 ///
 /// One caveat applies at every size: the picture assumes whoever produced the
 /// token numbered their slots the way `convention(n)` says. A token does not
-/// say, and the checked-in test vectors cannot settle it -- relabelling slots
+/// say, and the checked-in test vectors cannot settle it -- relabeling slots
 /// and pieces by any bijection conjugates every permutation, and conjugation
 /// preserves cycle structure, permutation parity and the orientation sums, so
-/// no property of the arrays tells one labelling from another.
+/// no property of the arrays tells one labeling from another.
 ///
 /// The 6x6x6 and 7x7x7 use the same geometric rules as the smaller cubes.
 ///
@@ -66,10 +66,10 @@ mod Orbit64.Net {
     def faces(): Vector[String] = Vector#{"U", "R", "F", "D", "L", "B"}
 
     ///
-    /// xterm-256 background colours for those faces. Orange has no place in the
-    /// sixteen-colour palette, which is why this uses the 256-colour one.
+    /// xterm-256 background colors for those faces. Orange has no place in the
+    /// sixteen-color palette, which is why this uses the 256-color one.
     ///
-    def colours(): Vector[Int32] = Vector#{15, 196, 46, 226, 208, 21}
+    def colors(): Vector[Int32] = Vector#{15, 196, 46, 226, 208, 21}
 
     /// Facelets of each corner slot, the first being the one orientation counts from.
     def cornerFacelet(): Vector[Vector[Int32]] = Vector#{
@@ -99,7 +99,7 @@ mod Orbit64.Net {
             Vector#{48, 14}
         }
 
-    /// Face colours of each corner piece, clockwise from its orientation facelet.
+    /// Face colors of each corner piece, clockwise from its orientation facelet.
     def cornerColor(): Vector[Vector[Int32]] = Vector#{
             Vector#{0, 1, 2},
             Vector#{0, 2, 4},
@@ -111,7 +111,7 @@ mod Orbit64.Net {
             Vector#{3, 1, 5}
         }
 
-    /// Face colours of each edge piece.
+    /// Face colors of each edge piece.
     def edgeColor(): Vector[Vector[Int32]] = Vector#{
             Vector#{0, 1},
             Vector#{0, 2},
@@ -129,7 +129,7 @@ mod Orbit64.Net {
 
     // ---------- the 4x4x4 tables ----------
     //
-    // Corners in the standard order; wings and centres by facelet index.
+    // Corners in the standard order; wings and centers by facelet index.
 
     def cornerFacelet4(): Vector[Vector[Int32]] = Vector#{
             Vector#{15, 16, 35},
@@ -169,9 +169,9 @@ mod Orbit64.Net {
             Vector#{94, 61}
         }
 
-    def centreFacelet4(): Vector[Int32] = Vector#{5, 6, 9, 10, 21, 22, 25, 26, 37, 38, 41, 42, 53, 54, 57, 58, 69, 70, 73, 74, 85, 86, 89, 90}
+    def centerFacelet4(): Vector[Int32] = Vector#{5, 6, 9, 10, 21, 22, 25, 26, 37, 38, 41, 42, 53, 54, 57, 58, 69, 70, 73, 74, 85, 86, 89, 90}
 
-    def cornerColour4(): Vector[Vector[Int32]] = Vector#{
+    def cornerColor4(): Vector[Vector[Int32]] = Vector#{
             Vector#{0, 1, 2},
             Vector#{0, 2, 4},
             Vector#{0, 4, 5},
@@ -182,7 +182,7 @@ mod Orbit64.Net {
             Vector#{3, 1, 5}
         }
 
-    def wingColour4(): Vector[Vector[Int32]] = Vector#{
+    def wingColor4(): Vector[Vector[Int32]] = Vector#{
             Vector#{0, 5},
             Vector#{0, 1},
             Vector#{0, 4},
@@ -209,12 +209,12 @@ mod Orbit64.Net {
             Vector#{5, 3}
         }
 
-    def centreColour4(): Vector[Int32] = Vector#{0, 1, 2, 3, 4, 5}
+    def centerColor4(): Vector[Int32] = Vector#{0, 1, 2, 3, 4, 5}
 
     // ---------- the 5x5x5 tables ----------
     //
     // Corners and midges in the standard orders, so a 5x5x5 reads as a 3x3x3
-    // with more orbits. Wings, X-centres and plus-centres by facelet index.
+    // with more orbits. Wings, X-centers and plus-centers by facelet index.
 
     def cornerFacelet5(): Vector[Vector[Int32]] = Vector#{
             Vector#{24, 25, 54},
@@ -227,7 +227,7 @@ mod Orbit64.Net {
             Vector#{99, 49, 145}
         }
 
-    def cornerColour5(): Vector[Vector[Int32]] = Vector#{
+    def cornerColor5(): Vector[Vector[Int32]] = Vector#{
             Vector#{0, 1, 2},
             Vector#{0, 2, 4},
             Vector#{0, 4, 5},
@@ -253,7 +253,7 @@ mod Orbit64.Net {
             Vector#{135, 39}
         }
 
-    def midgeColour5(): Vector[Vector[Int32]] = Vector#{
+    def midgeColor5(): Vector[Vector[Int32]] = Vector#{
             Vector#{0, 1},
             Vector#{0, 2},
             Vector#{0, 4},
@@ -295,7 +295,7 @@ mod Orbit64.Net {
             Vector#{148, 96}
         }
 
-    def wingColour5(): Vector[Vector[Int32]] = Vector#{
+    def wingColor5(): Vector[Vector[Int32]] = Vector#{
             Vector#{0, 5},
             Vector#{0, 1},
             Vector#{0, 4},
@@ -322,16 +322,16 @@ mod Orbit64.Net {
             Vector#{5, 3}
         }
 
-    /// The X-centres -- the four diagonal cells of each face's centre block.
+    /// The X-centers -- the four diagonal cells of each face's center block.
     def xFacelet5(): Vector[Int32] = Vector#{6, 8, 16, 18, 31, 33, 41, 43, 56, 58, 66, 68, 81, 83, 91, 93, 106, 108, 116, 118, 131, 133, 141, 143}
 
-    /// The plus-centres -- the four edge-adjacent cells.
+    /// The plus-centers -- the four edge-adjacent cells.
     def plusFacelet5(): Vector[Int32] = Vector#{7, 11, 13, 17, 32, 36, 38, 42, 57, 61, 63, 67, 82, 86, 88, 92, 107, 111, 113, 117, 132, 136, 138, 142}
 
-    /// Both centre orbits share one colour-to-face map.
-    def centreColour5(): Vector[Int32] = Vector#{0, 1, 2, 3, 4, 5}
+    /// Both center orbits share one color-to-face map.
+    def centerColor5(): Vector[Int32] = Vector#{0, 1, 2, 3, 4, 5}
 
-    /// The six single centres, which the format leaves out because they fix the
+    /// The six single centers, which the format leaves out because they fix the
     /// frame of reference rather than carry information.
     def fixedFacelet5(): Vector[Int32] = Vector#{12, 37, 62, 87, 112, 137}
 
@@ -363,10 +363,10 @@ mod Orbit64.Net {
         expandedTable(n, depth, if (Int32.modulo(n, 2) == 0) wingFacelet4()
                                else wingFacelet5())
 
-    def wingColours(n: Int32): Vector[Vector[Int32]] =
-        if (Int32.modulo(n, 2) == 0) wingColour4() else wingColour5()
+    def wingColors(n: Int32): Vector[Vector[Int32]] =
+        if (Int32.modulo(n, 2) == 0) wingColor4() else wingColor5()
 
-    def centreRepresentative(n: Int32, row: Int32, col: Int32): Bool =
+    def centerRepresentative(n: Int32, row: Int32, col: Int32): Bool =
         let last = n - 1;
         let rank = row * n + col;
         rank <= col * n + last - row and
@@ -374,7 +374,7 @@ mod Orbit64.Net {
         rank <= (last - col) * n + row
 
     /// Four rotational partners on each face, listed by facelet index.
-    def centreTable(n: Int32, row: Int32, col: Int32): Vector[Int32] =
+    def centerTable(n: Int32, row: Int32, col: Int32): Vector[Int32] =
         let last = n - 1;
         List.range(0, 6 * n * n)
             |> List.filter(i -> {
@@ -385,13 +385,13 @@ mod Orbit64.Net {
             })
             |> List.toVector
 
-    /// Centre orbits are ordered by their lowest reference facelet index.
-    def centreTables(n: Int32): List[Vector[Int32]] =
+    /// Center orbits are ordered by their lowest reference facelet index.
+    def centerTables(n: Int32): List[Vector[Int32]] =
         List.range(1, n - 1) |> List.flatMap(row ->
             List.range(1, n - 1) |> List.filterMap(col ->
-                if (centreRepresentative(n, row, col) and
+                if (centerRepresentative(n, row, col) and
                     not (Int32.modulo(n, 2) == 1 and row == n / 2 and col == n / 2))
-                    Some(centreTable(n, row, col))
+                    Some(centerTable(n, row, col))
                 else None))
 
     def writtenLarge(n: Int32): Vector[Int32] =
@@ -402,14 +402,14 @@ mod Orbit64.Net {
         let wings = List.range(1, (n - 2) / 2 + 1)
             |> List.foldLeft((all, d) ->
                 Vector.append(all, Vector.flatten(wingTable(n, d))), Vector.empty());
-        let centres = centreTables(n)
+        let centers = centerTables(n)
             |> List.foldLeft((all, table) -> Vector.append(all, table), Vector.empty());
         let fixed = match fixedFacelets(n) {
             case Some(fs) => fs
             case None => Vector.empty()
         };
         Vector.append(corners, Vector.append(midges,
-            Vector.append(wings, Vector.append(centres, fixed))))
+            Vector.append(wings, Vector.append(centers, fixed))))
 
     ///
     /// The name of the slot convention `draw` assumes at size `n`.
@@ -433,14 +433,14 @@ mod Orbit64.Net {
     /// The net for `orbits`, or `None` for a size this module cannot draw or a
     /// state that is not a cube.
     ///
-    /// `colour` false gives plain letters, for pipes and for `NO_COLOR`.
+    /// `color` false gives plain letters, for pipes and for `NO_COLOR`.
     ///
     ///
     /// Every facelet index the tables for size `n` write to, in no order.
     ///
     /// These tables are hand-derived, and the failure they invite is a
     /// duplicated or omitted index -- which a scramble fixture can miss, since
-    /// a doubly-written facelet still holds a plausible colour. A caller that
+    /// a doubly-written facelet still holds a plausible color. A caller that
     /// wants to check them can count instead: this should hold `6 * n * n`
     /// entries, all distinct. `None` for a size with no tables, and for the
     /// 2x2x2, which borrows the 3x3x3's.
@@ -453,7 +453,7 @@ mod Orbit64.Net {
                         Vector.range(0, 6) |> Vector.map(i -> i * 9 + 4)))
             case 4 => Some(Vector.append(
                         Vector.append(flat(cornerFacelet4()), flat(wingFacelet4())),
-                        centreFacelet4()))
+                        centerFacelet4()))
             case 5 => Some(
                         Vector.append(flat(cornerFacelet5()),
                         Vector.append(flat(midgeFacelet5()),
@@ -482,7 +482,7 @@ mod Orbit64.Net {
     /// to 5, row-major within a face -- the layout `flix-cube`'s `BigCube` and
     /// `cube-solvers`' `Facelets` both use, which is what makes this the layer
     /// those projects and this one can meet at. Slot orders differ between
-    /// implementations and always will; sticker colours do not.
+    /// implementations and always will; sticker colors do not.
     ///
     /// Subject to the same convention `draw` names, and the same caveat: this
     /// says what the state looks like *if* its producer numbered slots the way
@@ -525,7 +525,7 @@ mod Orbit64.Net {
         if (not (Orbit64.Frame.faultOf(frame) |> Option.isEmpty))
             Err("the state frame is not a right-handed cube frame")
         else if (not Orbit64.State.carriesFrame(n) and frame != Orbit64.Frame.canonical())
-            Err("an even cube carries its frame in its movable centres")
+            Err("an even cube carries its frame in its movable centers")
         else Ok(())
 
     ///
@@ -549,9 +549,9 @@ mod Orbit64.Net {
     ///
     /// The net for `orbits`, or why there isn't one.
     ///
-    pub def draw(n: Int32, state: Orbit64.State.FramedState, colour: Bool): Result[String, String] =
+    pub def draw(n: Int32, state: Orbit64.State.FramedState, color: Bool): Result[String, String] =
         toFacelets(n, state)
-            |> Result.map(fs -> render(n, fs, colour))
+            |> Result.map(fs -> render(n, fs, color))
 
     ///
     /// The orbits `facelets` describes, or why it describes no cube.
@@ -562,12 +562,12 @@ mod Orbit64.Net {
     /// adapter never has to restate this package's slot convention -- the one
     /// thing it could not restate correctly without copying it.
     ///
-    /// Facelets carry colours and no slot numbers, so this recovers the state
+    /// Facelets carry colors and no slot numbers, so this recovers the state
     /// as `convention(n)` numbers it. A project whose own slot order differs
     /// still gets the same cube, described in Orbit64's terms, which is exactly
     /// what makes the facelet layer the place two such projects can meet.
     ///
-    /// On an odd cube the fixed centres select the stored frame. The reader
+    /// On an odd cube the fixed centers select the stored frame. The reader
     /// restores the canonical facelet orientation before it reads coordinates,
     /// then returns both those coordinates and that frame.
     pub def fromFacelets(n: Int32, facelets: Vector[Int32]): Result[String, Orbit64.State.FramedState] =
@@ -593,7 +593,7 @@ mod Orbit64.Net {
     ///
     def facelets3(n: Int32, orbits: List[Coord]): Vector[Int32] =
         region rc {
-            // Centres never move, so they are the frame the rest is drawn in.
+            // Centers never move, so they are the frame the rest is drawn in.
             let sticker = Array.repeat(rc, 54, 0);
             Vector.range(0, 6) |> Vector.forEach(i -> Array.put(i, i * 9 + 4, sticker));
             orbits |> List.forEach(c -> match c {
@@ -617,7 +617,7 @@ mod Orbit64.Net {
     /// The two `CenterCoord`s are told apart by list position, which is the
     /// only thing that distinguishes them: `Orbit.layout` yields
     /// `Corners, Midges, Wings, Centers, Centers`, and this convention fixes
-    /// the fourth as the X-centres and the fifth as the plus-centres. Matching
+    /// the fourth as the X-centers and the fifth as the plus-centers. Matching
     /// the whole list rather than each element is what makes that explicit.
     ///
     def facelets5(orbits: List[Coord]): Option[Vector[Int32]] =
@@ -626,33 +626,33 @@ mod Orbit64.Net {
                  CenterCoord(xs) :: CenterCoord(ps) :: Nil =>
                 region rc {
                     let sticker = Array.repeat(rc, 150, 0);
-                    // The six single centres are not in the token; they are the frame.
+                    // The six single centers are not in the token; they are the frame.
                     Vector.range(0, 6) |> Vector.forEach(f ->
                         Array.put(f, Vector.get(f, fixedFacelet5()), sticker));
                     Vector.range(0, 8) |> Vector.forEach(slot ->
                         Vector.range(0, 3) |> Vector.forEach(k -> {
                             let at  = Vector.get(k, Vector.get(slot, cornerFacelet5()));
                             let col = Vector.get(Int32.modulo(k - Vector.get(slot, co) + 3, 3),
-                                                 Vector.get(Vector.get(slot, cp), cornerColour5()));
+                                                 Vector.get(Vector.get(slot, cp), cornerColor5()));
                             Array.put(col, at, sticker)
                         }));
                     Vector.range(0, 12) |> Vector.forEach(slot ->
                         Vector.range(0, 2) |> Vector.forEach(k -> {
                             let at  = Vector.get(k, Vector.get(slot, midgeFacelet5()));
                             let col = Vector.get(Int32.modulo(k - Vector.get(slot, eo) + 2, 2),
-                                                 Vector.get(Vector.get(slot, ep), midgeColour5()));
+                                                 Vector.get(Vector.get(slot, ep), midgeColor5()));
                             Array.put(col, at, sticker)
                         }));
                     Vector.range(0, 24) |> Vector.forEach(slot ->
                         Vector.range(0, 2) |> Vector.forEach(k -> {
                             let at  = Vector.get(k, Vector.get(slot, wingFacelet5()));
-                            let col = Vector.get(k, Vector.get(Vector.get(slot, wp), wingColour5()));
+                            let col = Vector.get(k, Vector.get(Vector.get(slot, wp), wingColor5()));
                             Array.put(col, at, sticker)
                         }));
                     Vector.range(0, 24) |> Vector.forEach(slot -> {
-                        Array.put(Vector.get(Vector.get(slot, xs), centreColour5()),
+                        Array.put(Vector.get(Vector.get(slot, xs), centerColor5()),
                                   Vector.get(slot, xFacelet5()), sticker);
-                        Array.put(Vector.get(Vector.get(slot, ps), centreColour5()),
+                        Array.put(Vector.get(Vector.get(slot, ps), centerColor5()),
                                   Vector.get(slot, plusFacelet5()), sticker)
                     });
                     Some(Array.toVector(sticker))
@@ -675,20 +675,20 @@ mod Orbit64.Net {
                             let at  = Vector.get(k, Vector.get(slot, cornerFacelet4()));
                             let ori = Vector.get(slot, co);
                             let col = Vector.get(Int32.modulo(k - ori + 3, 3),
-                                                 Vector.get(Vector.get(slot, cp), cornerColour4()));
+                                                 Vector.get(Vector.get(slot, cp), cornerColor4()));
                             Array.put(col, at, sticker)
                         }))
                 case WingCoord(wp) =>
                     Vector.range(0, 24) |> Vector.forEach(slot ->
                         Vector.range(0, 2) |> Vector.forEach(k -> {
                             let at  = Vector.get(k, Vector.get(slot, wingFacelet4()));
-                            let col = Vector.get(k, Vector.get(Vector.get(slot, wp), wingColour4()));
+                            let col = Vector.get(k, Vector.get(Vector.get(slot, wp), wingColor4()));
                             Array.put(col, at, sticker)
                         }))
                 case CenterCoord(cols) =>
                     Vector.range(0, 24) |> Vector.forEach(slot -> {
-                        let at  = Vector.get(slot, centreFacelet4());
-                        let col = Vector.get(Vector.get(slot, cols), centreColour4());
+                        let at  = Vector.get(slot, centerFacelet4());
+                        let col = Vector.get(Vector.get(slot, cols), centerColor4());
                         Array.put(col, at, sticker)
                     })
                 case _ => ()
@@ -712,57 +712,57 @@ mod Orbit64.Net {
     def writeLarge(n: Int32, orbits: List[Coord], sticker: Array[Int32, r]): Unit \ r =
         match orbits {
             case CornerCoord(cp, co) :: rest =>
-                writeOriented(sticker, cornerTable(n), cornerColour5(), cp, co);
+                writeOriented(sticker, cornerTable(n), cornerColor5(), cp, co);
                 writeLargeTail(n, rest, 1, 0, sticker)
             case _ => ()
         }
 
     def writeLargeTail(n: Int32, orbits: List[Coord], depth: Int32,
-                       centre: Int32, sticker: Array[Int32, r]): Unit \ r =
+                       center: Int32, sticker: Array[Int32, r]): Unit \ r =
         match orbits {
             case MidgeCoord(ep, eo) :: rest =>
                 writeOriented(sticker, expandedTable(n, 1, midgeFacelet5()),
-                    midgeColour5(), ep, eo);
-                writeLargeTail(n, rest, depth, centre, sticker)
+                    midgeColor5(), ep, eo);
+                writeLargeTail(n, rest, depth, center, sticker)
             case WingCoord(wp) :: rest =>
-                writeWings(sticker, wingTable(n, depth), wingColours(n), wp);
-                writeLargeTail(n, rest, depth + 1, centre, sticker)
+                writeWings(sticker, wingTable(n, depth), wingColors(n), wp);
+                writeLargeTail(n, rest, depth + 1, center, sticker)
             case CenterCoord(cols) :: rest =>
-                let table = centreTables(n) |> List.drop(centre) |> List.head;
+                let table = centerTables(n) |> List.drop(center) |> List.head;
                 match table {
-                    case Some(t) => writeCentres(sticker, t, cols)
+                    case Some(t) => writeCenters(sticker, t, cols)
                     case None => ()
                 };
-                writeLargeTail(n, rest, depth, centre + 1, sticker)
+                writeLargeTail(n, rest, depth, center + 1, sticker)
             case Nil => ()
             case _ => ()
         }
 
     def writeOriented(sticker: Array[Int32, r], table: Vector[Vector[Int32]],
-                      colours: Vector[Vector[Int32]], permutation: Vector[Int32],
+                      colors: Vector[Vector[Int32]], permutation: Vector[Int32],
                       orientations: Vector[Int32]): Unit \ r =
         Vector.range(0, Vector.length(table)) |> Vector.forEach(slot ->
             Vector.range(0, Vector.length(Vector.get(slot, table))) |> Vector.forEach(k -> {
                 let at = Vector.get(k, Vector.get(slot, table));
                 let m = Vector.length(Vector.get(slot, table));
-                let piece = Vector.get(Vector.get(slot, permutation), colours);
+                let piece = Vector.get(Vector.get(slot, permutation), colors);
                 let col = Vector.get(Int32.modulo(k - Vector.get(slot, orientations) + m, m), piece);
                 Array.put(col, at, sticker)
             }))
 
     def writeWings(sticker: Array[Int32, r], table: Vector[Vector[Int32]],
-                   colours: Vector[Vector[Int32]], permutation: Vector[Int32]): Unit \ r =
+                   colors: Vector[Vector[Int32]], permutation: Vector[Int32]): Unit \ r =
         Vector.range(0, 24) |> Vector.forEach(slot ->
             Vector.range(0, 2) |> Vector.forEach(k -> {
                 let at = Vector.get(k, Vector.get(slot, table));
-                let col = Vector.get(k, Vector.get(Vector.get(slot, permutation), colours));
+                let col = Vector.get(k, Vector.get(Vector.get(slot, permutation), colors));
                 Array.put(col, at, sticker)
             }))
 
-    def writeCentres(sticker: Array[Int32, r], table: Vector[Int32],
-                     colours: Vector[Int32]): Unit \ r =
+    def writeCenters(sticker: Array[Int32, r], table: Vector[Int32],
+                     colors: Vector[Int32]): Unit \ r =
         Vector.range(0, 24) |> Vector.forEach(slot ->
-            Array.put(Vector.get(slot, colours), Vector.get(slot, table), sticker))
+            Array.put(Vector.get(slot, colors), Vector.get(slot, table), sticker))
 
     def placeCorners(sticker: Array[Int32, r], cp: Vector[Int32], co: Vector[Int32]): Unit \ r =
         Vector.range(0, 8) |> Vector.forEach(slot ->
@@ -814,49 +814,49 @@ mod Orbit64.Net {
     ///
     def orbits4(fs: Vector[Int32]): Result[String, List[Coord]] =
         forM (
-            (cp, co) <- readOriented("corner", cornerFacelet4(), cornerColour4(), fs);
-            wp       <- readUnoriented("wing", wingFacelet4(), wingColour4(), fs);
-            cols     <- readCentres("centre", centreFacelet4(), centreColour4(), fs)
+            (cp, co) <- readOriented("corner", cornerFacelet4(), cornerColor4(), fs);
+            wp       <- readUnoriented("wing", wingFacelet4(), wingColor4(), fs);
+            cols     <- readCenters("center", centerFacelet4(), centerColor4(), fs)
         ) yield CornerCoord(cp, co) :: WingCoord(wp) :: CenterCoord(cols) :: Nil
 
     ///
     /// A 5x5x5, read under `orbit64-5x5-draft@1`.
     ///
-    /// The two centre orbits come back in the order that convention fixes --
-    /// the X-centres fourth and the plus-centres fifth -- which is the same
+    /// The two center orbits come back in the order that convention fixes --
+    /// the X-centers fourth and the plus-centers fifth -- which is the same
     /// order `facelets5` writes them in, and the only thing that tells two
     /// `CenterCoord`s apart.
     ///
     def orbits5(fs: Vector[Int32]): Result[String, List[Coord]] =
         forM (
-            (cp, co) <- readOriented("corner", cornerFacelet5(), cornerColour5(), fs);
-            (ep, eo) <- readOriented("midge", midgeFacelet5(), midgeColour5(), fs);
-            wp       <- readUnoriented("wing", wingFacelet5(), wingColour5(), fs);
-            xs       <- readCentres("X-centre", xFacelet5(), centreColour5(), fs);
-            ps       <- readCentres("plus-centre", plusFacelet5(), centreColour5(), fs)
+            (cp, co) <- readOriented("corner", cornerFacelet5(), cornerColor5(), fs);
+            (ep, eo) <- readOriented("midge", midgeFacelet5(), midgeColor5(), fs);
+            wp       <- readUnoriented("wing", wingFacelet5(), wingColor5(), fs);
+            xs       <- readCenters("X-center", xFacelet5(), centerColor5(), fs);
+            ps       <- readCenters("plus-center", plusFacelet5(), centerColor5(), fs)
         ) yield CornerCoord(cp, co) :: MidgeCoord(ep, eo) :: WingCoord(wp)
                     :: CenterCoord(xs) :: CenterCoord(ps) :: Nil
 
     def orbitsLarge(n: Int32, fs: Vector[Int32]): Result[String, List[Coord]] =
-        forM ((cp, co) <- readOriented("corner", cornerTable(n), cornerColour5(), fs);
+        forM ((cp, co) <- readOriented("corner", cornerTable(n), cornerColor5(), fs);
               tail <- readLargeTail(n, fs))
             yield CornerCoord(cp, co) :: tail
 
     def readLargeTail(n: Int32, fs: Vector[Int32]): Result[String, List[Coord]] =
         let wings = List.range(1, (n - 2) / 2 + 1)
             |> Result.traverse(d -> readUnoriented("wing", wingTable(n, d),
-                wingColours(n), fs));
-        let centres = centreTables(n)
-            |> Result.traverse(table -> readCentres("centre", table,
-                centreColour5(), fs));
+                wingColors(n), fs));
+        let centers = centerTables(n)
+            |> Result.traverse(table -> readCenters("center", table,
+                centerColor5(), fs));
         let midge = if (Int32.modulo(n, 2) == 1)
             readOriented("midge", expandedTable(n, 1, midgeFacelet5()),
-                midgeColour5(), fs)
+                midgeColor5(), fs)
                 |> Result.map(match (ep, eo) -> List#{MidgeCoord(ep, eo)})
             else Ok(Nil);
         forM (head <- midge;
               wp <- wings;
-              cs <- centres)
+              cs <- centers)
             yield List.append(head, List.append(List.map(w -> WingCoord(w), wp),
                 List.map(c -> CenterCoord(c), cs)))
 
@@ -891,13 +891,13 @@ mod Orbit64.Net {
     def readOriented(
         what: String,
         table: Vector[Vector[Int32]],
-        colours: Vector[Vector[Int32]],
+        colors: Vector[Vector[Int32]],
         fs: Vector[Int32]
     ): Result[String, (Vector[Int32], Vector[Int32])] =
         List.range(0, Vector.length(table))
             |> Result.traverse(slot ->
                 let seen = stickersAt(table, slot, fs);
-                match readPiece(colours, seen) {
+                match readPiece(colors, seen) {
                     case Some(po) => Ok(po)
                     case None     => Err(noSuchPiece(what, slot, seen))
                 })
@@ -910,41 +910,41 @@ mod Orbit64.Net {
     def readUnoriented(
         what: String,
         table: Vector[Vector[Int32]],
-        colours: Vector[Vector[Int32]],
+        colors: Vector[Vector[Int32]],
         fs: Vector[Int32]
     ): Result[String, Vector[Int32]] =
         List.range(0, Vector.length(table))
             |> Result.traverse(slot ->
                 let seen = stickersAt(table, slot, fs);
-                match List.range(0, Vector.length(colours))
-                        |> List.find(p -> Vector.get(p, colours) == seen) {
+                match List.range(0, Vector.length(colors))
+                        |> List.find(p -> Vector.get(p, colors) == seen) {
                     case Some(p) => Ok(p)
                     case None    => Err(noSuchPiece(what, slot, seen))
                 })
             |> Result.map(List.toVector)
 
     ///
-    /// The colours of a centre orbit, one per slot.
+    /// The colors of a center orbit, one per slot.
     ///
-    /// A centre is a single sticker and the four of a colour are alike, so
-    /// there is no piece to identify -- only a colour to look up. Under this
-    /// convention that lookup is the identity, because ordering centres by
-    /// facelet index makes a centre's colour index its face index. The table is
+    /// A center is a single sticker and the four of a color are alike, so
+    /// there is no piece to identify -- only a color to look up. Under this
+    /// convention that lookup is the identity, because ordering centers by
+    /// facelet index makes a center's color index its face index. The table is
     /// consulted anyway rather than the sticker being taken for the answer, so
     /// that the convention stays stated in one place.
     ///
-    def readCentres(
+    def readCenters(
         what: String,
         table: Vector[Int32],
-        colours: Vector[Int32],
+        colors: Vector[Int32],
         fs: Vector[Int32]
     ): Result[String, Vector[Int32]] =
         List.range(0, Vector.length(table))
             |> Result.traverse(slot ->
                 let seen = Vector.get(Vector.get(slot, table), fs);
-                match Vector.indexOf(seen, colours) {
+                match Vector.indexOf(seen, colors) {
                     case Some(col) => Ok(col)
-                    // Unreachable while the colour table is a permutation of
+                    // Unreachable while the color table is a permutation of
                     // the six faces, which `fromFacelets` has already bounded
                     // the sticker to. It is the table's property, not this
                     // reader's, so the reader still answers rather than trusts.
@@ -953,21 +953,21 @@ mod Orbit64.Net {
             |> Result.map(List.toVector)
 
     ///
-    /// The piece and orientation whose colours are `seen`, or nothing when no
-    /// piece of that orbit carries those colours in that cyclic order.
+    /// The piece and orientation whose colors are `seen`, or nothing when no
+    /// piece of that orbit carries those colors in that cyclic order.
     ///
     /// `toFacelets` writes the sticker on `table[slot][j]` as
-    /// `colours[piece][(j - orientation) mod m]`, and this inverts exactly
+    /// `colors[piece][(j - orientation) mod m]`, and this inverts exactly
     /// that. The answer is unique because no two pieces of an orbit share a
-    /// colour set, and no piece's colours are cyclically symmetric.
+    /// color set, and no piece's colors are cyclically symmetric.
     ///
-    def readPiece(colours: Vector[Vector[Int32]], seen: Vector[Int32]): Option[(Int32, Int32)] =
+    def readPiece(colors: Vector[Vector[Int32]], seen: Vector[Int32]): Option[(Int32, Int32)] =
         let m = Vector.length(seen);
-        List.range(0, Vector.length(colours)) |> List.findMap(p ->
+        List.range(0, Vector.length(colors)) |> List.findMap(p ->
             List.range(0, m)
                 |> List.find(o -> List.range(0, m) |> List.forAll(j ->
                     Vector.get(j, seen)
-                        == Vector.get(Int32.modulo(j - o + m, m), Vector.get(p, colours))))
+                        == Vector.get(Int32.modulo(j - o + m, m), Vector.get(p, colors))))
                 |> Option.map(o -> (p, o)))
 
     ///
@@ -976,17 +976,17 @@ mod Orbit64.Net {
     def normalizeFrame(n: Int32, fs: Vector[Int32]): Result[String, (Orbit64.Frame.Frame, Vector[Int32])] =
         match fixedFacelets(n) {
             case None => Ok((Orbit64.Frame.canonical(), fs))
-            case Some(centres) =>
+            case Some(centers) =>
                 match List.range(0, Orbit64.Frame.count())
                         |> List.map(Orbit64.Frame.unrank)
-                        |> List.find(frame -> canonicalCentres(centres, unapplyFrame(n, fs, frame))) {
+                        |> List.find(frame -> canonicalCenters(centers, unapplyFrame(n, fs, frame))) {
                     case Some(frame) => Ok((frame, unapplyFrame(n, fs, frame)))
-                    case None => Err("the six fixed centres are not a right-handed whole-cube frame")
+                    case None => Err("the six fixed centers are not a right-handed whole-cube frame")
                 }
         }
 
-    def canonicalCentres(centres: Vector[Int32], fs: Vector[Int32]): Bool =
-        List.range(0, 6) |> List.forAll(f -> Vector.get(Vector.get(f, centres), fs) == f)
+    def canonicalCenters(centers: Vector[Int32], fs: Vector[Int32]): Bool =
+        List.range(0, 6) |> List.forAll(f -> Vector.get(Vector.get(f, centers), fs) == f)
 
     /// Apply Rosetta's whole-cube transform: `x` turns, then `z`, then `y`.
     def applyFrame(n: Int32, fs: Vector[Int32], frame: Orbit64.Frame.Frame): Vector[Int32] =
@@ -1069,7 +1069,7 @@ mod Orbit64.Net {
         (n - 1 - z, y, x, -nz, ny, nx)
 
     ///
-    /// Where the six fixed centres sit at size `n`, or `None` for an even cube,
+    /// Where the six fixed centers sit at size `n`, or `None` for an even cube,
     /// which has none.
     ///
     def fixedFacelets(n: Int32): Option[Vector[Int32]] = match n {
@@ -1084,7 +1084,7 @@ mod Orbit64.Net {
     /// Every coordinate read back has to be a cube in its own right.
     ///
     /// Reading is slot by slot, so nothing above notices two slots claiming the
-    /// same piece, or a colour turning up five times where four is the whole
+    /// same piece, or a color turning up five times where four is the whole
     /// supply. `Coord.faultOf` states those constraints once, and this is where
     /// the facelet direction leans on them -- the same check, and the same
     /// wording, that `Orbit64.State.encode` gives a caller building coordinates by
@@ -1116,10 +1116,10 @@ mod Orbit64.Net {
     /// taking every other cell -- its four stickers are exactly the corner
     /// cells of a 3x3x3 face.
     ///
-    def render(n: Int32, sticker: Vector[Int32], colour: Bool): String =
+    def render(n: Int32, sticker: Vector[Int32], color: Bool): String =
         let cell = (face, row, col) -> Vector.get(face * n * n + row * n + col, sticker);
         let band = (face, row) -> Vector.range(0, n)
-            |> Vector.map(col -> paint(cell(face, row, col), colour))
+            |> Vector.map(col -> paint(cell(face, row, col), color))
             |> Vector.join("");
         // One sticker of gutter between faces, and a blank row between the
         // bands. Without it the six blocks read as one dense rectangle and the
@@ -1134,11 +1134,11 @@ mod Orbit64.Net {
         Vector.append(top, Vector.append(blank, Vector.append(mid,
             Vector.append(blank, bot)))) |> Vector.join("\n")
 
-    def paint(face: Int32, colour: Bool): String =
+    def paint(face: Int32, color: Bool): String =
         let letter = Vector.get(face, faces());
-        if (not colour) " ${letter} "
+        if (not color) " ${letter} "
         else
-            let bg = Vector.get(face, colours());
+            let bg = Vector.get(face, colors());
             "\u001b[48;5;${bg}m\u001b[38;5;16m ${letter} \u001b[0m"
 
 }
