@@ -96,7 +96,7 @@ virtualising = "virtualizing"
 
 [files]
 extend-exclude = [
-    "\\bLICENSE\\b",
+    "LICENSE",
     ".flixw/",
     # Encoded algorithm files are data, not prose.
     "*.orbit64",
