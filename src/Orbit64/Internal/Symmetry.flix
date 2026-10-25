@@ -1,6 +1,8 @@
 ///
 /// The 48 symmetries of the cube as permutations of the facelet indices.
 ///
+/// Internal to the package: `Orbit64.Canonical` is the public face of it.
+///
 /// A symmetry is a signed permutation of the three axes: 24 rotations and
 /// their 24 mirror images. It sends every sticker to another sticker of the
 /// same cube. The tables are derived from geometry alone: a facelet is
@@ -14,7 +16,7 @@
 /// `1` otherwise, in column `axes(g / 8)[r]`. Symmetry 0 is the identity
 /// and symmetry 1 mirrors across the R/L plane.
 ///
-mod Orbit64.Symmetry {
+mod Orbit64.Internal.Symmetry {
 
     /// The number of symmetries: the 6 axis permutations times the 8 sign choices.
     pub def count(): Int32 = 48
@@ -33,9 +35,24 @@ mod Orbit64.Symmetry {
         })
 
     ///
-    /// `stickers` moved by symmetry `g`; the colors stay.
+    /// `stickers` moved by symmetry `g`; the colors stay. An error unless
+    /// `stickers` has `6 * n * n` entries and `g` is a symmetry.
     ///
-    pub def image(n: Int32, g: Int32, stickers: Vector[Int32]): Vector[Int32] =
+    pub def image(n: Int32, g: Int32, stickers: Vector[Int32]): Result[String, Vector[Int32]] =
+        match fault(n, g, stickers) {
+            case Some(why) => Err(why)
+            case None      => Ok(moved(n, g, stickers))
+        }
+
+    def fault(n: Int32, g: Int32, stickers: Vector[Int32]): Option[String] =
+        if (n < 2 or n > 7) Some("no symmetries for the ${n}x${n}x${n}")
+        else if (g < 0 or g >= count()) Some("symmetry ${g} is not between 0 and ${count() - 1}")
+        else if (Vector.length(stickers) != 6 * n * n)
+            Some("expected ${6 * n * n} stickers for the ${n}x${n}x${n}, "
+                + "got ${Vector.length(stickers)}")
+        else None
+
+    def moved(n: Int32, g: Int32, stickers: Vector[Int32]): Vector[Int32] =
         let target = destinations(n, g);
         region rc {
             let out = Array.repeat(rc, Vector.length(stickers), 0);
@@ -65,17 +82,21 @@ mod Orbit64.Symmetry {
     /// second, in face order `U R F D L B`. Two cubes have the same least
     /// image exactly when one is the other turned, mirrored and recolored.
     ///
-    pub def leastImage(n: Int32, stickers: Vector[Int32]): Vector[Int32] =
-        let keyed = g -> {
-            let candidate = relabel(image(n, g, stickers));
-            (key(candidate), candidate)
-        };
-        let (_, least) = List.range(1, count()) |> List.foldLeft((best, g) -> {
-            let (k, v) = keyed(g);
-            let (bestKey, _) = best;
-            if (k < bestKey) (k, v) else best
-        }, keyed(0));
-        least
+    pub def leastImage(n: Int32, stickers: Vector[Int32]): Result[String, Vector[Int32]] =
+        match fault(n, 0, stickers) {
+            case Some(why) => Err(why)
+            case None      =>
+                let keyed = g -> {
+                    let candidate = relabel(moved(n, g, stickers));
+                    (key(candidate), candidate)
+                };
+                let (_, least) = List.range(1, count()) |> List.foldLeft((best, g) -> {
+                    let (k, v) = keyed(g);
+                    let (bestKey, _) = best;
+                    if (k < bestKey) (k, v) else best
+                }, keyed(0));
+                Ok(least)
+        }
 
     ///
     /// The three stickers of each corner, `U R F` first and then the other
@@ -95,8 +116,14 @@ mod Orbit64.Symmetry {
                     }
                 })))
 
-    /// The facelet at the middle of face `face` of an odd cube.
-    pub def centerFacelet(n: Int32, face: Int32): Int32 = face * n * n + (n * n) / 2
+    ///
+    /// The facelet at the middle of face `face` of an odd cube; `None` for an
+    /// even cube, which has no such facelet, or a face outside 0 to 5.
+    ///
+    pub def centerFacelet(n: Int32, face: Int32): Option[Int32] =
+        if (Int32.modulo(n, 2) == 1 and n >= 3 and n <= 7 and face >= 0 and face < 6)
+            Some(face * n * n + (n * n) / 2)
+        else None
 
     /// The colors as one base-6 number, so that numeric order is sticker order.
     def key(stickers: Vector[Int32]): BigInt =

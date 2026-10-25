@@ -43,7 +43,7 @@
 ///
 mod Orbit64.Canonical {
 
-    use Orbit64.Symmetry
+    use Orbit64.Internal.Symmetry
 
     ///
     /// The canonical token of the cube whose stickers are `facelets`.
@@ -56,12 +56,15 @@ mod Orbit64.Canonical {
         match checkFacelets(n, facelets) {
             case Some(why) => Err(why)
             case None =>
-                let least = Symmetry.leastImage(n, facelets);
-                let mirrored = Symmetry.image(n, Symmetry.mirrorAcrossRL(), least);
-                match standardToken(n, least) {
-                    case Ok(token) => Ok(token)
-                    case Err(why)  => standardToken(n, mirrored) |> Result.mapErr(_ -> why)
-                }
+                Symmetry.leastImage(n, facelets) |> Result.flatMap(least -> {
+                    let mirrored = Symmetry.image(n, Symmetry.mirrorAcrossRL(), least);
+                    match standardToken(n, least) {
+                        case Ok(token) => Ok(token)
+                        case Err(why)  => mirrored
+                            |> Result.flatMap(m -> standardToken(n, m))
+                            |> Result.mapErr(_ -> why)
+                    }
+                })
         }
 
     ///
@@ -117,8 +120,9 @@ mod Orbit64.Canonical {
         if (Int32.modulo(n, 2) == 1) namesByCenters(n, colors) else namesByCorner(n, colors)
 
     def namesByCenters(n: Int32, colors: Vector[Int32]): Result[String, Map[Int32, Int32]] =
-        let pairs = List.range(0, 6)
-            |> List.map(face -> (Vector.get(Symmetry.centerFacelet(n, face), colors), face));
+        let pairs = List.range(0, 6) |> List.filterMap(face ->
+            Symmetry.centerFacelet(n, face)
+                |> Option.map(at -> (Vector.get(at, colors), face)));
         nameMap(pairs, "the fixed centers of an odd cube must show six different colors")
 
     ///
