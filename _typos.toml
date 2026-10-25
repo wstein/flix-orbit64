@@ -1,16 +1,95 @@
 # Spelling gate: American English only (see AGENTS.md, "Language").
 [default]
 locale = "en-us"
-# Tokens such as `BUreBVbi5iMU` are data, not prose: skip quoted base64url
-# runs and long unquoted ones. Identifiers are still checked.
+
+# Exact token fixtures in which a short run of letters spells a word. Each is
+# listed in full, so no real word can hide behind it. Add a token here when a
+# new vector trips the check.
 extend-ignore-re = [
-    "[\"`][A-Za-z0-9_-]{5,}[\"`]",
-    "[ ][A-Za-z0-9_-]{25,}",
+    "ADxNbSxJmIyI9eq6tuWXE7R9apb",
+    "AY0iAFoFs10QSwB6QlaGs0srE6gbb2QIHVEvPkAcNxw",
+    "BUreBVbi5iMU",
+    "BUt6SRL-hJFWEmpUa2zYHsiSLJb",
+    "ECnN3EEOtKRlP-BhkhCyzStFStV5AQJrRujtZLEsHtTH7SyFv_T8dulUBcOyiDtz6u2wlcbgVWfqJUM8374ECX4qGI",
+    "ES5upAkODY4Q",
+    "HGV8DZXq8erFSc1wNdNsNwm2a8DYMmr5Zh_LQ6MAowW1OfsFgQQb-8jVGc_4s9b7P9F7n1kqBP3jg0Ob6JOQjshjFY",
+    "JNcDsK0IYUsw",
+    "M3Fo9OBFtLeH",
 ]
 
 [default.extend-words]
 # A facelet string in a test vector, not a word.
 FLUD = "FLUD"
+
+# British spellings that the en-us dictionary does not flag by itself.
+binarisation = "binarization"
+binarisations = "binarizations"
+binarise = "binarize"
+binarised = "binarized"
+binariser = "binarizer"
+binarisers = "binarizers"
+binarises = "binarizes"
+binarising = "binarizing"
+cancelled = "canceled"
+canonicalisation = "canonicalization"
+canonicalisations = "canonicalizations"
+canonicalise = "canonicalize"
+canonicalised = "canonicalized"
+canonicaliser = "canonicalizer"
+canonicalisers = "canonicalizers"
+canonicalises = "canonicalizes"
+canonicalising = "canonicalizing"
+colourisation = "colorization"
+colourisations = "colorizations"
+colourise = "colorize"
+colourised = "colorized"
+colouriser = "colorizer"
+colourisers = "colorizers"
+colourises = "colorizes"
+colourising = "colorizing"
+grey = "gray"
+greys = "grays"
+initialiser = "initializer"
+initialisers = "initializers"
+normaliser = "normalizer"
+optimiser = "optimizer"
+optimisers = "optimizers"
+parametrisation = "parametrization"
+parametrisations = "parametrizations"
+parametrise = "parametrize"
+parametrised = "parametrized"
+parametriser = "parametrizer"
+parametrisers = "parametrizers"
+parametrises = "parametrizes"
+parametrising = "parametrizing"
+programme = "program"
+programmes = "programs"
+serialiser = "serializer"
+serialisers = "serializers"
+tokenisation = "tokenization"
+tokenisations = "tokenizations"
+tokenise = "tokenize"
+tokenised = "tokenized"
+tokeniser = "tokenizer"
+tokenisers = "tokenizers"
+tokenises = "tokenizes"
+tokenising = "tokenizing"
+vectorisation = "vectorization"
+vectorisations = "vectorizations"
+vectorise = "vectorize"
+vectorised = "vectorized"
+vectoriser = "vectorizer"
+vectorisers = "vectorizers"
+vectorises = "vectorizes"
+vectorising = "vectorizing"
+virtualisation = "virtualization"
+virtualisations = "virtualizations"
+virtualise = "virtualize"
+virtualised = "virtualized"
+virtualiser = "virtualizer"
+virtualisers = "virtualizers"
+virtualises = "virtualizes"
+virtualising = "virtualizing"
 
 [files]
 extend-exclude = [

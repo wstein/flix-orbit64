@@ -108,9 +108,16 @@ jobs:
           fi
           echo "ok  every definition in src/ is inside a module"
 
+      # American English only (AGENTS.md, "Language"). Configuration is in
+      # _typos.toml. The action is pinned to a commit digest like the others
+      # and runs the typos release its own tag names, so the two move together.
+      - name: American spelling
+        if: runner.os == 'Linux'
+        uses: crate-ci/typos@7f9d0819ca1c008ade73f4b41fa9d258d48f605b # v1.51.1
+
       # Last on purpose: a stale badge is metadata, and failing earlier would
-      # hide the build result behind it. Repository-wide rather than per-OS, so
-      # it runs once.
+      # hide the build and spelling results behind it. Repository-wide rather
+      # than per-OS, so it runs once.
       #
       # A renamed repository keeps working through GitHub's redirect while
       # raw.githubusercontent.com does not follow one, so a wrong badge URL is
@@ -165,10 +172,3 @@ jobs:
             echo "  $ref  ->  $REPO"
           done <<<"$stale"
           exit 1
-
-      # American English only (AGENTS.md, "Language"). Configuration is in
-      # _typos.toml. The action is pinned to a commit digest like the others
-      # and runs the typos release its own tag names, so the two move together.
-      - name: American spelling
-        if: runner.os == 'Linux'
-        uses: crate-ci/typos@7f9d0819ca1c008ade73f4b41fa9d258d48f605b # v1.51.1
