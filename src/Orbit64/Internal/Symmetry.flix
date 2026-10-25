@@ -45,12 +45,20 @@ mod Orbit64.Internal.Symmetry {
         }
 
     def fault(n: Int32, g: Int32, stickers: Vector[Int32]): Option[String] =
-        if (n < 2 or n > 7) Some("no symmetries for the ${n}x${n}x${n}")
-        else if (g < 0 or g >= count()) Some("symmetry ${g} is not between 0 and ${count() - 1}")
-        else if (Vector.length(stickers) != 6 * n * n)
-            Some("expected ${6 * n * n} stickers for the ${n}x${n}x${n}, "
-                + "got ${Vector.length(stickers)}")
-        else None
+        List#{sizeFault(n), symmetryFault(g), lengthFault(n, stickers)}
+            |> List.filterMap(x -> x) |> List.head
+
+    def sizeFault(n: Int32): Option[String] =
+        if (n >= 2 and n <= 7) None else Some("no symmetries for the ${n}x${n}x${n}")
+
+    def symmetryFault(g: Int32): Option[String] =
+        if (g >= 0 and g < count()) None
+        else Some("symmetry ${g} is not between 0 and ${count() - 1}")
+
+    def lengthFault(n: Int32, stickers: Vector[Int32]): Option[String] =
+        if (Vector.length(stickers) == 6 * n * n) None
+        else Some("expected ${6 * n * n} stickers for the ${n}x${n}x${n}, "
+                  + "got ${Vector.length(stickers)}")
 
     def moved(n: Int32, g: Int32, stickers: Vector[Int32]): Vector[Int32] =
         let target = destinations(n, g);
@@ -121,9 +129,11 @@ mod Orbit64.Internal.Symmetry {
     /// even cube, which has no such facelet, or a face outside 0 to 5.
     ///
     pub def centerFacelet(n: Int32, face: Int32): Option[Int32] =
-        if (Int32.modulo(n, 2) == 1 and n >= 3 and n <= 7 and face >= 0 and face < 6)
-            Some(face * n * n + (n * n) / 2)
-        else None
+        if (hasCenters(n) and isFace(face)) Some(face * n * n + (n * n) / 2) else None
+
+    def hasCenters(n: Int32): Bool = Int32.modulo(n, 2) == 1 and n >= 3 and n <= 7
+
+    def isFace(face: Int32): Bool = face >= 0 and face < 6
 
     /// The colors as one base-6 number, so that numeric order is sticker order.
     def key(stickers: Vector[Int32]): BigInt =
