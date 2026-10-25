@@ -146,3 +146,10 @@ so never take a common top-level name.
 - name a module for what is done there: `Orbit64.Rank` holds the
   permutation and combination ranking primitives
 - spell names out; tests flat, one `TestX` per subject
+
+## Language
+
+Write American English everywhere: texts, docs, comments, identifiers, test
+names and output strings (color, center, neighbor, optimize, license, labeled).
+British spellings are mistakes. Rename without alias or fallback; existing
+token and facelet formats are unaffected, since the wire format has no words.
