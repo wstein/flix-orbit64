@@ -267,16 +267,20 @@ mirrored or colored have different tokens. A *pattern* is the color state up to
 those choices, and `Orbit64.Canonical` gives it one token:
 
 ```flix
-// a 2x2x2 and the same cube turned, mirrored and recolored: one token
-Orbit64.Canonical.fromToken(2, "EJ6kr")                 //=> Ok("AXnYr")
-Orbit64.Canonical.fromFacelets(3, stickers)             // from face indices
+// the solved 3x3x3, and the same cube after an x rotation: one token
+Orbit64.Canonical.fromToken(3, "AAAAAAAAAAAA")          //=> Ok("AAAAAAAAAAAA")
 Orbit64.Canonical.fromToken(3, "AAAAAAAAAAAE")          //=> Ok("AAAAAAAAAAAA")
+// a scrambled 2x2x2
+Orbit64.Canonical.fromToken(2, "EJ6kr")                 //=> Ok("AXnYr")
+// a cube some other engine turned, as face indices
+Orbit64.Canonical.fromFacelets(4, stickers)
 ```
 
 The result is an ordinary state token, so `Orbit64.State.decode` reads it back
 and every existing token keeps its meaning; this adds a function and changes
-no format. (`Orbit64.State.canonical` is unrelated: it builds a `FramedState`.) The token is the same for all 48 symmetries (24 rotations and their
-mirror images) and for any renaming of the six colors, so a pattern and its
+no format. (`Orbit64.State.canonical` is unrelated: it builds a `FramedState`.)
+The token is the same for all 48 symmetries (24 rotations and their mirror
+images) and for any renaming of the six colors, so a pattern and its
 mirror image share it. From the 4x4x4 up, pieces of one color are
 interchangeable, and no representative has to be picked: Orbit64 already reads
 colors, so swapping equal-colored pieces changes no token. A cube that is
@@ -318,10 +322,12 @@ state, so it encodes silently to a token for a different cube. Neither is
 visible to `decode`, which can only bounds-check the token as a whole.
 `Orbit64.Coord.faultOf` names the rule that was broken.
 
-**Whole-cube rotation is not quotiented out.** Canonicalising orientation would
-save log2(24) ~ 4.6 bits but needs a canonical-form search, and "canonical" is
-ill-defined on an even cube with no fixed centers. So `stateCount(4)` is exactly
-24 times the classic 4x4x4 figure, and `stateCount(3)` exactly twice the classic
+**Whole-cube rotation is not quotiented out of the state format.** Dropping
+the orientation from the encoding would save log2(24) ~ 4.6 bits, but encoding
+would then need a search over rotations, which belongs in a separate function:
+`Orbit64.Canonical` does that search, and the state format stays as it is. So
+`stateCount(4)` is exactly 24 times the classic 4x4x4 figure, and
+`stateCount(3)` exactly twice the classic
 3x3x3 figure. Both are asserted in the tests.
 
 **base64url over base58.** Measured on a reference implementation, the
