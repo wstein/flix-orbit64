@@ -1,0 +1,18 @@
+# Spelling gate: American English only (see AGENTS.md, "Language").
+[default]
+locale = "en-us"
+# Tokens such as `BUreBVbi5iMU` are data, not prose: skip long words that
+# contain a digit or underscore.
+extend-ignore-re = ["[A-Za-z0-9_]{3,}[0-9_][A-Za-z0-9_]{3,}"]
+
+[default.extend-words]
+# A facelet string in a test vector, not a word.
+FLUD = "FLUD"
+
+[files]
+extend-exclude = [
+    "LICENSE",
+    ".flixw/",
+    # Encoded algorithm files are data, not prose.
+    "*.orbit64",
+]
