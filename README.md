@@ -36,7 +36,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                    # 189 tests
+./flixw test                                    # 196 tests
 (cd examples/cli-tool && flix run)              # size table, round-trip
 (cd examples/cli-tool && flix run -- <token>)   # decode; length picks n
 ```
@@ -288,13 +288,17 @@ unreachable in every coloring is an error, not a token. The definition,
 including the rule that orders sticker strings and the convention the token
 depends on, is in [FORMAT.md](FORMAT.md#canonical-form).
 
-The function was specified by a Rust reference implementation. The expected
-tokens in `test/TestCanonicalVectors.flix` come from it, and
-`test/TestCanonical.flix` checks idempotence, both conversion directions and
-invariance under all 48 symmetries and three color renamings, for scrambled
-states of every size from the 2x2x2 to the 7x7x7. The reference also counted
-77 802 tokens over all 3 674 160 2x2x2 states; that exhaustive run is not
-repeated in this repository's tests.
+This repository is the reference implementation of the function, and
+FORMAT.md is meant to be enough to reproduce it. A Rust implementation
+specified it first. The expected tokens in `test/TestCanonicalVectors.flix`
+come from that one: scrambles of every size, slice scrambles whose centers
+move, and pairs of one cube turned, mirrored and recolored from its
+cross-check of 324 states. `test/TestCanonical.flix` checks idempotence, both
+conversion directions and invariance under all 48 symmetries and three color
+renamings, pins the inputs that must fail, and pairs a chiral pattern with its
+mirror image. The Rust implementation also counted 77 802 tokens over all
+3 674 160 2x2x2 states; that exhaustive run is not repeated in this
+repository's tests.
 
 ## Design decisions
 
@@ -394,9 +398,9 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
 - `src/Orbit64/Token.flix` -- first-sextet dispatch across the token family.
 - `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical
   delimiter-padded bitstream primitives.
-- `src/Orbit64/Symmetry.flix`, `src/Orbit64/Canonical.flix` -- the 48 cube
-  symmetries as facelet permutations, and the canonical token of a pattern
-  built on them.
+- `src/Orbit64/Canonical.flix`, `src/Orbit64/Internal/Symmetry.flix` -- the
+  canonical token of a pattern, and the 48 cube symmetries as facelet
+  permutations it is built on.
 - `src/Orbit64/Net.flix` -- draws a decoded cube as a colored net, up to the
   7x7x7, and reads one back out of its facelets. It is the only module that
   knows where pieces and facelets sit; `Orbit64.Move` names faces but carries no
