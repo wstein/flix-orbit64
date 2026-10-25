@@ -63,7 +63,7 @@ jobs:
 
       # The tag is what a consumer writes in their own flix.toml, and the
       # version inside the package is what the resolver reads back. If those
-      # two disagree the release is mislabelled in a way nothing downstream can
+      # two disagree the release is mislabeled in a way nothing downstream can
       # see, so refuse before anything is published rather than after.
       - name: The tag names the version this tree declares
         run: |
@@ -84,7 +84,7 @@ jobs:
         run: ./flixw validate
 
       # Build and Test has already run this on three platforms for the commit
-      # the tag names. It runs again because a release is the one artefact
+      # the tag names. It runs again because a release is the one artifact
       # nobody re-checks afterwards, and a green tick on a parent commit is not
       # the same claim as a green tick on what is being published.
       - name: Test

@@ -108,7 +108,7 @@ and re-encoded by `test/TestReadmeExamples.flix`.
 | 99 | 5x5x5 | Random #19 | `APYf0C4g2trHzzfhD0PyexpL6BjwfwJw4xepbWZc2P3` | `LULBLBRDBRLFBRLFFDRURDBFF RLBDFUUBULRRUBDFBULLFDUUL ULRRDLDUDRFBLFDBUFDDDFDUR RRBFUUFBFBULFLBBLFULLFUDU DRULBFBLFDFDDRDUDLRRDUFFB UDFBBBLDLLLRRURBRUBRBRRDF` |
 | 100 | 5x5x5 | Random #20 | `A3kv9rOq4LrmEub0WLlGlgPIOn5wGJBYyckrG7H69rb` | `UUBDRRLRDLUBUBDUFDFBLRBDB URRBDULUFLDFFFUBDULFRLRUU DFURLDDULRLLLBLLRRBLUFRBF BUFDDLBDRFLLDDBDBBURLFUFL RBLBBUDRFLFFBFBFRLRUDBFDR BRDLFFUUUBRDRLDDBRUDFUFRF` |
 
-On odd cubes the token records the fixed-centre frame; `Net` applies that
+On odd cubes the token records the fixed-center frame; `Net` applies that
 frame at the facelet boundary. These examples are fixed-view states, not
 rotation-invariant identifiers.
 

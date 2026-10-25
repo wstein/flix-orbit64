@@ -223,7 +223,7 @@ jobs:
           done
           [ "$broken" -eq 0 ]
 
-      # enablement is kept because it costs nothing where an organisation does
+      # enablement is kept because it costs nothing where an organization does
       # grant the Actions token that permission -- but do not count on it: the
       # default GITHUB_TOKEN cannot create a Pages site even with pages:write,
       # and fails here with "Resource not accessible by integration". Pages

@@ -34,8 +34,8 @@ A state is a `FramedState`: coordinates in `Orbit.layout(n)` order together
 with a whole-cube reference frame. Each coordinate has range
 `Orbit.radix(orbit)`. On odd cubes, corner and midge permutation parity must
 match; that removes the unreachable half of the coordinate space, and the 24
-fixed-centre frames are then recorded explicitly. On even cubes, movable
-centres already determine the pose, so the frame is required to be canonical.
+fixed-center frames are then recorded explicitly. On even cubes, movable
+centers already determine the pose, so the frame is required to be canonical.
 
 Coordinates are combined by mixed-radix Horner ranking. Corner twists and
 midge flips are little-endian at every supported size: the first stored
@@ -103,8 +103,8 @@ states; the smaller entries also exercise scrambled coordinates.
 | 6×6×6 | `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA` | `UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB` |
 | 7×7×7 | `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA` | `UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB` |
 
-These are face colours, not move labels. `Net` applies a state's frame when it
-writes facelets, and derives that frame from an odd cube's fixed centres before
+These are face colors, not move labels. `Net` applies a state's frame when it
+writes facelets, and derives that frame from an odd cube's fixed centers before
 it reads coordinates.
 
 ### 6×6×6 and 7×7×7 slot order
@@ -126,11 +126,11 @@ from 1 to 2. Corners use `d = 1`; the 7×7×7 midges use `d = 1`.
 This mapping keeps each wing's reference sticker and the established slot
 order. The first wing orbit is depth 1 and the second is depth 2.
 
-For centres, rotate an interior face cell `(row, col)` through its four
-quarter-turn positions. Each distinct group is one centre orbit; omit the
+For centers, rotate an interior face cell `(row, col)` through its four
+quarter-turn positions. Each distinct group is one center orbit; omit the
 fixed middle cell on 7×7×7. Order the orbits by their lowest reference
 facelet index, and order the 24 slots within each orbit by facelet index.
-The six fixed centre facelets on 7×7×7 are `face * 49 + 24` and determine
+The six fixed center facelets on 7×7×7 are `face * 49 + 24` and determine
 the whole-cube frame, as on 3×3×3 and 5×5×5.
 
 ## Whole-cube frame reference
@@ -143,7 +143,7 @@ are `(x, 0, y)` for `x = 0..3`, then ranks 16–19 are `(0, 1, y)`, and ranks
 20–23 are `(0, 3, y)`, with `y = 0..3` in every group. `Net` applies those
 rotations at its facelet boundary. Odd-cube state tokens store this rank after
 their coordinate rank. Even-cube state tokens always use rank zero because
-their movable centres carry pose.
+their movable centers carry pose.
 
 For 3×3×3, the normative compatibility vectors are `AAAAAAAAAAAA` (solved),
 `AAAAAAAAAAAE` (solved after `x`), `AAAAAAAAAL_o` (superflip), and

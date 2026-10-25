@@ -125,9 +125,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          # %2F is how the shields.io url= parameter spells a slash. Normalising
+          # %2F is how the shields.io url= parameter spells a slash. Normalizing
           # once lets one set of patterns cover both spellings.
-          normalised=$(sed 's/%2F/\//g' README.md)
+          normalized=$(sed 's/%2F/\//g' README.md)
 
           # Only self-referencing URLs count. A plain github.com/<owner>/<repo>
           # link is not one -- this README links to wstein/flix-cube deliberately --
@@ -139,23 +139,23 @@ jobs:
           # the step before the comparison below runs.
           refs=$(
             {
-              grep -oE 'github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/' <<<"$normalised" |
+              grep -oE 'github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/' <<<"$normalized" |
                 sed -E 's#^github\.com/##; s#/actions/$##' || true
-              grep -oE 'raw\.githubusercontent\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/' <<<"$normalised" |
+              grep -oE 'raw\.githubusercontent\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/' <<<"$normalized" |
                 sed -E 's#^raw\.githubusercontent\.com/##; s#/$##' || true
               # The label part is one segment for github/license/<o>/<r> but two
               # for github/v/release/<o>/<r>, so match a run of segments and keep
               # the last two rather than counting them.
-              grep -oE 'shields\.io/github/[a-z/-]+/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+' <<<"$normalised" |
+              grep -oE 'shields\.io/github/[a-z/-]+/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+' <<<"$normalized" |
                 sed -E 's#.*/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)$#\1#' || true
-              grep -oE '[A-Za-z0-9-]+\.github\.io/[A-Za-z0-9_.-]+' <<<"$normalised" |
+              grep -oE '[A-Za-z0-9-]+\.github\.io/[A-Za-z0-9_.-]+' <<<"$normalized" |
                 sed -E 's#^([A-Za-z0-9-]+)\.github\.io/#\1/#' || true
             } | sort -u
           )
           [ -n "$refs" ] || exit 0
 
           # Case-insensitively: a Pages host is always lowercase, while
-          # github.repository carries the owner's canonical capitalisation, and
+          # github.repository carries the owner's canonical capitalization, and
           # the two differing is not a stale URL.
           stale=$(grep -vixF "$REPO" <<<"$refs" || true)
           [ -n "$stale" ] || exit 0
