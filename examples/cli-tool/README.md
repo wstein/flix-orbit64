@@ -23,4 +23,4 @@ $ flix run -- AEtgYICyPB1X
 ...
 ```
 
-`NO_COLOR=1` prints the net in plain letters instead of terminal colour.
+`NO_COLOR=1` prints the net in plain letters instead of terminal color.

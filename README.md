@@ -110,10 +110,10 @@ Orbit64 token family.
 | `Wings`   | `(n-2)/2`           | `24!`         | 79.04 |
 | `Centers` | `(n-2)^2/4`         | `24!/(4!)^6`  | 51.53 |
 
-Where a cube has more than one centre orbit, list position is the only thing
+Where a cube has more than one center orbit, list position is the only thing
 telling them apart -- they are all `CenterCoord`. On a 5x5x5 the renderer's
-convention fixes the fourth entry as the **X-centres** (the four diagonal cells
-of a face's centre block) and the fifth as the **plus-centres** (the four
+convention fixes the fourth entry as the **X-centers** (the four diagonal cells
+of a face's center block) and the fifth as the **plus-centers** (the four
 edge-adjacent cells).
 
 Both counts truncate, so the state codec's `layout` is pure arithmetic in `n`:
@@ -212,7 +212,7 @@ The codec ranks coordinate ordinals, but the published state contract includes
 their geometry at the facelet boundary. `Orbit64.Net` defines the supported
 2x2x2–7x7x7 layouts: facelets are indexed as `face * n * n + row * n + col`
 in `U R F D L B` order; corners and midges use their standard orders; wings
-and centres are ordered by their reference facelet index. `FORMAT.md` and the
+and centers are ordered by their reference facelet index. `FORMAT.md` and the
 Cube Rosetta compatibility vectors are normative for that interchange.
 
 Constructing `Coord` values manually still requires that same convention:
@@ -222,7 +222,7 @@ convert at the facelet boundary with `Net.toFacelets` and `Net.fromFacelets`,
 rather than translate coordinate arrays themselves.
 
 For 6x6x6 and 7x7x7, `Net` extends the smaller slot tables by facelet
-geometry. Wing orbits follow increasing depth from the outer face; centre
+geometry. Wing orbits follow increasing depth from the outer face; center
 orbits follow the lowest facelet index in each fourfold face rotation class.
 The [format specification](FORMAT.md) fixes the exact ordering.
 
@@ -255,9 +255,9 @@ that project, by an engine sharing no code with this one, and every fixture has
 to both draw to those stickers and read back from them, at the 4x4x4 and the
 5x5x5 alike.
 
-On odd cubes, `fromFacelets` accepts one of the 24 right-handed fixed-centre
+On odd cubes, `fromFacelets` accepts one of the 24 right-handed fixed-center
 orientations, normalizes facelets for coordinate recovery, and returns the
-corresponding `FramedState`. It rejects centre arrangements that are not a
+corresponding `FramedState`. It rejects center arrangements that are not a
 whole-cube rotation.
 
 ## Design decisions
@@ -268,7 +268,7 @@ the sum-mod-3 rule and the last edge flip by parity, so `rank` drops them and
 
 **Odd-cube permutation parity is enforced.** Corner and midge permutations must
 have the same parity. The codec ranks the midge permutation in the matching
-half of its range, reclaiming that bit, then records one of 24 fixed-centre
+half of its range, reclaiming that bit, then records one of 24 fixed-center
 frames. The frame makes 5x5x5 one character wider; other supported odd sizes
 still fit their existing widths.
 
@@ -276,7 +276,7 @@ still fit their existing widths.
 question from the one above, and the two are worth keeping apart. Parity says
 whether a cube could have been *reached* by turning; this says whether each
 coordinate is a cube at all -- eight distinct corners, twists that sum to zero
-mod three, four centres of each colour. `encode` checks both.
+mod three, four centers of each color. `encode` checks both.
 
 It has to. A coordinate above its own range does not merely encode itself
 wrongly: the assembly is Horner, so the surplus carries into the next orbit and
@@ -288,7 +288,7 @@ visible to `decode`, which can only bounds-check the token as a whole.
 
 **Whole-cube rotation is not quotiented out.** Canonicalising orientation would
 save log2(24) ~ 4.6 bits but needs a canonical-form search, and "canonical" is
-ill-defined on an even cube with no fixed centres. So `stateCount(4)` is exactly
+ill-defined on an even cube with no fixed centers. So `stateCount(4)` is exactly
 24 times the classic 4x4x4 figure, and `stateCount(3)` exactly twice the classic
 3x3x3 figure. Both are asserted in the tests.
 
@@ -297,9 +297,9 @@ big-integer division base58 needs came to about 2% of an encode -- the cost is
 in reading the cube, not in packing it. So density wins: 6 bits per character
 against 5.858, which is a character off the 3x3x3 token.
 
-**Centres are indistinguishable, wings are not.** Four centres of a colour are
-interchangeable, so a centre orbit is a multiset arrangement. Two wings of a
-colour pair look interchangeable but are not: the pair appears in opposite order
+**Centers are indistinguishable, wings are not.** Four centers of a color are
+interchangeable, so a center orbit is a multiset arrangement. Two wings of a
+color pair look interchangeable but are not: the pair appears in opposite order
 depending on the slot's handedness, so `24!` is right and `24!/2^12` is not.
 `Orbit64.Rank.multisetRank` handles the first; a plain Lehmer rank handles the second.
 
@@ -309,7 +309,7 @@ Flix embeds Datalog, which here earns its keep in exactly one place and not in
 the place next door.
 
 `Orbit.layout(n)` is arithmetic -- one corner orbit, midges when `n` is odd,
-`(n-2)/2` wing orbits, `(n-2)^2/4` centre orbits -- and nothing inside the codec
+`(n-2)/2` wing orbits, `(n-2)^2/4` center orbits -- and nothing inside the codec
 can check that, because the codec *is* that formula. So the tests derive the
 same answer from geometry instead: build the cubies of an `n`-cube, turn the
 layers a solver is allowed to turn, and take the connected components of the
@@ -329,7 +329,7 @@ decorative either: an extra wing orbit fails at the 2x2x2, and midges on even
 cubes fails at the 4x4x4. And it is cheap, because a 7x7x7 has only 218 surface
 pieces.
 
-The neighbouring idea does not pay. Distance-from-solved is a lattice rule of
+The neighboring idea does not pay. Distance-from-solved is a lattice rule of
 the same shape -- `Dist(t; d+1) :- Dist(s; d), Move(s, t)` under a minimum
 lattice -- and it does work: over the 2x2x2's 3,674,160 states and 11 million
 move facts it terminates and reports a depth of 22 quarter turns. It also dies
@@ -356,7 +356,7 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
 - `src/Orbit64/Token.flix` -- first-sextet dispatch across the token family.
 - `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical
   delimiter-padded bitstream primitives.
-- `src/Orbit64/Net.flix` -- draws a decoded cube as a coloured net, up to the
+- `src/Orbit64/Net.flix` -- draws a decoded cube as a colored net, up to the
   7x7x7, and reads one back out of its facelets. It is the only module that
   knows where pieces and facelets sit; `Orbit64.Move` names faces but carries no
   slot geometry.
@@ -378,18 +378,18 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   built by a separate geometric model, with that model's own nets as the
   expected output.
 - `test/TestNet5x5.flix` -- the same for the 5x5x5, including a wide turn that
-  distinguishes the two centre orbits.
+  distinguishes the two center orbits.
 - `test/TestNetLarge.flix` -- independent inner-slice facelets on the 6x6x6
-  and 7x7x7, and all 24 fixed-centre frames on the 7x7x7.
+  and 7x7x7, and all 24 fixed-center frames on the 7x7x7.
 - `test/TestFacelets.flix` -- cross-project fixtures at the facelet layer,
   generated by `flix-cube`'s turn engine and checked in both directions. Six
   single turns at each of the 4x4x4 and 5x5x5, and one 5x5x5 sequence combining
   an outer turn, a wide turn and an inner slice, which is where wings and both
-  centre orbits arrive from two layers at once.
+  center orbits arrive from two layers at once.
 - `test/TestFromFacelets.flix` -- `toFacelets` and `fromFacelets` as exact
   inverses, asserted each way round over the conformance vectors rather than
   over solved cubes, and again over a deterministic seed matrix of unranked
-  coordinates that reaches arbitrary wing permutations and centre colourings.
+  coordinates that reaches arbitrary wing permutations and center colorings.
 - `test/TestFromFaceletsGuards.flix` -- what `fromFacelets` must refuse, each
   case asserting the wording of the refusal, so that a guard cannot go on
   passing once some earlier check is what actually catches the input.
@@ -420,7 +420,7 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
   Both are worth reading and neither is a source for anything here: they are
   GPL, this package is Apache-2.0, and its tables are derived from geometry for
   that reason as much as any other. Comparison happens at the facelet layer,
-  where no licence question arises because nobody owns what colour a sticker is.
+  where no license question arises because nobody owns what color a sticker is.
 - [A Rubik's Cube Solving Guide](https://circuitcellar.com/research-design-hub/projects/a-rubiks-cube-solving-guide/)
   (Circuit Cellar) -- packs each edge into 5 bits (orientation, then
   permutation) and each corner into 5 bits likewise, two 64-bit integers for
