@@ -6,12 +6,15 @@ locale = "en-us"
 # listed in full, so no real word can hide behind it. Add a token here when a
 # new vector trips the check.
 extend-ignore-re = [
+    "ABBHSfcTiwD8DJM9gT2wp_4y4eE-1gWlbHEZBgIY6U28aQVtuiVOKGjS_K6hsEf93O",
+    "ABI8RIXFyJ4G9g8Vn93LVVFFo1cNE_vD4MOYTv7bi3ckI6OLQujHTPCckfSOPgoSkW",
     "ADxNbSxJmIyI9eq6tuWXE7R9apb",
     "AY0iAFoFs10QSwB6QlaGs0srE6gbb2QIHVEvPkAcNxw",
     "BUreBVbi5iMU",
     "BUt6SRL-hJFWEmpUa2zYHsiSLJb",
     "ECnN3EEOtKRlP-BhkhCyzStFStV5AQJrRujtZLEsHtTH7SyFv_T8dulUBcOyiDtz6u2wlcbgVWfqJUM8374ECX4qGI",
     "ES5upAkODY4Q",
+    "EYr8pyZkUrK_WQsaIRlzdkqbK-xDFwRFxH8mUEL0vskTEP3Zu8fLiaJN1WIEz_hKRKDxuZbmBP6jIhs4fY5cZy910g",
     "HGV8DZXq8erFSc1wNdNsNwm2a8DYMmr5Zh_LQ6MAowW1OfsFgQQb-8jVGc_4s9b7P9F7n1kqBP3jg0Ob6JOQjshjFY",
     "JNcDsK0IYUsw",
     "M3Fo9OBFtLeH",

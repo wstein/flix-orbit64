@@ -4,9 +4,12 @@
 // Each expected token was produced by `cubacle::canonical` (the spike that
 // defines this function) from the same input. Token inputs are the
 // conformance vectors of `test/TestVectors.flix` plus two whole-cube
-// rotations. Facelet inputs are random scrambles of every size and two 3x3x3
-// slice scrambles whose centers move; they are written one face per string,
-// `U R F D L B`, row-major, as in FORMAT.md.
+// rotations. Facelet inputs are random scrambles of every size, two 3x3x3
+// slice scrambles whose centers move (the fourth and fifth of
+// `faceletVectors3a`), and pairs from the reference's cross-check of 324 states:
+// consecutive inputs with one token are one cube turned, mirrored and
+// recolored. Facelets are written one face per string, `U R F D L B`,
+// row-major, as in FORMAT.md.
 //
 
 def canonicalTokenVectors(): List[(Int32, String, String)] = List#{
@@ -64,10 +67,28 @@ def canonicalTokenVectors(): List[(Int32, String, String)] = List#{
 }
 
 def canonicalFaceletVectors(): List[(Int32, List[String], String)] =
-    List#{faceletVectors2(), faceletVectors3(), faceletVectors4(), faceletVectors5(), faceletVectors6(), faceletVectors7()}
-        |> List.flatten
+    List#{
+        faceletVectors2a(),
+        faceletVectors2b(),
+        faceletVectors2c(),
+        faceletVectors3a(),
+        faceletVectors3b(),
+        faceletVectors3c(),
+        faceletVectors4a(),
+        faceletVectors4b(),
+        faceletVectors4c(),
+        faceletVectors5a(),
+        faceletVectors5b(),
+        faceletVectors5c(),
+        faceletVectors6a(),
+        faceletVectors6b(),
+        faceletVectors6c(),
+        faceletVectors7a(),
+        faceletVectors7b(),
+        faceletVectors7c()
+    } |> List.flatten
 
-def faceletVectors2(): List[(Int32, List[String], String)] = List#{
+def faceletVectors2a(): List[(Int32, List[String], String)] = List#{
     (2,
      List#{
         "RFDF",
@@ -97,10 +118,96 @@ def faceletVectors2(): List[(Int32, List[String], String)] = List#{
         "URRL",
         "LBUU"
      },
-     "Anonm")
+     "Anonm"),
+    (2,
+     List#{
+        "DFFU",
+        "LLLU",
+        "UBRB",
+        "UDDL",
+        "FRBB",
+        "DRFR"
+     },
+     "AVAvi"),
+    (2,
+     List#{
+        "DFFL",
+        "RLRF",
+        "RFUU",
+        "DLLB",
+        "UDUR",
+        "BBDB"
+     },
+     "AVAvi")
 }
 
-def faceletVectors3(): List[(Int32, List[String], String)] = List#{
+def faceletVectors2b(): List[(Int32, List[String], String)] = List#{
+    (2,
+     List#{
+        "FBUU",
+        "BDDU",
+        "FRRR",
+        "FFRB",
+        "DLDU",
+        "LLLB"
+     },
+     "AYNty"),
+    (2,
+     List#{
+        "FFFU",
+        "DURR",
+        "LLFB",
+        "RDDD",
+        "URBB",
+        "BLLU"
+     },
+     "AYNty"),
+    (2,
+     List#{
+        "FULL",
+        "FRUR",
+        "DDFB",
+        "LLBU",
+        "RBRU",
+        "BDFD"
+     },
+     "Al-bV"),
+    (2,
+     List#{
+        "BBLR",
+        "ULFF",
+        "DDUL",
+        "RBLB",
+        "RUFF",
+        "DDRU"
+     },
+     "Al-bV"),
+    (2,
+     List#{
+        "BDDR",
+        "FRLL",
+        "LUBF",
+        "DUUB",
+        "RFBR",
+        "FUDL"
+     },
+     "ARsAO")
+}
+
+def faceletVectors2c(): List[(Int32, List[String], String)] = List#{
+    (2,
+     List#{
+        "RDLF",
+        "LBDL",
+        "UBRU",
+        "FBLR",
+        "DBUD",
+        "FUFR"
+     },
+     "ARsAO")
+}
+
+def faceletVectors3a(): List[(Int32, List[String], String)] = List#{
     (3,
      List#{
         "BBLFBFFDF",
@@ -153,7 +260,93 @@ def faceletVectors3(): List[(Int32, List[String], String)] = List#{
      "JNcDsK0IYUsw")
 }
 
-def faceletVectors4(): List[(Int32, List[String], String)] = List#{
+def faceletVectors3b(): List[(Int32, List[String], String)] = List#{
+    (3,
+     List#{
+        "LLFURBFDR",
+        "UUDBUFBFR",
+        "LRBDBRBBR",
+        "LLDULUBLU",
+        "FLUBDFLRD",
+        "RFDRFDFDU"
+     },
+     "K0LhcFHx_FgI"),
+    (3,
+     List#{
+        "FDBFFFLDD",
+        "RLDURLURL",
+        "BRUBDRDDL",
+        "UBRLUFRDF",
+        "BBULBUFUB",
+        "FULBLRRFD"
+     },
+     "K0LhcFHx_FgI"),
+    (3,
+     List#{
+        "BLFFFLFFL",
+        "UULUUDFLD",
+        "RLFBRFBUR",
+        "UBUUBBBFB",
+        "LRDBDRURL",
+        "DDDRLDRDR"
+     },
+     "J2rn_bzYy7JQ"),
+    (3,
+     List#{
+        "FBBBBRFFB",
+        "LULUDLUUU",
+        "DLFLUBULD",
+        "RRBRRDDDR",
+        "LFBRLBRDL",
+        "UDRUFFDFF"
+     },
+     "J2rn_bzYy7JQ"),
+    (3,
+     List#{
+        "DUFRRDLBD",
+        "FBRDBLBFU",
+        "FLRRDFLLD",
+        "UDLBLURFB",
+        "RDDRFBBUF",
+        "URBUUFLLU"
+     },
+     "I14d-ZsKZCpI")
+}
+
+def faceletVectors3c(): List[(Int32, List[String], String)] = List#{
+    (3,
+     List#{
+        "UFBLRURDL",
+        "FLUUFBDDB",
+        "DRRFDBBRF",
+        "DURDBBFLD",
+        "LFURUDBUF",
+        "LRRFLLUBL"
+     },
+     "I14d-ZsKZCpI"),
+    (3,
+     List#{
+        "DLDFLFULU",
+        "FULRBUFUL",
+        "BDLBUFRFL",
+        "BLDRRLRRU",
+        "FDRBFUUDD",
+        "BBRRDDBBF"
+     },
+     "LssdOTxXunAA"),
+    (3,
+     List#{
+        "FDULLLFDU",
+        "BBRRUUBBD",
+        "DFLRBFDFL",
+        "ULFLRRBRR",
+        "BULBFDRDL",
+        "DURBDFFUU"
+     },
+     "LssdOTxXunAA")
+}
+
+def faceletVectors4a(): List[(Int32, List[String], String)] = List#{
     (4,
      List#{
         "DDDFDLFUFDURUDRB",
@@ -183,10 +376,96 @@ def faceletVectors4(): List[(Int32, List[String], String)] = List#{
         "BLBBDBRUDLDRRRRR",
         "ULFLBFFBBLRLBFRD"
      },
-     "ADxNbSxJmIyI9eq6tuWXE7R9apb")
+     "ADxNbSxJmIyI9eq6tuWXE7R9apb"),
+    (4,
+     List#{
+        "BRRBDBLRLRFURBBF",
+        "DLUURFRFBDRBUFUU",
+        "FRLLRLDDRUUUBRLB",
+        "LFFLFBRDULBBFLLL",
+        "DFDUDBLUDFDDDLUD",
+        "RBFRUUUBDFDLFBFR"
+     },
+     "ALIW_NwY0EuCmwjkv9LRmESUiMd"),
+    (4,
+     List#{
+        "DULDFFFUBLBRLULD",
+        "BBBBRLULFBRBBBFF",
+        "RRRLUURFBDULRLLR",
+        "URDUFFFDBBRDRRDL",
+        "FLUFFDDFRLBLBDUF",
+        "UDDUBURDRDLFDUUL"
+     },
+     "ALIW_NwY0EuCmwjkv9LRmESUiMd")
 }
 
-def faceletVectors5(): List[(Int32, List[String], String)] = List#{
+def faceletVectors4b(): List[(Int32, List[String], String)] = List#{
+    (4,
+     List#{
+        "DFRFUUULRBLBFBRF",
+        "RLDRDRDFUDUFBUFB",
+        "LDBDLBRBRFLFBRUD",
+        "DDRLLFLBFRLLUUDU",
+        "LRDUBUFUDBRFBUBR",
+        "UBRFDFDULDBLRFLL"
+     },
+     "AHwCoirwqFa2A0MIGLFqH3n4XDg"),
+    (4,
+     List#{
+        "RLFRBDLBRDFFUDBR",
+        "LUFULFBFBRLRFBDU",
+        "LBUDFDRDUFBRFDFB",
+        "DRLUDBRUULLBDLFL",
+        "DFBRURUDLUFLBRLL",
+        "BLUBUBURDUDRFDRF"
+     },
+     "AHwCoirwqFa2A0MIGLFqH3n4XDg"),
+    (4,
+     List#{
+        "FBFFDBLDFULRFBFF",
+        "DDLDDUFDLRBUDURD",
+        "LRLLDDBBUBLULRLL",
+        "BFBBFDRFUFUUBFBB",
+        "URDUBDULUFLRULUU",
+        "RRLRFRDDBRFBRRLR"
+     },
+     "AAAAABBTDk6mru0eQjKGUua4oCs"),
+    (4,
+     List#{
+        "UUBUFLFFUDDUURBU",
+        "RRDRURBBFRUFRRDR",
+        "BBDBBLUBDRFLBLRB",
+        "FULFFRLFUBUUFULF",
+        "DRDDBBFFLFDLDRDD",
+        "LRBLFBLDLUDRLDLL"
+     },
+     "AAAAABBTDk6mru0eQjKGUua4oCs"),
+    (4,
+     List#{
+        "LFFRRLRURBRUDLFL",
+        "DRRFDRURFFLUUFLU",
+        "RBDBFULBLBBLFLBF",
+        "LUURFDURFBFDBLBR",
+        "FDDBBLRDDFFBLULU",
+        "DURDBDDULDUBBRDU"
+     },
+     "AItq6hf5Yv4fpwnBR_XURM0r-gW")
+}
+
+def faceletVectors4c(): List[(Int32, List[String], String)] = List#{
+    (4,
+     List#{
+        "DRDRFBBUULRFFUUB",
+        "UDFDLUDUDUULUFRF",
+        "ULLRRFRBBLLBRDDL",
+        "ULLBULDLBBRDDBRD",
+        "BRBLRFDFFFRUBRFF",
+        "FBBRRFUDFBDDLULL"
+     },
+     "AItq6hf5Yv4fpwnBR_XURM0r-gW")
+}
+
+def faceletVectors5a(): List[(Int32, List[String], String)] = List#{
     (5,
      List#{
         "DBUUFLULBDUUFUFULUBRFBFUD",
@@ -216,10 +495,96 @@ def faceletVectors5(): List[(Int32, List[String], String)] = List#{
         "BRUDLRLDDUFBLRLUBDBDUBLLL",
         "FFLFDLDUDBRFBLUDBBUFUFFDF"
      },
-     "AdCIFRpnu6omMAQSI2_SdINuCEg0Fz0zuDoItzf3UOw")
+     "AdCIFRpnu6omMAQSI2_SdINuCEg0Fz0zuDoItzf3UOw"),
+    (5,
+     List#{
+        "FUBDFFDBDFLLFRLBDFRBFUBFF",
+        "RLFRRUBLDUUDLDDDRBUDRLFRR",
+        "DBDUDLFBBLLLUURRLRBRDFDFD",
+        "BDFDBFRBLFRUBLRBUFRBBBFUB",
+        "LLBRLUFFLUUURUDDURLDLLBRL",
+        "UBUFURFFBRRRDDLLFDULUBUDU"
+     },
+     "ARLWTFv-tgkZ9YSXn88xh3icG1EYLSToubByTWmzc7g"),
+    (5,
+     List#{
+        "UFFRUURFFULDBBLBUFDBUFRRU",
+        "LDBLLLUUFFDLLDDRFBFRLDBLL",
+        "FUUBFLDRDRFURDFLBBLDFUBBF",
+        "BFFRBUBRBUDUULDBRRLBBFRRB",
+        "DDULDRUBBFLLDDLDRRUFDDULD",
+        "RUUBRDLULDRLFFRLDFRFRUBBR"
+     },
+     "ARLWTFv-tgkZ9YSXn88xh3icG1EYLSToubByTWmzc7g")
 }
 
-def faceletVectors6(): List[(Int32, List[String], String)] = List#{
+def faceletVectors5b(): List[(Int32, List[String], String)] = List#{
+    (5,
+     List#{
+        "RRFFFLUULLBFDBLDFUDFRDBFL",
+        "ULUBDLRRUFFULLBRBBRDFRLDB",
+        "BLLLFBRDBDLBFUUFDFFDBBFUL",
+        "LUDRDUDDUBDLULDLLBFRULUFL",
+        "UBRFDUBDBDBRRDFULFRUFURRD",
+        "RRRBBRFRLBDRBFUBDLUFUDRUR"
+     },
+     "Af_eMj34S-lwG3o02mHaf8TXn4Q4B1hp_VLALzvvNgA"),
+    (5,
+     List#{
+        "URUDRFRLDBRFBUDBLUFUBBUUU",
+        "DFBDBBRLUDRULBLLURBURLFUF",
+        "UUFFFLRRLLBFDBLDFRDFUDBFL",
+        "BLLLFBUDBDLBFRRFDFFDBBFRL",
+        "FRBRRRLUBBUFUDUUUDBFDRFDD",
+        "LFRLRUFBLLDLRLDBRDDRDUDRL"
+     },
+     "Af_eMj34S-lwG3o02mHaf8TXn4Q4B1hp_VLALzvvNgA"),
+    (5,
+     List#{
+        "UBDURDFBBDLURLLRLLRRRDRBD",
+        "LUDLDLBDDDBBDRRBLLDBFBLFB",
+        "FFBLFFUURFUFFRLLUURDRUULU",
+        "DRRULBFLRLDRLFFDFDFRLRRUU",
+        "LLUDUFURBRFBUFBFUBLFBFBUF",
+        "BBFRBBBDDUFUBFURLDDURLDDD"
+     },
+     "ABSBZnrrey21Ys5rOjwgEJZClWYHYvTzFeXezgLa4hg"),
+    (5,
+     List#{
+        "LDDDFLBFBDBUBFFRFDLBBUFDD",
+        "RFRRLUDUDUULLRUBUDDBLLDUB",
+        "DDBLUDBDBBFBDBBLUUULDDLRB",
+        "LLFFDBFFLFRRRLLLRURDRRUFF",
+        "BRLUUFDBLRRFULUBFLUFURLUR",
+        "RBBBFRRDRURRFRDLLBFFUUDFF"
+     },
+     "ABSBZnrrey21Ys5rOjwgEJZClWYHYvTzFeXezgLa4hg"),
+    (5,
+     List#{
+        "RLFRLFUBBRUUFDDFRRFFLBLDR",
+        "FRLBDDRDDUDDLBBBLLRLFLURU",
+        "ULULUUFUUBFRULBFDUDULFUFD",
+        "BURRRUUBDUFFBLFLLFBDBRBDR",
+        "BDBLFUBLFFRDRFDURBFDDDRRU",
+        "FDLFDBLULLRFDRDBURBRBBLBL"
+     },
+     "AKC3zHWGzpnzfPoK4O_kt7c_eujafCl36EsKkBK8bcY")
+}
+
+def faceletVectors5c(): List[(Int32, List[String], String)] = List#{
+    (5,
+     List#{
+        "DFDLBRBBRRUURLLRUFFBBDRBD",
+        "LFDBRULLBLFFDLLDBDDFUBUDR",
+        "LRDLRDDUDFLBLRBBFBUFDFDFF",
+        "FBFLBDDRFLRRFDRUUFLUFUBBB",
+        "RDFLFRRDFULRBLBLRFBUUBBLL",
+        "UDUDUFUURUFDUBRULULRLRURD"
+     },
+     "AKC3zHWGzpnzfPoK4O_kt7c_eujafCl36EsKkBK8bcY")
+}
+
+def faceletVectors6a(): List[(Int32, List[String], String)] = List#{
     (6,
      List#{
         "RFDUDRDDLLUUUUDFUUDDDLUDULRUUULBLBLL",
@@ -249,10 +614,136 @@ def faceletVectors6(): List[(Int32, List[String], String)] = List#{
         "UUULUDBLBBRFBLUFRFULLFRLBBBRBBUUULUD",
         "FLLLDBLDDDFDFURUDRDUDBFFRRUURRFDFDRB"
      },
-     "AJ_-ZwRuvazyly6ZgQgQi1bufyS_6xxnsSw2RMYL-G-CiF0msfoseiBgsIshqUH8SJ")
+     "AJ_-ZwRuvazyly6ZgQgQi1bufyS_6xxnsSw2RMYL-G-CiF0msfoseiBgsIshqUH8SJ"),
+    (6,
+     List#{
+        "BBLBRRLLFFULUURFRLUUBLRRBRFFURBBFFRR",
+        "DFDFBDRULBRUUFBLDUBURFBBDRLBDLRBLBRF",
+        "RRDDFFUBRLBUBBUUBBRDDDRDFFRRFFUBFRBU",
+        "FURBUFRRFLDDLURFUUDDBBDRLDULLDLLLLLL",
+        "UFFFDUDLLBLLDUFRBDFFLLDURULBDUBFLBDL",
+        "BBLDLLFFUDFFRRUDDRULUDDRUBFRBUDDUFDD"
+     },
+     "ABI8RIXFyJ4G9g8Vn93LVVFFo1cNE_vD4MOYTv7bi3ckI6OLQujHTPCckfSOPgoSkW"),
+    (6,
+     List#{
+        "RRRRRRFRRBFRDFUUFFBBLDBRFFRLDDLBUDBL",
+        "RFURLUBFURBDBFRRLLFUDLBFRRURRFBFLLLB",
+        "BUDLUBLLDDLLFDFFFDUUBBUUBURDUBLLFFDD",
+        "DDLLUUDBLLDUDDRUBBRDLDBBRBLLRRDDURUU",
+        "LDURUDRFURDFUULDBUBFRULBBDURBDFULFLF",
+        "FFLBFFBUDLUBDFFBRBDFFBDDLLFBLLRRFRUU"
+     },
+     "ABI8RIXFyJ4G9g8Vn93LVVFFo1cNE_vD4MOYTv7bi3ckI6OLQujHTPCckfSOPgoSkW")
 }
 
-def faceletVectors7(): List[(Int32, List[String], String)] = List#{
+def faceletVectors6b(): List[(Int32, List[String], String)] = List#{
+    (6,
+     List#{
+        "BDLBDRDBUBUUUULRLDUDRLRURBBBRRLLRBUL",
+        "UULLBUDDFLDDBFFDFFUULBLDFDRDFRDLLLUD",
+        "FBFRFFBFLFURDRRBDDBFDFLFBRUURUBLFLBR",
+        "LFRBRFURDFUDUDUBRUUUDBLDLLBBFLBBLBLB",
+        "ULBRUDFLRBUDRUUFFFDLDRDDLLDLFDUUBRBD",
+        "FFRFRLFBRRLRUUULRDRBFUFFFBDBDFRBLFRR"
+     },
+     "AEIOai41Ix1p-gYtb0LeoBPkVNwfCWqhYLPyMp4AOXoux6vZB6vuLoMn4me7tIEn0E"),
+    (6,
+     List#{
+        "DDRDRFDBRRFRLLLFRURBDLDDDBUBUDRBFDRR",
+        "LFURDLLFFLFFBUULRBRFRDBRBDUDLLUUUDUU",
+        "BFBFBBFDBBFFUFBULLLRBLULULDURLDRBRDF",
+        "RBFDFBLRLLRBDFDUDBUUBRRURLDFDBDDRDBD",
+        "LUDURUBUDFDLFFUBUFFDDFRFLUDLUFLUBLDU",
+        "BUFBURUBLBLLLLFRFULURFRLRBBBRRFFRBLF"
+     },
+     "AEIOai41Ix1p-gYtb0LeoBPkVNwfCWqhYLPyMp4AOXoux6vZB6vuLoMn4me7tIEn0E"),
+    (6,
+     List#{
+        "LBLLLDDLURDUBFULUDRUBFDDUBURLLLBDLLD",
+        "FFBBFBLDBRFFLFDLRRBRRLRRRRLLUBLDRLRR",
+        "FLRFFRURBURDUFBUDFDFFDBUUULDUFLDFUDF",
+        "BRULRUDLUFRLBDFBDUDBURDDULUFDUBBRFFU",
+        "DFRURDFULBBLFLLURLFFRFRRBBLFFLUBLUBU",
+        "RBBBRBRBDBFDFUDRBDFLDBBDRFDLDUFUUBDR"
+     },
+     "ABBHSfcTiwD8DJM9gT2wp_4y4eE-1gWlbHEZBgIY6U28aQVtuiVOKGjS_K6hsEf93O"),
+    (6,
+     List#{
+        "LBBUFBLDLFFDUUDFBFUFBBBBLLFFRFULFFUF",
+        "RRDRBRLDDDFFLLFULBFRRLRRUBUDBFURDUDU",
+        "FFLLFLUURBLRUDDDDRUUFUBUFLUUDDUDDDRF",
+        "DLLLURLRBLUUFBBFBBRURLLRFUFFLUDBBFBR",
+        "DBDDRDBBDRDBBFLBFBDRURRBUURLBUBRFUDB",
+        "LLRLDFDRUDFLRDDRRLLBLUUFDRLLFBBRDRRL"
+     },
+     "ABBHSfcTiwD8DJM9gT2wp_4y4eE-1gWlbHEZBgIY6U28aQVtuiVOKGjS_K6hsEf93O"),
+    (6,
+     List#{
+        "UFLLFLBFDFFRBFULBDUFBLDFRLUDRRUULBUF",
+        "RBRLBURDDRBRRDFULBDLLBLFDRRRDDFDBUDF",
+        "FFFUFDUBDBLDFLRRUDUBDFFBBFDULFLRDBLL",
+        "DFLDDDBUFDDBUBRDBUFUFBBFFLUBBLDBRRBR",
+        "BDRLFLLBRFULURDUULRFFDRRUULLFUBDDFUB",
+        "BLBBLRURFUUURBLRLLDRBUUDRDLRRRULUFLR"
+     },
+     "AAZFIxJv1f80S_yQCFiKBC6gVsOq7U-6jLNTw6JnZib1F1tzL1cx9znbiAC9tij0wI")
+}
+
+def faceletVectors6c(): List[(Int32, List[String], String)] = List#{
+    (6,
+     List#{
+        "DFDLURDBFLRDDBBULBLLUFFLBFDDBBRBFUUR",
+        "LLUDBLDLBDBDFLBLBRBDRDFRDULRLDBLULBR",
+        "URBFFUFBRBDRDFLFBLUUURRLUURRRRURBFDL",
+        "FURBUFULLLUUUDDRDFLUFBDRLUULRLLRLDRB",
+        "FBFBRDFRDRFLFULUUUBRLFBRFDBFDDUUURFD",
+        "BRRBLBFFFFDBDUBRBDDFDDURFFRULBDLUFLF"
+     },
+     "AAZFIxJv1f80S_yQCFiKBC6gVsOq7U-6jLNTw6JnZib1F1tzL1cx9znbiAC9tij0wI"),
+    (6,
+     List#{
+        "LUFUDRUFULBBRLRFFLRBFUFLDFFFDFFFRDBB",
+        "LLFBLDDBBBUFDRDDURLLLRULRRLRRDRLBFLU",
+        "DDBFRDURUDLLFBBRFBDDULDDUFRBDFFLBBUF",
+        "UURUBDUBBBDFLDBLLDLUDBFDDURDUBLBBLDR",
+        "BLUDLLUDDDBFRULRRUULUDLRFRUDLRFRFBRR",
+        "BRRUFURLFBLBFUUBLFDRFFRLBUFRFDBBUURU"
+     },
+     "AGOotJw0lM6k4MPdE2xJOe_XQvBgmJcN5RWx253KUTAgVE7tkBe1kWGLEBKiUXVHXe"),
+    (6,
+     List#{
+        "UDLLUFUBDDUBBDRDLRFDDFRDDDULDRDBFFRL",
+        "RDRFFUULUDLFDLURRDLFDDFBBDFDRURFRRUU",
+        "LLBRLUDUBBBRRFFLRFFLBRLRFLBRFDFFUDFD",
+        "RRLLBLRUBRRUFUUBFURULUBLUBLDRBBDBBUF",
+        "BFDUBBLLBRFRUDFUUDBBLRBBDBUFDRDRUULD",
+        "BLUDLLDRUUUBFRBBFBLRFLLLBFFLFFRLDULF"
+     },
+     "AGOotJw0lM6k4MPdE2xJOe_XQvBgmJcN5RWx253KUTAgVE7tkBe1kWGLEBKiUXVHXe"),
+    (6,
+     List#{
+        "FLLURRFFDUBFFRDLBFDURRBUFRULRBDURRBU",
+        "FUFLUDRDFDRDRLBLRDDLRURLDBFDURDLBLRL",
+        "LLUUULBURBDBBDDBBBUDLUURRLBFFFBLLFFR",
+        "LBURDFDFRFLDDLFDUUDUBUDUUUBBLUUBDBBU",
+        "UURFRFDLLFBLDLBFRLRLRFRFFULDDFRLLLRD",
+        "BDBFFRBDBDBLBRFUFRBFLDUBUFFURLBDDFRB"
+     },
+     "AFMYSnQEGLsHUXO57DdHyvNYG_LR4QprZWdkYmpyObKvDHTX5Ea0m8XWkr8TXROc9G"),
+    (6,
+     List#{
+        "FBBRUBFRDDFFRUDFBFRBBRLLRDBRLLFBBULU",
+        "LDURBFDFLULDRRDLFDRDRBRDRFBBRRRBBDBR",
+        "LUUDDDRDFFBFLLBULBFDFRDFRUUURUDDDFUF",
+        "BBBBRBDDULLDBBLFLDLDRDRLLBLRUUUFUBFB",
+        "DRUUBRLURFUBDRUUBRLUDFBLLLDRBLLFFRUU",
+        "DLLFFLUDUUBUFDLLLLFFUBFUFRFFFRULUDDR"
+     },
+     "AFMYSnQEGLsHUXO57DdHyvNYG_LR4QprZWdkYmpyObKvDHTX5Ea0m8XWkr8TXROc9G")
+}
+
+def faceletVectors7a(): List[(Int32, List[String], String)] = List#{
     (7,
      List#{
         "DDDLDFRUDURUFBLLBURURUFBUBUBUDUDDFRBRRUDRRUDUUDRB",
@@ -282,5 +773,131 @@ def faceletVectors7(): List[(Int32, List[String], String)] = List#{
         "LUDLRLLBBDBDDDLDRLULLRBFRLRULFFFUUFDDURURULUDBDBB",
         "RULFBDBRRRDFDURBFBBBBDUFDDUDLLFBBLBFLBFRLLULFFBLB"
      },
-     "ECnN3EEOtKRlP-BhkhCyzStFStV5AQJrRujtZLEsHtTH7SyFv_T8dulUBcOyiDtz6u2wlcbgVWfqJUM8374ECX4qGI")
+     "ECnN3EEOtKRlP-BhkhCyzStFStV5AQJrRujtZLEsHtTH7SyFv_T8dulUBcOyiDtz6u2wlcbgVWfqJUM8374ECX4qGI"),
+    (7,
+     List#{
+        "FBUDBFFRLRDLRBLRUDFFLDURFURUUUDFFDDRBFDBRBBLDULFB",
+        "LUBFFURDFFLRFDUULBRDUDFLRLFDULFRBDULUBFFURDBLRBUD",
+        "DBFBBUDLBBLLLRLLLDUURLUBDULRLULUUURDBFBLBDLBBRBLR",
+        "BRRFRBFLDBUFLDFUDDBDFBBLBBLBDLUFBUULRLRRLFBDRFFBF",
+        "LFBBFFRUULRBUUDBFLBDDUDRLRDUDRLFRRDLDBBFDRUFFLRFU",
+        "UDDFBDULRRUFFRLDDURDRLRBUFBRLUDDRDRUFRFBDULRULFFR"
+     },
+     "BQpYG7M344R6JJoTS44EV8r6IP6IojyR6KjB7KfGYaFg51MvdDF5WfVQLo76MJt13z5XrHJLLH7XZJ8-D08PSa7pmo"),
+    (7,
+     List#{
+        "UDBDBUDBRBRUBLLRUURLURULFFRFRFFULRLBRDRDBBFDBDBFD",
+        "RRBLRDRLUBUDULRFLLLRFRFRLDBRFUBUDLFDFULBDFLUDLRUL",
+        "BUUUUBUDFDFBRFDFDLDFBRBBBDRULRFRFLRDRDLDDRBFFFFBF",
+        "UBDBDUBRBLDFDRLURFULRLFUURLURLLFFRFRBDDFDRFBDBDFB",
+        "LLDBULRRFDFRFRULRBRULBDRRDDDDRDFBFBULBBFULLFBDUFR",
+        "FDFFFFDULBUBUBLUBBBULFLBDDULLRULULRLLBBULLUDUUUUD"
+     },
+     "BQpYG7M344R6JJoTS44EV8r6IP6IojyR6KjB7KfGYaFg51MvdDF5WfVQLo76MJt13z5XrHJLLH7XZJ8-D08PSa7pmo")
+}
+
+def faceletVectors7b(): List[(Int32, List[String], String)] = List#{
+    (7,
+     List#{
+        "BLLFRFLUUUBURDDDBBDLDFRRULBRLLRBLBBUBDLFDDURDFDDD",
+        "BBDUFFULLBBRRUBLRFBBRDLRLLFRRRDDDLFFFDDBBFLLDDRRD",
+        "BDLRLLLLDFUFFFRLBUFRUBLFBDURBBBBLBBBDLFRRRRDFDFFF",
+        "DLULUUUDFURBUULFUFLLBLFRDLLBUUFBURUDDDRDLURBLBRRF",
+        "DLFDURRDFFFFBBLUDDRRDLULRRRUBLLUURRBLRUURRUBRUUFF",
+        "BLFUBBRBLFBBBRDUFDFDFBDFFUDFLDUURUUUUFDDUULFFLBRF"
+     },
+     "EYr8pyZkUrK_WQsaIRlzdkqbK-xDFwRFxH8mUEL0vskTEP3Zu8fLiaJN1WIEz_hKRKDxuZbmBP6jIhs4fY5cZy910g"),
+    (7,
+     List#{
+        "BFDFBBLUDRLRRRUBULLUUDLBRDDFLLBLDBBUUFBULRUUUFUDR",
+        "DDRUFBULLFFFFUUDDUURBRDDDBRBDDRRBBLDDRRDBLFFRRDLR",
+        "BBBDBULFFFRFUBRDFRLBDDRULFBLLLBLLLLDDDFBULFFFUFUD",
+        "RRRBRBURRLDRFULBBFRFBLBBUDFBRDRLFRRRBUDUUUFDDLBLD",
+        "RFFRULLRDDLLBBDLLFDBLDFBBDBUFBUUUDDFLLUUFFUDDUUBB",
+        "DLLRFBLDLLLFBLFUFUFRUFURFFULRRDRRUBRRUUFRRFDLBFFB"
+     },
+     "EYr8pyZkUrK_WQsaIRlzdkqbK-xDFwRFxH8mUEL0vskTEP3Zu8fLiaJN1WIEz_hKRKDxuZbmBP6jIhs4fY5cZy910g"),
+    (7,
+     List#{
+        "URDUFUUBLRFLFLRFRRFURDUDDFRDRLDFURBDRDDFDDUBDULUU",
+        "RLUBDURBBULDBBBBBBUBBFFUBUUFRFRRDRRRLRFDURFFULFUF",
+        "FUBFDFFRURRDRRRLFFURRLURLDLLFDLRFFFFDBFDFFLUULDRL",
+        "DFLDRUDDLBDBUDLRRBDLFUULUBLUDBLDBDDFRUBRBRDLLDBUD",
+        "LDUFURLFFURUFFFFDFFFFBDDFUBBLLRLLBLLUUBLRLBDBRUBB",
+        "BBUBFDBLLDLLDLLLUBBULRRURLDRBBBLLFBBBUBFDBRLURDDR"
+     },
+     "HGuYqBc8syF1Y4hbilVKDForR1epk28gCOtfxGKlKtKSO03frPf3E-jvsYZmWkZ0TQzhg-MYaPG2yjKysvMiSYEyaw"),
+    (7,
+     List#{
+        "RLUDUBRDDULUDDDDDDBDDFFUDBBFRFRRLRRRLRFUURFFULFBF",
+        "LFFLRRFBBDBUBBBDRRFRDLFRLFRFUUFUUBURFFLRRFLFFLRRF",
+        "BBRUBDBDRLUFLRRFLRRURBBFUBFBLFBFFLFUURRBFUBBDUBLB",
+        "DDURDUDLRLDBULLDLLBLLDDUFUUDFFFFUFFFFURBFFLRUFBUL",
+        "DLLRDDRUURUBBUFLDLRFUDLDRLDRBBUBDBBDLLRDDLDLLRDDR",
+        "UFLBLBULRDURLFBLLBBBBUDLBDBUDRDDUDRUDULLBUURLBFBU"
+     },
+     "HGuYqBc8syF1Y4hbilVKDForR1epk28gCOtfxGKlKtKSO03frPf3E-jvsYZmWkZ0TQzhg-MYaPG2yjKysvMiSYEyaw"),
+    (7,
+     List#{
+        "RLRLBLBDURLBUBDFFRRDLDFFFRDLFFFFRRRUFBFBRBURFRRRR",
+        "FRFBBUUFDFUDFLLLFUUDLFDDUFRFURURLUDUBRLLBFDUUDDBL",
+        "LDDUUDUFDUUUFULLLRBLDDFURLRLFFDBFBFFRDBBRLFRRBBRB",
+        "LFURRFRLLUULLRLFRLLFBLBUBLLBLDUDRDRURFFLDRLBFFUBB",
+        "DLRRUBBDBRRLLLDUBDBBBUBUDFLFDUUDDFLFDUUUFUDRUUUDU",
+        "RBRDFBFUURBBUFDDLBDDFUDLLBDBBBDBBRBDBRRLLLDDBRLDF"
+     },
+     "DfTt9eiOMz7cXARcb6toSFNSrvWNxOLpLAMWvg108mwR2WSRm61KndjrOiqbfIKmFVoOd8xsbVekC5-VqF0doWbLVI")
+}
+
+def faceletVectors7c(): List[(Int32, List[String], String)] = List#{
+    (7,
+     List#{
+        "LLLUFLFBBLLFUUBUURFRUDDDBBRRDDLFDRRBBDBFLUDFLFURR",
+        "BBBBLBRDBDLDLRBBBLLLLFUBLLLUFUBBLLUDRDFBRUDFDFBFB",
+        "URRLFLLRDBUFUBRBRULLLUFBRRRDUFFLRUDDDRBULRFLULFFR",
+        "UUDRURBUDDUURDDBUFFBBBBDFDDUFFDDUDLUFBUURDLFDDLLL",
+        "FLRBBLBFFRRFFBFLBFFLDFDRDFFDFURUBUBRBLLFUBFDLLRDD",
+        "DFDLFRRDFDFLLURFDLURRBBUUURRBBDRRRRFDRDRUBUUURULU"
+     },
+     "DfTt9eiOMz7cXARcb6toSFNSrvWNxOLpLAMWvg108mwR2WSRm61KndjrOiqbfIKmFVoOd8xsbVekC5-VqF0doWbLVI"),
+    (7,
+     List#{
+        "DDDULDURDDUFDUUDBUUBFFRDRDDBRLBURLBDDDUFDUDDDUFDU",
+        "RRLDURRLFUBRFFRRUBRRRBFLUFFLUFBDFFFRRLDURRBFFDUFF",
+        "BBBFDBFBBUUUBUURBFDRFRRLBBRRLBLRUBRBLBFDLFRRLUDRR",
+        "DDFRBDDUULFBUUUUDRLUULLRLDLFLDRUFLBUULRBUUUURUBLU",
+        "LFLLDLLBBLDUBRRDDFFRRRBBDLBFDDLFDFFLFULBLLBBDDBBF",
+        "BFUBFFFLFLLBLLBRLBFRDBDLFUUDRFURRFLBRDBFRFLDLLBLL"
+     },
+     "D0VrnCFYrD-TZcxUOM8pulVKqcNLKh3Oh98msa4RdqJvDV87w0SR6bC19S4P59o_upbGcqV5Zshpb1PZCE4gZCc2Tw"),
+    (7,
+     List#{
+        "FBUFBBBLBLLLBBFDUFBDLDDBBRDDDBLDRBRFRUFBRBDDULRDD",
+        "FRFFDDRBRFBDBRBBURFLUURFUFURULRBURRBFUBUBFBRUDDBR",
+        "UUBDFUULLBFRLLLLRDULLFRURDRRBRFLDURLLBDRLLLRBLDLL",
+        "RURRBRRBDUBFDFDFLDDFRBURFLLUBDRBFDURFRRBRRBFLBFFF",
+        "DRDBLDBDFDFFDFRLLRBRFUBBLUUULDDFFLLDFDFFDFDFDRFDF",
+        "UUULFULUUULFULDRBLDRBFDUDUUBLUBLLBFDUULFULUUULRUL"
+     },
+     "D0VrnCFYrD-TZcxUOM8pulVKqcNLKh3Oh98msa4RdqJvDV87w0SR6bC19S4P59o_upbGcqV5Zshpb1PZCE4gZCc2Tw"),
+    (7,
+     List#{
+        "LLBRFDUUUDRRDLBDRRUDRBFDLLLBFURRFLDRUUBUDLBLLRFUL",
+        "DULDDUBLRFDBFFRRBUDRRUDDFUDDDLDFBLRLRFUBDBDFUUDDR",
+        "DBBDLFBUDRUDLDBBDRLBUBRRDURBFFFULFRFRDBDBDBUBRFBR",
+        "RBLFURFDBUFUFDULRFURBFBDRBRLRLRBFRFFFFLBLRFBBFURU",
+        "FFRLRBRBURFUBRLUBFUFUDUFBBBRDLUBBBDUBRULLDULUULRU",
+        "LBLUDFDRRUDLFUFFLLFFULFDULLFBBLLDBLLUDLDLRFFFLDDL"
+     },
+     "FOw1mzv2NusM3OYLcxinT1jh5HknZwkZDGFkhLJxeUX5OkGk1YLt3w5QifZSG8OBMB-4LhspoGAJ09y1LK_qQmpQNY"),
+    (7,
+     List#{
+        "ULLUUDFDBLBUFUUFLBFBUBUDFBDFLFRDRFRUULBURLBFBUDFU",
+        "RDLBRRURFDUDDBFRLBBDLURRRFLUBFDBBFURFBBFDDDFLBURR",
+        "FRFDBRFLBRFBBDDLFFULRDDLLDFFFUUDFUFFFRFBLDBUBFBLU",
+        "LRURLBRLDULLBULFRFRDRRRRDRFDFFFRLRFFRURLLLRBRLDDF",
+        "BURLDBLFUDLDLFDRBLDBULUFBUBRBRBULBLLLLRURBLUULDBD",
+        "BBDBFFDUULUURBBDDUURRRLLUUDDBBULDBDLDDDRURLURFFDD"
+     },
+     "FOw1mzv2NusM3OYLcxinT1jh5HknZwkZDGFkhLJxeUX5OkGk1YLt3w5QifZSG8OBMB-4LhspoGAJ09y1LK_qQmpQNY")
 }
