@@ -37,7 +37,8 @@ def symmetryZeroIsTheIdentity(): Unit \ Assert =
 def theMirrorSwapsTheRightAndLeftFaces(): Unit \ Assert =
     let mirror = Symmetry.mirrorAcrossRL();
     let mirrored = symmetryImage(3, mirror, symmetrySolved(3));
-    let face = f -> Vector.range(f * 9, f * 9 + 9) |> Vector.map(i -> Vector.get(i, mirrored));
+    let face = f ->
+        Vector.range(f * 9, f * 9 + 9) |> Vector.map(i -> Vector.get(i, mirrored));
     Assert.assertEq(expected = Vector.repeat(9, 0), face(0));
     Assert.assertEq(expected = Vector.repeat(9, 4), face(1));
     Assert.assertEq(expected = Vector.repeat(9, 1), face(4));
