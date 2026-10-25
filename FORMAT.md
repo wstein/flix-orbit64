@@ -238,6 +238,57 @@ leave the rest of the token to that future format. ID `15` consumes one more
 base64url sextet and denotes IDs `15` through `78`. `Token.decode` returns the
 format ID and opaque remaining payload; no extension format is assigned here.
 
+## Canonical form
+
+The canonical form is a function from cubes to ordinary state tokens, not a new
+token class or a change to one: it adds nothing to the wire format, and the
+tokens `State.encode` writes are unchanged. It gives one token to every cube
+that differs only by a whole-cube rotation, a mirror image, or a renaming of
+the six colors.
+
+Let `S` be the sticker string of a cube: its `6 n^2` facelets in the order
+`U R F D L B`, row-major within a face, as `Net.toFacelets` writes them, with
+the colors as the numbers 0 to 5.
+
+1. **Least image.** For each of the 48 symmetries (24 rotations and their mirror
+   images), move the stickers and rename the colors in order of first
+   appearance. `C(S)` is the least of the 48 results. Strings are ordered
+   lexicographically on the numbers, sticker by sticker. The order is on
+   sticker strings, not on tokens, so the token is not the smallest token of
+   its class; this keeps the cost at 48 images and one encoding.
+2. **Standard colors.** On an odd cube, the color in the center of face `f`
+   becomes `f`: the six fixed centers are home and the stored frame is 0. An
+   even cube has no centers: the three colors of the corner in the URF slot
+   become `U R F` in turning order, and the three colors sharing no corner with
+   them (their opposites) become `D L B`.
+3. **Handedness.** If the result is not a cube, mirror `C(S)` across the R/L
+   plane, which changes the turning order of the corner colors, and repeat step
+   2. The first attempt that `State.encode` accepts is used; if neither is a
+   cube, the error is the first attempt's.
+4. **Token.** Read the standard string with `Net.fromFacelets` and encode it
+   with `State.encode`.
+
+Because the token depends only on `C(S)`, it is invariant, and two color
+states get the same token exactly when one is the other turned, mirrored and
+recolored. Mirror images are one class: a chiral pattern and its mirror image
+share a token. The solved cube of every size is `A` repeated to the token
+width.
+
+From the 4x4x4 up, equal-colored pieces need no representative. Orbit64 reads
+colors: a wing by the ordered pair of colors in its slot, a center orbit as a
+multiset of colors. Swapping two pieces of one color changes no color and no
+token.
+
+The token depends on four conventions, and changing any of them renames every
+canonical token: the slot convention `orbit64-Nxn-draft@1` that
+`Net.convention(n)` names (`orbit64-2x2-draft@1` to `orbit64-7x7-draft@1`),
+the sticker order `U R F D L B`, the choice of the R/L plane for the mirror, and
+the URF corner for even cubes. A stored canonical token should carry the
+convention name. Sizes above 7 have no canonical form.
+
+The API is `Orbit64.Canonical.fromFacelets(n, facelets)`, `fromToken(n, token)`
+and `fromState(n, state)`, each returning `Result[String, String]`.
+
 ## Public API
 
 State operations live under `Orbit64.State`; the package root is the format
@@ -245,6 +296,7 @@ family, not an alias for one member:
 
 ```text
 Orbit64.State.canonical / frame / orbits / encode / decode
+Orbit64.Canonical.fromFacelets / fromToken / fromState
 Orbit64.Move.encode / decode        (decode returns a layer class)
 Orbit64.Algorithm.Encoding.encode / decode
 Orbit64.Token.decode

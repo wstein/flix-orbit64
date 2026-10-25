@@ -36,7 +36,7 @@ local mutation lets the one routine that scatters into an array still type as
 pure, and Java interop is one `import` away on the rare occasion it is wanted.
 
 ```
-./flixw test                                    # 169 tests
+./flixw test                                    # 189 tests
 (cd examples/cli-tool && flix run)              # size table, round-trip
 (cd examples/cli-tool && flix run -- <token>)   # decode; length picks n
 ```
@@ -260,6 +260,38 @@ orientations, normalizes facelets for coordinate recovery, and returns the
 corresponding `FramedState`. It rejects center arrangements that are not a
 whole-cube rotation.
 
+## One token per pattern
+
+A token names a state: two cubes that differ only by how they are held,
+mirrored or colored have different tokens. A *pattern* is the color state up to
+those choices, and `Orbit64.Canonical` gives it one token:
+
+```flix
+// a 2x2x2 and the same cube turned, mirrored and recolored: one token
+Orbit64.Canonical.fromToken(2, "EJ6kr")                 //=> Ok("AXnYr")
+Orbit64.Canonical.fromFacelets(3, stickers)             // from face indices
+Orbit64.Canonical.fromToken(3, "AAAAAAAAAAAE")          //=> Ok("AAAAAAAAAAAA")
+```
+
+The result is an ordinary state token, so `Orbit64.State.decode` reads it back
+and every existing token keeps its meaning; this adds a function and changes
+no format. (`Orbit64.State.canonical` is unrelated: it builds a `FramedState`.) The token is the same for all 48 symmetries (24 rotations and their
+mirror images) and for any renaming of the six colors, so a pattern and its
+mirror image share it. From the 4x4x4 up, pieces of one color are
+interchangeable, and no representative has to be picked: Orbit64 already reads
+colors, so swapping equal-colored pieces changes no token. A cube that is
+unreachable in every coloring is an error, not a token. The definition,
+including the rule that orders sticker strings and the convention the token
+depends on, is in [FORMAT.md](FORMAT.md#canonical-form).
+
+The function was specified by a Rust reference implementation. The expected
+tokens in `test/TestCanonicalVectors.flix` come from it, and
+`test/TestCanonical.flix` checks idempotence, both conversion directions and
+invariance under all 48 symmetries and three color renamings, for scrambled
+states of every size from the 2x2x2 to the 7x7x7. The reference also counted
+77 802 tokens over all 3 674 160 2x2x2 states; that exhaustive run is not
+repeated in this repository's tests.
+
 ## Design decisions
 
 **Orientation is stored one entry short.** The last corner twist is forced by
@@ -356,6 +388,9 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
 - `src/Orbit64/Token.flix` -- first-sextet dispatch across the token family.
 - `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical
   delimiter-padded bitstream primitives.
+- `src/Orbit64/Symmetry.flix`, `src/Orbit64/Canonical.flix` -- the 48 cube
+  symmetries as facelet permutations, and the canonical token of a pattern
+  built on them.
 - `src/Orbit64/Net.flix` -- draws a decoded cube as a colored net, up to the
   7x7x7, and reads one back out of its facelets. It is the only module that
   knows where pieces and facelets sit; `Orbit64.Move` names faces but carries no
