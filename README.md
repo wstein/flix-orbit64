@@ -289,9 +289,9 @@ including the rule that orders sticker strings and the convention the token
 depends on, is in [FORMAT.md](FORMAT.md#canonical-form).
 
 This repository is the reference implementation of the function, and
-FORMAT.md is meant to be enough to reproduce it. A Rust implementation
-specified it first. The expected tokens in `test/TestCanonicalVectors.flix`
-come from that one: scrambles of every size, slice scrambles whose centers
+FORMAT.md is meant to be enough to reproduce it. The expected tokens in
+`test/TestCanonicalVectors.flix` come from an independent implementation in
+Rust: scrambles of every size, slice scrambles whose centers
 move, and pairs of one cube turned, mirrored and recolored from its
 cross-check of 324 states. `test/TestCanonical.flix` checks idempotence, both
 conversion directions and invariance under all 48 symmetries and three color
@@ -331,8 +331,8 @@ the orientation from the encoding would save log2(24) ~ 4.6 bits, but encoding
 would then need a search over rotations, which belongs in a separate function:
 `Orbit64.Canonical` does that search, and the state format stays as it is. So
 `stateCount(4)` is exactly 24 times the classic 4x4x4 figure, and
-`stateCount(3)` exactly twice the classic
-3x3x3 figure. Both are asserted in the tests.
+`stateCount(3)` exactly twice the classic 3x3x3 figure. Both are asserted in
+the tests.
 
 **base64url over base58.** Measured on a reference implementation, the
 big-integer division base58 needs came to about 2% of an encode -- the cost is
