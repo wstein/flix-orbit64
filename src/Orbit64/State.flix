@@ -3,7 +3,7 @@
 ///
 /// The whole state is one integer. Each orbit contributes a coordinate in a
 /// range of exactly its own size (see `Orbit.radix`), and odd cubes add one of
-/// the 24 fixed-centre frames. The values are combined by mixed radix and
+/// the 24 fixed-center frames. The values are combined by mixed radix and
 /// written in base64url at a fixed width. Nothing is spent on separators or
 /// field alignment; the two leading zero bits identify this member of the
 /// Orbit64 token family as state.
@@ -52,7 +52,7 @@ mod Orbit64.State {
         case FramedState.FramedState(_, value) => value
     }
 
-    /// Whether `n` has fixed centres whose physical frame must be carried.
+    /// Whether `n` has fixed centers whose physical frame must be carried.
     pub def carriesFrame(n: Int32): Bool = Int32.modulo(n, 2) == 1 and n >= 3
 
     /// The number of legal coordinate states before the optional frame factor.
@@ -69,9 +69,9 @@ mod Orbit64.State {
     ///
     /// Encode a frame-aware state.
     ///
-    /// On even cubes the frame must be canonical: movable centre coordinates
+    /// On even cubes the frame must be canonical: movable center coordinates
     /// already determine the pose, so recording another 24-way choice would
-    /// duplicate every state. Odd cubes carry one of the 24 fixed-centre
+    /// duplicate every state. Odd cubes carry one of the 24 fixed-center
     /// frames explicitly.
     ///
     pub def encode(n: Int32, state: FramedState): Result[String, String] =
@@ -92,7 +92,7 @@ mod Orbit64.State {
         if (not (Orbit64.Frame.faultOf(value) |> Option.isEmpty))
             Some("the state frame is not a right-handed cube frame")
         else if (not carriesFrame(n) and value != Orbit64.Frame.canonical())
-            Some("an even cube carries its frame in its movable centres")
+            Some("an even cube carries its frame in its movable centers")
         else None
 
     def layoutFault(n: Int32, actual: List[Coord]): Option[String] =

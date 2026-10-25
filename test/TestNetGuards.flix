@@ -76,7 +76,7 @@ def netDeclinesAReorderedOrbitList(): Unit \ Assert =
 ///
 /// The tables are hand-derived, so the invariant is checked directly rather
 /// than left to the scramble fixtures: a doubly-written facelet still holds a
-/// plausible colour, and a fixture can pass while a table is wrong.
+/// plausible color, and a fixture can pass while a table is wrong.
 ///
 @Test
 def everyFaceletIsWrittenExactlyOnce(): Unit \ Assert =

@@ -163,7 +163,7 @@ mod Orbit64.Rank {
     /// Colexicographic rank of a `k`-subset of `0..n-1`, in `[0, C(n, k))`.
     ///
     /// The combinatorial number system: `rank = sum C(c_i, i+1)` over the
-    /// sorted elements. This is Kociemba's `UDSlice` coordinate generalised.
+    /// sorted elements. This is Kociemba's `UDSlice` coordinate generalized.
     ///
     pub def combRank(subset: Vector[Int32]): Int32 =
         Vector.sortBy(x -> x, subset)
@@ -209,7 +209,7 @@ mod Orbit64.Rank {
     /// Decomposed into a chain of combination ranks -- pick the slots holding
     /// label 0, then label 1 from what remains, and so on. The last label is
     /// forced, so it contributes nothing. Every intermediate radix stays small
-    /// enough for `Int32`, which is why centre orbits need no big integers
+    /// enough for `Int32`, which is why center orbits need no big integers
     /// until the final assembly.
     ///
     pub def multisetRank(labels: Vector[Int32], k: Int32, ntypes: Int32): BigInt =

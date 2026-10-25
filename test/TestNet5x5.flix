@@ -2,9 +2,9 @@
 // The 5x5x5 display convention, checked against an independent model.
 //
 // `orbit64-5x5-draft@1`: corners and midges in the standard orders, wings and
-// both centre orbits ordered by the facelet index of each piece's reference
-// sticker. The fourth entry of the list is the X-centres and the fifth the
-// plus-centres -- nothing in the type says so, which is why the `Uw` case
+// both center orbits ordered by the facelet index of each piece's reference
+// sticker. The fourth entry of the list is the X-centers and the fifth the
+// plus-centers -- nothing in the type says so, which is why the `Uw` case
 // matters: after it the two vectors differ, so swapping them fails.
 //
 

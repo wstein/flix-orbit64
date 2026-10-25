@@ -2,7 +2,7 @@
 // The 4x4x4 display convention, checked against an independent model.
 //
 // `Orbit64.Net` draws a 4x4x4 under `orbit64-4x4-draft@1`: corners in the
-// standard URF UFL ULB UBR DFR DLF DBL DRB order, wings and centres ordered by
+// standard URF UFL ULB UBR DFR DLF DBL DRB order, wings and centers ordered by
 // the facelet index of each piece's reference sticker. Every table below is
 // derived from cube geometry -- no external puzzle definition is read -- and
 // the states here were produced by applying moves in a separate model.

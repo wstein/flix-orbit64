@@ -25,7 +25,7 @@ def layoutOf5x5(): Unit \ Assert =
     Assert.assertEq(expected = List#{Corners, Midges, Wings, Centers, Centers}, Orbit64.Orbit.layout(5))
 
 @Test
-def layoutOf7x7HasTwoWingAndSixCentreOrbits(): Unit \ Assert =
+def layoutOf7x7HasTwoWingAndSixCenterOrbits(): Unit \ Assert =
     let l = Orbit64.Orbit.layout(7);
     Assert.assertEq(expected = 2, List.count(o -> o == Wings, l));
     Assert.assertEq(expected = 6, List.count(o -> o == Centers, l))
@@ -34,17 +34,17 @@ def layoutOf7x7HasTwoWingAndSixCentreOrbits(): Unit \ Assert =
 
 ///
 /// The classic 3x3x3 figure is 43,252,003,274,489,856,000. A framed state
-/// carries one of 24 fixed-centre frames and admits only matching corner/midge
+/// carries one of 24 fixed-center frames and admits only matching corner/midge
 /// permutation parity, so its count is exactly 24 times the reachable count.
 ///
 @Test
-def stateCountOf3x3CarriesTheFixedCentreFrame(): Unit \ Assert =
+def stateCountOf3x3CarriesTheFixedCenterFrame(): Unit \ Assert =
     let reachable = 43252003274489856000ii;
     Assert.assertEq(expected = reachable * 24ii, Orbit64.State.stateCount(3))
 
 ///
 /// The classic figure for the 4x4x4, which divides by 24 because an even cube
-/// has no fixed centres to pin its orientation. This codec does not quotient by
+/// has no fixed centers to pin its orientation. This codec does not quotient by
 /// whole-cube rotation, so its count is exactly 24 times larger.
 ///
 @Test
@@ -53,7 +53,7 @@ def stateCountOf4x4IsOrientationFree(): Unit \ Assert =
     Assert.assertEq(expected = classic * 24ii, Orbit64.State.stateCount(4))
 
 @Test
-def centreRadixIsMultinomial(): Unit \ Assert =
+def centerRadixIsMultinomial(): Unit \ Assert =
     // 24! / (4!)^6
     Assert.assertEq(expected = 3246670537110000ii, Orbit64.Orbit.radix(Centers))
 
@@ -252,7 +252,7 @@ def parityRestrictedPermutationRanksRoundTrip(): Unit \ Assert =
         }))
 
 ///
-/// An odd cube carries its fixed-centre frame while retaining only legal
+/// An odd cube carries its fixed-center frame while retaining only legal
 /// corner/midge parity pairs.
 ///
 @Test
@@ -266,7 +266,7 @@ def framedOddStatesRoundTripWithoutGrowingTheThreeByThreeWidth(): Unit \ Assert 
         case Ok(token) => Assert.assertEq(expected = Ok(state), Orbit64.State.decode(3, token))
     }
 
-/// Even cubes keep frame in their movable centre coordinates rather than duplicating it.
+/// Even cubes keep frame in their movable center coordinates rather than duplicating it.
 @Test
 def framedEvenStatesRequireTheCanonicalFrame(): Unit \ Assert =
     let state = Orbit64.State.FramedState.FramedState(
@@ -322,12 +322,12 @@ def encodeRejectsAPermutationWithARepeat(): Unit \ Assert = {
 }
 
 ///
-/// Centre colours in the wrong multiplicities rank *above* the coordinate's
+/// Center colors in the wrong multiplicities rank *above* the coordinate's
 /// range, and the assembly is Horner -- so the surplus used to carry into the
-/// neighbouring wing coordinate and corrupt a state that was correct.
+/// neighboring wing coordinate and corrupt a state that was correct.
 ///
 @Test
-def encodeRejectsCentresInTheWrongMultiplicities(): Unit \ Assert = {
+def encodeRejectsCentersInTheWrongMultiplicities(): Unit \ Assert = {
     // Twenty-four slots exactly, but five 0s and three 1s. The 0s sit high so
     // the surplus combination term is large.
     let cols = Vector#{2,2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 1,1,1, 0,0,0,0,0};
@@ -455,7 +455,7 @@ def sizesWithoutAConventionAreNotDrawn(): Unit \ Assert =
     })
 
 @Test
-def colourWrapsEveryStickerAndResetsIt(): Unit \ Assert =
+def colorWrapsEveryStickerAndResetsIt(): Unit \ Assert =
     match Orbit64.Net.draw(3, Orbit64.State.solved(3), true) {
         case Err(e)  => Assert.assertEq(expected = "a net", e)
         case Ok(net) =>

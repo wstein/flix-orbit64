@@ -59,7 +59,7 @@ def fromFaceletsDeclinesTheWrongNumberOfFacelets(): Unit \ Assert =
     })
 
 ///
-/// A facelet names one of six faces. Anything else indexes no colour table.
+/// A facelet names one of six faces. Anything else indexes no color table.
 ///
 @Test
 def fromFaceletsDeclinesAFaceletThatIsNoFace(): Unit \ Assert =
@@ -70,28 +70,28 @@ def fromFaceletsDeclinesAFaceletThatIsNoFace(): Unit \ Assert =
     })
 
 ///
-/// Fixed centres select one of 24 whole-cube frames. A swap of two centres is
+/// Fixed centers select one of 24 whole-cube frames. A swap of two centers is
 /// not one of those right-handed orientations, so it remains invalid.
 ///
 @Test
-def fromFaceletsDeclinesAnImpossibleFixedCentreFrame(): Unit \ Assert =
-    // The U and R centres, at both odd sizes this module reads.
+def fromFaceletsDeclinesAnImpossibleFixedCenterFrame(): Unit \ Assert =
+    // The U and R centers, at both odd sizes this module reads.
     refuses(said = "not a right-handed whole-cube frame",
-            "a 3x3x3 with its U and R centres exchanged", 3, swapFacelets(4, 13, stickersOf(3)));
+            "a 3x3x3 with its U and R centers exchanged", 3, swapFacelets(4, 13, stickersOf(3)));
     refuses(said = "not a right-handed whole-cube frame",
-            "a 5x5x5 with its U and R centres exchanged", 5, swapFacelets(12, 37, stickersOf(5)))
+            "a 5x5x5 with its U and R centers exchanged", 5, swapFacelets(12, 37, stickersOf(5)))
 
 ///
-/// An even cube has no fixed centre, so nothing about its centres is a frame
+/// An even cube has no fixed center, so nothing about its centers is a frame
 /// and exchanging two of them is an ordinary state rather than a refusal.
 ///
 @Test
-def fromFaceletsAcceptsAnEvenCubeWithItsCentresMoved(): Unit \ Assert =
-    // Two centre facelets of a 4x4x4, on the U and R faces.
+def fromFaceletsAcceptsAnEvenCubeWithItsCentersMoved(): Unit \ Assert =
+    // Two center facelets of a 4x4x4, on the U and R faces.
     let moved = swapFacelets(5, 21, stickersOf(4));
     Assert.assertTrueWithMsg(
         Result.isOk(Orbit64.Net.fromFacelets(4, moved)),
-        "refused a 4x4x4 whose centres are merely permuted")
+        "refused a 4x4x4 whose centers are merely permuted")
 
 ///
 /// Stickers in an order no piece of that orbit carries.
@@ -112,18 +112,18 @@ def fromFaceletsDeclinesStickersNoPieceCarries(): Unit \ Assert =
 ///
 @Test
 def fromFaceletsDeclinesTwoSlotsShowingOnePiece(): Unit \ Assert =
-    // Corner slot 1 of a 3x3x3 reads U F L. Recolouring its other two stickers
+    // Corner slot 1 of a 3x3x3 reads U F L. Recoloring its other two stickers
     // makes it U R F, which corner slot 0 already is.
     let doubled = stickersOf(3) |> withFacelet(18, 1) |> withFacelet(38, 2);
     refuses(said = "not a permutation of 0..7",
             "two corner slots holding one corner", 3, doubled)
 
 ///
-/// A colour on more centres than a cube has of it.
+/// A color on more centers than a cube has of it.
 ///
 @Test
-def fromFaceletsDeclinesAnImpossibleCentreCount(): Unit \ Assert =
-    // Repainting one U centre of a 4x4x4 red leaves five reds and three whites,
-    // where every colour must appear on exactly four.
+def fromFaceletsDeclinesAnImpossibleCenterCount(): Unit \ Assert =
+    // Repainting one U center of a 4x4x4 red leaves five reds and three whites,
+    // where every color must appear on exactly four.
     refuses(said = "exactly four times",
-            "five centres of one colour", 4, withFacelet(5, 1, stickersOf(4)))
+            "five centers of one color", 4, withFacelet(5, 1, stickersOf(4)))

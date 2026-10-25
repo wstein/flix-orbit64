@@ -4,7 +4,7 @@
 //
 // `Orbit.layout(n)` computes the orbits of an n-cube as pure arithmetic in n:
 // one corner orbit, midges when n is odd, (n-2)/2 wing orbits and (n-2)^2/4
-// centre orbits. That is the claim this file exists to check, and it checks it
+// center orbits. That is the claim this file exists to check, and it checks it
 // the long way round -- by building a cube, turning it, and seeing which pieces
 // can reach which.
 //
@@ -30,7 +30,7 @@ mod OrbitDiscovery {
 
     ///
     /// How many faces the cubie at `(x, y, z)` shows: 3 for a corner, 2 for an
-    /// edge, 1 for a centre, 0 for a piece buried inside the cube.
+    /// edge, 1 for a center, 0 for a piece buried inside the cube.
     ///
     def visible(n: Int32, x: Int32, y: Int32, z: Int32): Int32 =
         (if (onFace(n, x)) 1 else 0) +
@@ -71,7 +71,7 @@ mod OrbitDiscovery {
     /// The layers a solver is allowed to turn.
     ///
     /// The outer `n/2` layers from each of the six faces, which on an odd cube
-    /// leaves the middle layer alone -- turning it would move the fixed centres
+    /// leaves the middle layer alone -- turning it would move the fixed centers
     /// that define the cube's frame of reference.
     ///
     def layers(n: Int32): List[Int32] =
@@ -111,11 +111,11 @@ mod OrbitDiscovery {
 
     ///
     /// Which kind of orbit a component of `size` pieces each showing `faces`
-    /// stickers is. `None` for the fixed centres, which the format leaves out
+    /// stickers is. `None` for the fixed centers, which the format leaves out
     /// because they never move relative to one another, and `None` again for
-    /// anything this does not recognise.
+    /// anything this does not recognize.
     ///
-    /// That second `None` is why `unrecognised` exists. Dropping a component
+    /// That second `None` is why `unrecognized` exists. Dropping a component
     /// silently would let a shape nobody expected disappear from
     /// `derivedLayout` and leave it agreeing with `Orbit.layout` anyway -- so
     /// the derivation would confirm the arithmetic by discarding whatever
@@ -134,8 +134,8 @@ mod OrbitDiscovery {
     /// Whether a component of `size` pieces each showing `faces` stickers is a
     /// shape this file expects to see at all.
     ///
-    /// The four orbits, plus the single fixed centre of an odd cube, which is
-    /// left out of the format on purpose rather than unrecognised.
+    /// The four orbits, plus the single fixed center of an odd cube, which is
+    /// left out of the format on purpose rather than unrecognized.
     ///
     def known(faces: Int32, size: Int32): Bool =
         not Option.isEmpty(classify(faces, size)) or (faces == 1 and size == 1)
@@ -146,7 +146,7 @@ mod OrbitDiscovery {
     /// Empty is the only answer that means anything: a component here is one
     /// `derivedLayout` threw away without saying so.
     ///
-    pub def unrecognised(n: Int32): List[(Int32, Int32)] =
+    pub def unrecognized(n: Int32): List[(Int32, Int32)] =
         components(n)
             |> List.filterMap(match (r, size) -> {
                 let (x, y, z) = decode(n, r);
@@ -168,7 +168,7 @@ mod OrbitDiscovery {
 
     ///
     /// Every component is accounted for: the pieces classified, plus the fixed
-    /// centres, must be every surface cubie there is.
+    /// centers, must be every surface cubie there is.
     ///
     pub def accountedFor(n: Int32): (Int32, Int32) =
         let counted = components(n)
@@ -191,7 +191,7 @@ def derivedLayoutAgreesWithArithmetic(): Unit \ Assert =
 /// Nothing the geometry finds is quietly discarded.
 ///
 /// `derivedLayout` maps components through `classify`, which answers `None`
-/// both for the fixed centres it means to skip and for any shape it does not
+/// both for the fixed centers it means to skip and for any shape it does not
 /// know. Without this, a component of an unexpected size would vanish and
 /// `derivedLayout` would still match `Orbit.layout` -- confirming the
 /// arithmetic by throwing away the evidence against it.
@@ -200,7 +200,7 @@ def derivedLayoutAgreesWithArithmetic(): Unit \ Assert =
 def everyComponentIsAShapeTheFormatKnows(): Unit \ Assert =
     List.range(2, 8) |> List.forEach(n ->
         Assert.assertEqWithMsg(expected = (Nil: List[(Int32, Int32)]),
-            OrbitDiscovery.unrecognised(n),
+            OrbitDiscovery.unrecognized(n),
             "the ${n}x${n}x${n} has components derivedLayout drops without saying so"))
 
 @Test

@@ -31,7 +31,7 @@ def largeCubeInnerSlicesArePhysicalStates(): Unit \ Assert =
                 "could not encode the ${n}x${n}x${n} U slice at depth ${depth}")
         }))
 
-/// The fixed centre on the 7x7x7 identifies every whole-cube frame.
+/// The fixed center on the 7x7x7 identifies every whole-cube frame.
 @Test
 def sevenBySevenFramesReadBack(): Unit \ Assert =
     List.range(0, Orbit64.Frame.count()) |> List.forEach(rank -> {

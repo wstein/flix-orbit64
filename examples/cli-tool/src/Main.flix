@@ -6,20 +6,20 @@
 ///
 def main(): Unit \ { IO, Sys.Env } =
     // https://no-color.org -- any non-empty value means plain text.
-    let colour = match Sys.Env.getVar("NO_COLOR") {
+    let color = match Sys.Env.getVar("NO_COLOR") {
         case Some(v) => String.isEmpty(v)
         case None    => true
     };
     match Sys.Env.getArgs() {
-        case token :: _ => report(token, colour)
-        case Nil        => table(colour)
+        case token :: _ => report(token, color)
+        case Nil        => table(color)
     }
 
 ///
 /// One row per cube size: how many states, how wide a token, and what the
 /// solved cube looks like.
 ///
-def table(colour: Bool): Unit \ IO =
+def table(color: Bool): Unit \ IO =
     println("  cube      states  bits  chars");
     println("  ----  ----------  ----  -----");
     List.range(2, 8) |> List.forEach(n -> {
@@ -30,7 +30,7 @@ def table(colour: Bool): Unit \ IO =
         println("  ${n}x${n}x${n}  ${sci(total)}  ${bits}  ${chars}")
     });
     println("");
-    demo(colour)
+    demo(color)
 
 ///
 /// Encode a scrambled 3x3x3 and read it back.
@@ -40,7 +40,7 @@ def table(colour: Bool): Unit \ IO =
 /// set, and nothing else -- which is a fair advertisement for what mixed-radix
 /// packing buys over fixed-width fields.
 ///
-def demo(colour: Bool): Unit \ IO =
+def demo(color: Bool): Unit \ IO =
     let superflip = List#{
         Orbit64.Coord.Coord.CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
         Orbit64.Coord.Coord.MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
@@ -53,14 +53,14 @@ def demo(colour: Bool): Unit \ IO =
                 case Err(e) => println("  decode failed: ${e}")
                 case Ok(back) =>
                     println("  decodes back identically: ${back == superflip}");
-                    draw(3, Orbit64.State.orbits(back), colour)
+                    draw(3, Orbit64.State.orbits(back), color)
             }
     }
 
 ///
 /// Decode `token`, inferring the cube size from its length.
 ///
-def report(token: String, colour: Bool): Unit \ IO =
+def report(token: String, color: Bool): Unit \ IO =
     match List.range(2, 8) |> List.find(n -> Orbit64.State.width(n) == String.length(token)) {
         case None => println("no cube size uses a ${String.length(token)}-character token")
         case Some(n) => match Orbit64.State.decode(n, token) {
@@ -69,16 +69,16 @@ def report(token: String, colour: Bool): Unit \ IO =
                 let orbits = Orbit64.State.orbits(state);
                 println("${n}x${n}x${n}, ${List.length(orbits)} orbits, ${Orbit64.State.frame(state)}:");
                 orbits |> List.forEach(c -> println("  ${Orbit64.Coord.kind(c)}: ${c}"));
-                draw(n, orbits, colour)
+                draw(n, orbits, color)
         }
     }
 
 ///
 /// Print the net, or say why there isn't one.
 ///
-def draw(n: Int32, orbits: List[Orbit64.Coord.Coord], colour: Bool): Unit \ IO =
+def draw(n: Int32, orbits: List[Orbit64.Coord.Coord], color: Bool): Unit \ IO =
     println("");
-    match Orbit64.Net.draw(n, orbits, colour) {
+    match Orbit64.Net.draw(n, orbits, color) {
         case Ok(net) =>
             println(net);
             // A token carries ordinals, not geometry. Which slot sits where

@@ -29,7 +29,7 @@ def asString(r: Result[String, Vector[Int32]]): Result[String, String] =
 ///
 /// Face symbols back to face indices, the way `BigCube.parseFacelets` reads
 /// them. A symbol that is no face becomes `-1`, which `fromFacelets` refuses
-/// rather than silently taking for a colour.
+/// rather than silently taking for a color.
 ///
 def asFacelets(s: String): Vector[Int32] =
     let table = String.toList(faceSymbols() |> Vector.join(""));
@@ -138,10 +138,10 @@ def faceletsOfFiveByFive2R(): Unit \ Assert =
 ///
 /// The single turns above each disturb one kind of thing at a time, and a
 /// reader can agree with a writer about every one of them while still getting
-/// a compound state wrong -- wings and centres arriving from two different
+/// a compound state wrong -- wings and centers arriving from two different
 /// layers at once is what a single turn never asks of either side. This state
-/// permutes both centre orbits and the wings heavily, twists corners and flips
-/// midges, and leaves the fixed centres alone, which is what makes it readable
+/// permutes both center orbits and the wings heavily, twists corners and flips
+/// midges, and leaves the fixed centers alone, which is what makes it readable
 /// at all: `2R` is the deepest slice that misses them, and `3R` would not.
 ///
 /// The stickers come from `flix-cube` as the rest do. The orbits were derived
