@@ -147,17 +147,20 @@ mod Orbit64.Symmetry {
     /// The inverse of `locate`.
     def indexOf(n: Int32, position: (Int32, Int32, Int32), normal: (Int32, Int32, Int32)): Int32 =
         let m = n - 1;
+        let (face, a, b) = planeCoordinates(position, normal);
+        face * n * n + ((b + m) / 2) * n + (a + m) / 2
+
+    /// The face a normal points out of, and the position's coordinates on it.
+    def planeCoordinates(position: (Int32, Int32, Int32), normal: (Int32, Int32, Int32))
+            : (Int32, Int32, Int32) =
         let (x, y, z) = position;
-        let (face, a, b) = match normal {
+        match normal {
             case (0, 1, 0)  => (0, x, z)
             case (1, 0, 0)  => (1, -z, -y)
             case (0, 0, 1)  => (2, x, -y)
             case (0, -1, 0) => (3, x, -z)
             case (-1, 0, 0) => (4, z, -y)
             case _          => (5, -x, -y)
-        };
-        let col = (a + m) / 2;
-        let row = (b + m) / 2;
-        face * n * n + row * n + col
+        }
 
 }
