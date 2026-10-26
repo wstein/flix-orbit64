@@ -30,8 +30,10 @@ use `.\flixw.cmd` wherever these say `./flixw`.
     --sha256 d806e21d463ee569621257b89938bc4846c1aaa3041d79bfbd6da9fba97d51bb
   ```
 
-  This is a per-machine install, not a per-repository one — it is third-party,
-  unaffiliated code that runs as you; see
+  Installing also writes a `[plugins.metrics]` entry to this repository's
+  `.flixw/lock.toml`. Do not commit that change: it is the machine's install
+  record, not part of the project. The install is per machine, not per
+  repository, and it is third-party, unaffiliated code that runs as you; see
   [flixw-metrics' own Safety section](https://github.com/wstein/flixw-metrics#safety)
   before installing anything
 
