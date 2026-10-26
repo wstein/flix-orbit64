@@ -41,10 +41,7 @@ def table(color: Bool): Unit \ IO =
 /// packing buys over fixed-width fields.
 ///
 def demo(color: Bool): Unit \ IO =
-    let superflip = List#{
-        Orbit64.Coord.Coord.CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
-        Orbit64.Coord.Coord.MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
-    } |> Orbit64.State.canonical;
+    let superflip = superflip();
     match Orbit64.State.encode(3, superflip) {
         case Err(e) => println("encode failed: ${e}")
         case Ok(token) =>
@@ -56,6 +53,15 @@ def demo(color: Bool): Unit \ IO =
                     draw(3, back, color)
             }
     }
+
+///
+/// The superflip as a state: corners solved, every midge in place and flipped.
+///
+def superflip(): Orbit64.State.FramedState =
+    List#{
+        Orbit64.Coord.Coord.CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
+        Orbit64.Coord.Coord.MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
+    } |> Orbit64.State.canonical
 
 ///
 /// Decode `token`, inferring the cube size from its length.
