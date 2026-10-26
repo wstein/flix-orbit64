@@ -16,10 +16,10 @@ flix run -- <token>      # decode a state token; its length picks the cube size
 ```
 
 ```
-$ flix run -- AEtgYICyPB1X
-3x3x3, 2 orbits:
-  Corners: CornerCoord(Vector#{0, 4, 5, 1, 3, 7, 6, 2}, ...)
-  Midges: MidgeCoord(Vector#{1, 8, 5, 9, 3, 11, 7, 10, 0, 4, 6, 2}, ...)
+$ flix run -- AP7AYhnwDQbA
+3x3x3, 2 orbits, Frame(0):
+  Corners: CornerCoord(Vector#{0, 1, 7, 6, 4, 5, 3, 2}, Vector#{0, 0, 1, 1, 0, 0, 0, 1})
+  Midges: MidgeCoord(Vector#{0, 1, 2, 6, 4, 5, 11, 7, 8, 9, 10, 3}, Vector#{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0})
 ...
 ```
 
