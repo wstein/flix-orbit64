@@ -53,7 +53,7 @@ def demo(color: Bool): Unit \ IO =
                 case Err(e) => println("  decode failed: ${e}")
                 case Ok(back) =>
                     println("  decodes back identically: ${back == superflip}");
-                    draw(3, Orbit64.State.orbits(back), color)
+                    draw(3, back, color)
             }
     }
 
@@ -69,16 +69,16 @@ def report(token: String, color: Bool): Unit \ IO =
                 let orbits = Orbit64.State.orbits(state);
                 println("${n}x${n}x${n}, ${List.length(orbits)} orbits, ${Orbit64.State.frame(state)}:");
                 orbits |> List.forEach(c -> println("  ${Orbit64.Coord.kind(c)}: ${c}"));
-                draw(n, orbits, color)
+                draw(n, state, color)
         }
     }
 
 ///
 /// Print the net, or say why there isn't one.
 ///
-def draw(n: Int32, orbits: List[Orbit64.Coord.Coord], color: Bool): Unit \ IO =
+def draw(n: Int32, state: Orbit64.State.FramedState, color: Bool): Unit \ IO =
     println("");
-    match Orbit64.Net.draw(n, orbits, color) {
+    match Orbit64.Net.draw(n, state, color) {
         case Ok(net) =>
             println(net);
             // A token carries ordinals, not geometry. Which slot sits where
