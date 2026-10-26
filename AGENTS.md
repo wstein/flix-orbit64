@@ -25,9 +25,9 @@ use `.\flixw.cmd` wherever these say `./flixw`.
   the `metrics` plugin installed once per machine:
 
   ```console
-  ./flixw plugin install metrics 0.1.8 \
-    https://github.com/wstein/flixw-metrics/releases/download/v0.1.8/plugin.jar \
-    --sha256 bd8707afb5a06a37d26f1bd9b9d3bc3b3892a73e1617b177328a4f5ff7d7c67f
+  ./flixw plugin install metrics 0.5.0 \
+    https://github.com/wstein/flixw-metrics/releases/download/v0.5.0/plugin.jar \
+    --sha256 d806e21d463ee569621257b89938bc4846c1aaa3041d79bfbd6da9fba97d51bb
   ```
 
   This is a per-machine install, not a per-repository one — it is third-party,
