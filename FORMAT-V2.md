@@ -231,7 +231,9 @@ tables. These are defined in [FORMAT.md](FORMAT.md) and `Orbit64.Net` for
 `n <= 7`. For `n >= 8` V2 extends them by FORMAT.md's rule for the 6x6x6 and
 7x7x7 ("6×6×6 and 7×7×7 slot order"). Use the 4x4x4 (`b = 4`, even `n`) or
 5x5x5 (`b = 5`, odd `n`) reference slots, with wing depth `d` running from 1 to
-`w`, and with each center orbit's 24 slots ordered by facelet index.
+`w`, and with each center orbit's 24 slots ordered by facelet index. In V2,
+the names `orbit64-8x8-draft@1` to `orbit64-15x15-draft@1` mean exactly this
+extension, although V1's `Net.convention(n)` names no convention above 7.
 
 The six colors are the face indexes `U R F D L B` = `0..5`. Frames use V1's
 `Frame` order of the 24 right-handed whole-cube frames. A piece is numbered by
@@ -384,7 +386,9 @@ standard library and checks `n = 2..15` in about a minute.
       composition.
     - the per-piece orientation counts. *Checked*: for one piece of each orbit,
       the orbit of its (facelet, tangent) points under the generators of `H`
-      has exactly `slots x orientations` elements. The stabilizer argument
+      reaches every slot and has exactly `slots x orientations` elements.
+      Over the slots, a group orbit's fibers all have the same size, so each
+      slot allows exactly that many orientations. The stabilizer argument
       under [Pieces and orbits](#pieces-and-orbits) explains why.
     - the parity relations. *Checked*: they are the GF(2) linear forms that
       vanish on every generator of the full group, restricted to fixed centers
