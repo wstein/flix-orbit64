@@ -12,6 +12,10 @@ Every element ever stored is a product of the generators, and
 and the product of the orbit lengths is at most the order of the group.
 The random elements only decide how fast the bound grows, never whether it
 holds. Paired with an upper bound from invariants, equality proves the order.
+
+Permutations are stored as `Int16` image vectors, which caps the degree at
+32767 points, and each orbit point keeps only the inverse of its transversal
+element: that is all sifting needs, and it halves the memory of a long chain.
 """
 module LowerBound
 
@@ -19,7 +23,7 @@ using Random
 
 export lower_bound
 
-const Perm = Vector{Int32}
+const Perm = Vector{Int16}
 
 "`compose(a, b)` applies `b` first, then `a`."
 compose(a::Perm, b::Perm)::Perm = a[b]
@@ -35,27 +39,40 @@ end
 isidentity(a::Perm) = all(i -> a[i] == i, eachindex(a))
 
 mutable struct Level
-    base::Int32
+    base::Int16
     gens::Vector{Perm}
-    transversal::Dict{Int32,Perm}
+    invgens::Vector{Perm}
+    # For each orbit point q, the inverse of an element mapping base to q.
+    uinv::Dict{Int16,Perm}
 end
 
-"Recompute the orbit of a level's base point, with a transversal element per point."
-function rebuild!(level::Level, degree::Int)
-    id = Int32.(1:degree)
-    u = Dict{Int32,Perm}(level.base => id)
-    queue = [level.base]
+"""
+Extend a level's orbit after `gens` grew: apply every generator to every
+orbit point and keep going from the points that are new. Existing transversal
+elements stay valid, so a generator that adds nothing costs one pass.
+"""
+function extend!(level::Level, fresh::Vector{Int})
+    queue = Int16[]
+    # Points already in the orbit, under the new generators only.
+    for gi in fresh, p in collect(keys(level.uinv))
+        s, sinv = level.gens[gi], level.invgens[gi]
+        q = s[p]
+        if !haskey(level.uinv, q)
+            level.uinv[q] = compose(level.uinv[p], sinv)
+            push!(queue, q)
+        end
+    end
+    # New points, under every generator.
     while !isempty(queue)
         p = popfirst!(queue)
-        for s in level.gens
-            q = s[p]
-            if !haskey(u, q)
-                u[q] = compose(s, u[p])
+        for gi in eachindex(level.gens)
+            q = level.gens[gi][p]
+            if !haskey(level.uinv, q)
+                level.uinv[q] = compose(level.uinv[p], level.invgens[gi])
                 push!(queue, q)
             end
         end
     end
-    level.transversal = u
 end
 
 "Sift `g` through the chain; return the residue and the level where it stopped."
@@ -63,36 +80,43 @@ function sift(levels::Vector{Level}, g::Perm)
     h = g
     for (i, level) in enumerate(levels)
         p = h[level.base]
-        haskey(level.transversal, p) || return (h, i)
-        h = compose(inverse(level.transversal[p]), h)
+        u = get(level.uinv, p, nothing)
+        u === nothing && return (h, i)
+        h = compose(u, h)
     end
     (h, length(levels) + 1)
 end
 
-function add!(levels::Vector{Level}, h::Perm, j::Int, degree::Int)
+function add!(levels::Vector{Level}, h::Perm, j::Int)
+    degree = length(h)
     if j > length(levels)
-        moved = Int32(findfirst(i -> h[i] != i, eachindex(h)))
-        push!(levels, Level(moved, Perm[], Dict{Int32,Perm}()))
+        moved = Int16(findfirst(i -> h[i] != i, eachindex(h)))
+        id = Int16.(1:degree)
+        push!(levels, Level(moved, Perm[], Perm[], Dict{Int16,Perm}(moved => id)))
     end
+    hinv = inverse(h)
     for k in 1:j
         push!(levels[k].gens, h)
-        rebuild!(levels[k], degree)
+        push!(levels[k].invgens, hinv)
+        extend!(levels[k], [length(levels[k].gens)])
     end
 end
 
-bound(levels) = prod(BigInt(length(l.transversal)) for l in levels; init=BigInt(1))
+bound(levels) = prod(BigInt(length(l.uinv)) for l in levels; init=BigInt(1))
 
 """
 Grow a lower bound on `|<gens>|` until it reaches `target` or `patience`
 random elements in a row sift to the identity. Returns the bound reached.
 """
-function lower_bound(gens::Vector{Perm}, target::BigInt; seed::Int=1, patience::Int=200)
+function lower_bound(gens::Vector{Vector{Int32}}, target::BigInt; seed::Int=1, patience::Int=200)
     degree = length(gens[1])
+    degree <= typemax(Int16) || error("degree $degree exceeds the Int16 storage")
+    gens = [Perm(g) for g in gens]
     levels = Level[]
     for g in gens
         isidentity(g) && continue
         h, j = sift(levels, g)
-        isidentity(h) || add!(levels, h, j, degree)
+        isidentity(h) || add!(levels, h, j)
     end
     rng = MersenneTwister(seed)
     # Product replacement: a pool of products of the generators.
@@ -100,7 +124,7 @@ function lower_bound(gens::Vector{Perm}, target::BigInt; seed::Int=1, patience::
     while length(pool) < 12
         push!(pool, copy(gens[rand(rng, 1:length(gens))]))
     end
-    acc = Int32.(1:degree)
+    acc = Int16.(1:degree)
     function next!()
         i, j = rand(rng, 1:length(pool)), rand(rng, 1:length(pool))
         while j == i
@@ -114,16 +138,18 @@ function lower_bound(gens::Vector{Perm}, target::BigInt; seed::Int=1, patience::
         next!()
     end
     quiet = 0
-    while bound(levels) < target && quiet < patience
+    current = bound(levels)
+    while current < target && quiet < patience
         h, j = sift(levels, next!())
         if isidentity(h)
             quiet += 1
         else
-            add!(levels, h, j, degree)
+            add!(levels, h, j)
+            current = bound(levels)
             quiet = 0
         end
     end
-    bound(levels)
+    current
 end
 
 end

@@ -6,16 +6,17 @@
 #
 # Needs only Julia's standard library. Writes a Markdown report to stdout;
 # `proof-obligations.md` beside this file is that report, committed. The
-# 7x7x7 is the slowest size; pass a smaller `max_n` for a quick run.
+# default `max_n` is 15 (about a minute); pass a smaller one for a quick run.
 #
-# For every size n = 2..7 the script proves, for the canonical picture group
+# For every size n = 2..max_n the script proves, for the canonical picture group
 # H (the reachable states with the reference home), that
 #
 #     lower bound  <=  |H|  <=  upper bound
 #
 # with the two bounds equal. The upper bound comes from invariants: corner
 # twists sum to 0 mod 3, midge flips to 0 mod 2 (checked on every
-# generator), and every GF(2) relation between permutation parities that the
+# generator), the orientations each piece can show (checked by orbit), and
+# every GF(2) relation between permutation parities that the
 # generators of the full group G satisfy. The lower bound is a Schreier-Sims
 # chain of elements of H (LowerBound.jl). From |H| it derives the color count
 # by projection and checks it against V1's `State.stateCount(n)`. Last, it
@@ -81,11 +82,27 @@ end
 
 "Every linear form that vanishes on the span of `basis`, as a basis."
 function annihilator(basis::Vector{Vector{Int}}, k::Int)
-    forms = Vector{Int}[]
-    for bits in 0:(1 << k) - 1
-        lam = [(bits >> i) & 1 for i in 0:k-1]
-        all(v -> isodd(sum(lam .& v)) == false, basis) && push!(forms, lam)
+    # Reduced echelon form of the span; its null space, one vector per free
+    # column, is the annihilator.
+    rows = [copy(b) for b in echelon(basis)]
+    pivots = Int[]
+    for i in eachindex(rows)
+        p = findfirst(==(1), rows[i])
+        push!(pivots, p)
+        for j in eachindex(rows)
+            j != i && rows[j][p] == 1 && (rows[j] .⊻= rows[i])
+        end
     end
+    forms = Vector{Int}[]
+    for f in setdiff(1:k, pivots)
+        lam = zeros(Int, k)
+        lam[f] = 1
+        for (i, p) in enumerate(pivots)
+            lam[p] = rows[i][f]
+        end
+        push!(forms, lam)
+    end
+    all(lam -> all(v -> iseven(sum(lam .& v)), basis), forms) || error("annihilator is wrong")
     echelon(forms)
 end
 
@@ -119,6 +136,34 @@ end
 
 "Restriction to states where the dropped components are zero."
 restrict(forms, keep) = reduce_last(echelon([f[keep] for f in forms if any(==(1), f[keep])]))
+
+"""
+The closed-form picture relations of FORMAT-V2.md: `M = C` and `R = C` on odd
+cubes, and for every center orbit `Z[r,c]` with `d = min(c, n - 1 - c)`,
+`Z[r,c] = C + W_r + W_d`, where a wing term for a depth with no wing orbit
+(the middle of an odd cube) is absent and two equal terms cancel.
+"""
+function rule_relations(n::Int, names::Vector{String})
+    index = Dict(nm => i for (i, nm) in enumerate(names))
+    rows = Vector{Int}[]
+    function relation(lhs, rhs...)
+        v = zeros(Int, length(names))
+        v[index[lhs]] ⊻= 1
+        for t in rhs
+            haskey(index, t) && (v[index[t]] ⊻= 1)
+        end
+        push!(rows, v)
+    end
+    for nm in names
+        if nm == "M" || nm == "R"
+            relation(nm, "C")
+        elseif startswith(nm, "Z")
+            r, c = parse.(Int, split(nm[3:end-1], ","))
+            relation(nm, "C", "W$r", "W$(min(c, n - 1 - c))")
+        end
+    end
+    reduce_last(echelon(rows))
+end
 
 function show_relations(names, rows)
     isempty(rows) && return "none"
@@ -196,6 +241,48 @@ sci(x::BigInt) = @sprintf("%.3e", BigFloat(x))
 
 # ---- main ------------------------------------------------------------------
 
+"""
+A proof step. Unlike `@assert`, which Julia may disable at some optimization
+levels, this always runs.
+"""
+check(ok::Bool, why::String) = ok || error("proof obligation failed: " * why)
+
+"""
+Every piece shows exactly as many orientations as `free_count` assumes.
+
+For one piece of each orbit, take the tuple of its (facelet, tangent) points
+and its orbit under the canonical generators. The orbit has one element per
+reachable (slot, orientation) pair, so it must have `slots * orientations`
+elements: corners 3, midges 2, fixed centers 4, wings and centers 1.
+"""
+function check_orientations(c::Cube, gens::Vector{Vector{Int32}})
+    m = c.n - 1
+    dbl = (-m, -m, -m)
+    orientations = Dict(:corner => 3, :midge => 2, :wing => 1, :center => 1, :fixed => 4)
+    for (k, g) in orbits(c)
+        rep = first(p for p in g if p != dbl)
+        start = Int32[i for (i, (pos, _, _)) in enumerate(c.points) if pos == rep]
+        seen = Set([start])
+        queue = [start]
+        while !isempty(queue)
+            t = popfirst!(queue)
+            for s in gens
+                u = s[t]
+                u in seen || (push!(seen, u); push!(queue, u))
+            end
+        end
+        slots = k == :fixed ? 1 : (k == :corner && iseven(c.n)) ? 7 : length(g)
+        check(length(seen) == slots * orientations[k],
+              "$(c.n)x$(c.n)x$(c.n) $k: $(length(seen)) poses, expected $slots x $(orientations[k])")
+    end
+end
+
+"An entry's offset as the sum of the entries before it at its length."
+function offset_text(e, entries)
+    before = [f.id for f in entries if f.length == e.length && f.id < e.id]
+    isempty(before) ? "0" : join(("`N_$i`" for i in before), " + ")
+end
+
 function main(maxn::Int)
     println("# Orbit64 V2 proof obligations\n")
     println("Generated by `julia tools/format-v2/proof_obligations.jl`. Do not edit.\n")
@@ -203,8 +290,10 @@ function main(maxn::Int)
     for n in 2:maxn
         c = Cube(n)
         turns = all_turns(c)
-        @assert all(t -> corner_twist_sum(c, t...) == 0, turns) "twist law fails"
-        @assert all(t -> midge_flip_sum(c, t...) == 0, turns) "flip law fails"
+        check(all(t -> corner_twist_sum(c, t...) == 0, turns), "twist law fails for n = $n")
+        check(all(t -> midge_flip_sum(c, t...) == 0, turns), "flip law fails for n = $n")
+        gens = [point_turn(c, t...) for t in canonical_turns(c)]
+        check_orientations(c, gens)
         names = components(c)
         k = length(names)
         rels = annihilator(echelon([generator_vector(c, t...) for t in turns]), k)
@@ -212,16 +301,17 @@ function main(maxn::Int)
         keep = findall(!=("P"), names)
         cnames = names[keep]
         picture_rels = restrict(rels, keep)
+        check(sort(picture_rels) == sort(rule_relations(n, cnames)),
+              "the closed-form relations fail for n = $n")
         drop = findall(nm -> startswith(nm, "Z") || nm == "R", cnames)
         color_rels = eliminate(picture_rels, drop, length(cnames))
         upper = free_count(n, true) ÷ big(2)^length(picture_rels)
         color = free_count(n, false) ÷ big(2)^length(color_rels)
-        gens = [point_turn(c, t...) for t in canonical_turns(c)]
         lower = lower_bound(gens, upper; seed=n, patience=400)
-        @assert lower <= upper "lower bound exceeds upper bound: invariant missing"
-        @assert lower == upper "bounds differ for n = $n: $lower < $upper"
-        @assert 24 * color == v1_state_count(n) "color count disagrees with V1 for n = $n"
-        n == 2 && @assert upper == color "a 2x2x2 has no centers"
+        check(lower <= upper, "lower bound exceeds upper bound for n = $n: an invariant is wrong")
+        check(lower == upper, "bounds differ for n = $n: $lower < $upper")
+        check(24 * color == v1_state_count(n), "color count disagrees with V1 for n = $n")
+        n == 2 && check(upper == color, "a 2x2x2 has no centers")
         counts[(n, :color)] = color
         counts[(n, :picture)] = upper
         println("## $(n)x$(n)x$(n)\n")
@@ -244,7 +334,15 @@ function main(maxn::Int)
         push!(entries, Entry(length(entries), name, count, 0, big(0)))
     end
     allocate!(entries)
-    println("## Initial registry\n")
+    println("## FORMAT-V2.md registry table\n")
+    println("FORMAT-V2.md's \"Initial registry\" table is these rows, verbatim.\n")
+    println("| ID | Type | States | Bits | Length | Offset |")
+    println("| -: | ---- | -----: | ---: | -----: | -----: |")
+    for e in entries
+        println("| $(e.id) | $(e.name) | $(sci(e.count)) | $(bits(e.count)) | $(e.length) | ",
+                "$(offset_text(e, entries)) |")
+    end
+    println("\n## Initial registry\n")
     println("| ID | Type | States | Bits | Length | Offset | Share | Solved token |")
     println("| -: | ---- | -----: | ---: | -----: | -----: | ----: | ------------ |")
     for e in entries
@@ -262,4 +360,4 @@ function main(maxn::Int)
     end
 end
 
-main(isempty(ARGS) ? 7 : parse(Int, ARGS[1]))
+main(isempty(ARGS) ? 15 : parse(Int, ARGS[1]))

@@ -80,6 +80,11 @@ is published.
   `Orbit64/Move.flix` owns the deliberately smaller face/layer/amount vocabulary
   needed to describe turns. State ranking remains pure arithmetic in `n`
 - `test/` — `@Test` functions
+- `tools/format-v2/` — the Julia program (standard library only) that checks
+  the proof obligations of the draft [FORMAT-V2.md](FORMAT-V2.md), and its
+  committed report. Regenerate the report with
+  `julia tools/format-v2/proof_obligations.jl > tools/format-v2/proof-obligations.md`
+  after changing either
 - `examples/cli-tool/` — the demo command line, a separate Flix package that
   depends on this one the same way any other consumer would
 - `flix.toml` — package metadata, dependencies, and the *lowest* Flix version
