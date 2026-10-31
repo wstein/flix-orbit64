@@ -246,7 +246,7 @@ tables. The program that generates it is
 For `n >= 8` the tables extend V1's rule for the 6x6x6 and 7x7x7. Take the
 4x4x4 (`b = 4`, even `n`) or 5x5x5 (`b = 5`, odd `n`) reference slots. For a
 reference facelet `face * b^2 + row * b + col`, keep the face and replace each
-axis coordinate: `0` stays `0`, `1` becomes `d`, `2` becomes `n / 2` when
+axis coordinate: `0` stays `0`, `1` becomes `d`, `2` becomes `floor(n / 2)` when
 `b = 5`, `b - 2` becomes `n - 1 - d`, and `b - 1` becomes `n - 1`. Corners and
 midges use `d = 1`, and wing orbit `Wd` uses its depth `d`, for `d = 1..w`.
 The 24 slots of each center orbit are ordered by facelet index. In V2, the
