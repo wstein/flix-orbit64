@@ -477,10 +477,11 @@ records the physical state.
 
 1. Inline the slot tables here, so that V2 no longer depends on another
    document: V1's tables for `n <= 7`, and the generated ones for `n = 8..15`.
-2. Implement V2 in this library. Commit reference vectors for every entry: the
-   solved state, single turns, a frame, and random states checked against an
-   independent facelet simulation. Include V1's vectors as V2 vectors for the
-   sizes in [Relation to V1](#relation-to-v1).
+2. Extend the reference implementation (`Orbit64.V2`, coordinates only) with
+   the facelet bridge, and its vectors with single turns and states checked
+   against an independent facelet simulation. The committed vectors are the
+   solved state and random states drawn in coordinates. V1's vectors are only
+   checked as V2 tokens, see [Relation to V1](#relation-to-v1).
 3. Check in CI that `proof-obligations.md` is the script's output and that this
    document's registry table matches it.
 4. Port the other implementations (cubacle, cube-assembler, cubelab) only

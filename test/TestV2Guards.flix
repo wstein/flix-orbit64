@@ -53,3 +53,15 @@ def encodeRejectsAPictureCenterBreakingTheParityRelation(): Unit \ Assert =
     let base = Orbit64.V2.State.solved(4, Orbit64.V2.Registry.Model.Picture);
     let cube = { centers = Vector#{swapFirstTwo(Vector.get(0, base#centers))} | base };
     Assert.assertTrue(Result.isErr(Orbit64.V2.Codec.encode(8, cube)))
+
+@Test
+def encodeRejectsShortCornerVectorsWithoutCrashing(): Unit \ Assert =
+    let cube = { cornerPieces = Vector#{0, 1, 2}, cornerTwists = Vector#{0, 0, 0}
+                 | Orbit64.V2.State.solved(2, Orbit64.V2.Registry.Model.Color) };
+    Assert.assertTrue(Result.isErr(Orbit64.V2.Codec.encode(0, cube)))
+
+@Test
+def encodeRejectsMissingWingOrbitsWithoutCrashing(): Unit \ Assert =
+    let cube = { wings = Vector.empty()
+                 | Orbit64.V2.State.solved(4, Orbit64.V2.Registry.Model.Picture) };
+    Assert.assertTrue(Result.isErr(Orbit64.V2.Codec.encode(8, cube)))
