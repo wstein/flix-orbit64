@@ -48,10 +48,11 @@ mod Orbit64.V2.Facelets {
 
     // ------------------------------------------------------------ slot tables
 
-    /// Corner slots of the 5x5x5: the facelet of each slot that orientation counts from, then clockwise.
+    /// Corner slots of the 5x5x5: the facelet orientation counts from, then clockwise.
     def cornerReference(): Vector[Vector[Int32]] = Vector#{
-        Vector#{24, 25, 54}, Vector#{20, 50, 104}, Vector#{0, 100, 129}, Vector#{4, 125, 29},
-        Vector#{79, 74, 45}, Vector#{75, 124, 70}, Vector#{95, 149, 120}, Vector#{99, 49, 145}
+        Vector#{24, 25, 54}, Vector#{20, 50, 104}, Vector#{0, 100, 129},
+        Vector#{4, 125, 29}, Vector#{79, 74, 45}, Vector#{75, 124, 70},
+        Vector#{95, 149, 120}, Vector#{99, 49, 145}
     }
 
     /// Midge slots of the 5x5x5.
@@ -110,10 +111,16 @@ mod Orbit64.V2.Facelets {
     def centerTables(n: Int32): Vector[Vector[Int32]] =
         List.range(1, n - 1) |> List.flatMap(row ->
             List.range(1, n - 1) |> List.filterMap(col ->
-                if (centerRepresentative(n, row, col) and not (odd(n) and row == n / 2 and col == n / 2))
+                if (centerRepresentative(n, row, col)
+                    and not (odd(n) and row == n / 2 and col == n / 2))
                     Some(centerTable(n, row, col))
                 else None))
             |> List.toVector
+
+    def fixedFacelets(n: Int32): Vector[Int32] =
+        let middle = (n * n - 1) / 2;
+        if (odd(n)) Vector.range(0, 6) |> Vector.map(f -> f * n * n + middle)
+        else Vector.empty()
 
     def tables(n: Int32): Tables =
         { corners = expandTable(n, 5, 1, cornerReference()),
@@ -121,8 +128,7 @@ mod Orbit64.V2.Facelets {
           wings = Vector.range(1, Orbit64.V2.State.wingOrbits(n) + 1)
               |> Vector.map(d -> expandTable(n, 4, d, wingReference())),
           centers = centerTables(n),
-          fixed = if (odd(n)) Vector.range(0, 6) |> Vector.map(f -> f * n * n + (n * n - 1) / 2)
-                  else Vector.empty() }
+          fixed = fixedFacelets(n) }
 
     /// The face color of a facelet: in the solved cube a sticker shows its face.
     def faceOf(n: Int32, facelet: Int32): Int32 = facelet / (n * n)
@@ -147,15 +153,30 @@ mod Orbit64.V2.Facelets {
     /// The inverse of `geometry`.
     def faceletAt(n: Int32, position: Vec, normal: Vec): Int32 =
         let m = n - 1;
+        let face = faceOfNormal(normal);
+        let (a, b) = gridOf(face, position);
+        face * n * n + (b + m) / 2 * n + (a + m) / 2
+
+    def faceOfNormal(normal: Vec): Int32 = match normal {
+        case (0, 1, 0)  => 0
+        case (1, 0, 0)  => 1
+        case (0, 0, 1)  => 2
+        case (0, -1, 0) => 3
+        case (-1, 0, 0) => 4
+        case _          => 5
+    }
+
+    /// The `(a, b)` grid coordinates of a position on a face, as in `geometry`.
+    def gridOf(face: Int32, position: Vec): (Int32, Int32) =
         let (x, y, z) = position;
-        let (nx, ny, nz) = normal;
-        let cell = (face, a, b) -> face * n * n + (b + m) / 2 * n + (a + m) / 2;
-        if (ny == 1) cell(0, x, z)
-        else if (nx == 1) cell(1, -z, -y)
-        else if (nz == 1) cell(2, x, -y)
-        else if (ny == -1) cell(3, x, -z)
-        else if (nx == -1) cell(4, z, -y)
-        else cell(5, -x, -y)
+        match face {
+            case 0 => (x, z)
+            case 1 => (-z, -y)
+            case 2 => (x, -y)
+            case 3 => (x, -z)
+            case 4 => (z, -y)
+            case _ => (-x, -y)
+        }
 
     def normalOf(face: Int32): Vec = match face {
         case 0 => (0, 1, 0)
@@ -179,7 +200,7 @@ mod Orbit64.V2.Facelets {
     def frameFaces(frame: Int32): List[Int32] =
         Orbit64.Frame.faces(Orbit64.Frame.unrank(frame)) |> List.map(faceIndex)
 
-    /// The rotation of frame `frame`: it moves the normal of physical face `faces[i]` onto the normal of slot `i`.
+    /// The rotation of frame `frame`: it moves physical face `faces[i]` onto slot `i`.
     def turnOf(frame: Int32): Turn =
         let faces = frameFaces(frame);
         let slotOf = f -> normalOf(Option.getWithDefault(0, List.indexOf(f, faces)));
@@ -193,10 +214,16 @@ mod Orbit64.V2.Facelets {
     def forward(turn: Turn, v: Vec): Vec =
         let (ex, ey, ez) = turn;
         let (x, y, z) = v;
-        let (ax, ay, az) = ex;
-        let (bx, by, bz) = ey;
-        let (cx, cy, cz) = ez;
-        (x * ax + y * bx + z * cx, x * ay + y * by + z * cy, x * az + y * bz + z * cz)
+        add(scale(x, ex), add(scale(y, ey), scale(z, ez)))
+
+    def scale(k: Int32, v: Vec): Vec =
+        let (x, y, z) = v;
+        (k * x, k * y, k * z)
+
+    def add(a: Vec, b: Vec): Vec =
+        let (ax, ay, az) = a;
+        let (bx, by, bz) = b;
+        (ax + bx, ay + by, az + bz)
 
     /// The inverse of a rotation is its transpose.
     def backward(turn: Turn, v: Vec): Vec =
@@ -234,7 +261,8 @@ mod Orbit64.V2.Facelets {
                    pieces: Vector[Int32]): Unit \ r =
         writeOriented(n, sticker, table, pieces, Vector.repeat(24, 0))
 
-    def writeCenters(sticker: Array[Int32, r], table: Vector[Int32], colors: Vector[Int32]): Unit \ r =
+    def writeCenters(sticker: Array[Int32, r], table: Vector[Int32],
+                     colors: Vector[Int32]): Unit \ r =
         Vector.range(0, Vector.length(table)) |> Vector.forEach(slot ->
             Array.put(Vector.get(slot, colors), Vector.get(slot, table), sticker))
 
@@ -254,6 +282,15 @@ mod Orbit64.V2.Facelets {
             Array.toVector(sticker)
         }
 
+    def faultText(n: Int32, model: Model): String =
+        Option.getWithDefault("", typeFault(n, model))
+
+    /// Why a type has no facelet letters, if it has none.
+    def typeFault(n: Int32, model: Model): Option[String] =
+        if (n < 2 or n > 15) Some("no V2 type for the ${n}x${n}x${n}")
+        else if (model == Model.Picture) Some("the picture model has no letters")
+        else None
+
     def spell(n: Int32, fs: Vector[Int32]): String =
         Vector.range(0, 6) |> Vector.map(face ->
             Vector.range(0, n * n)
@@ -268,8 +305,7 @@ mod Orbit64.V2.Facelets {
     /// even size shows its pose in its corners already. Only the color model
     /// has letters.
     pub def toFacelets(n: Int32, model: Model, pose: Pose, cube: Cube): Result[String, String] =
-        if (n < 2 or n > 15) Err("no V2 type for the ${n}x${n}x${n}")
-        else if (model == Model.Picture) Err("the picture model has no letters: it has no letters")
+        if (not Option.isEmpty(typeFault(n, model))) Err(faultText(n, model))
         else
             Orbit64.V2.State.rank(n, model, pose, cube)
                 |> Result.map(_ -> {
@@ -303,7 +339,8 @@ mod Orbit64.V2.Facelets {
         Vector.get(slot, table) |> Vector.map(at -> Vector.get(at, fs))
 
     /// The piece and twist whose colors, read from the slot's first facelet, are `seen`.
-    def readPiece(n: Int32, table: Vector[Vector[Int32]], seen: Vector[Int32]): Option[(Int32, Int32)] =
+    def readPiece(n: Int32, table: Vector[Vector[Int32]],
+                  seen: Vector[Int32]): Option[(Int32, Int32)] =
         let m = Vector.length(seen);
         List.range(0, Vector.length(table)) |> List.findMap(p ->
             List.range(0, m)
@@ -325,7 +362,10 @@ mod Orbit64.V2.Facelets {
                 case Some(po) => Ok(po)
                 case None => Err(noPiece(what, slot, seen))
             }
-        }) |> Result.map(ps -> (List.map(fst, ps) |> List.toVector, List.map(snd, ps) |> List.toVector))
+        }) |> Result.map(ps -> (pick(fst, ps), pick(snd, ps)))
+
+    def pick(f: ((Int32, Int32)) -> Int32, ps: List[(Int32, Int32)]): Vector[Int32] =
+        ps |> List.map(f) |> List.toVector
 
     /// A wing carries no twist: its two stickers sit in the order of its home slot or not at all.
     def readWingsStrict(n: Int32, table: Vector[Vector[Int32]],
@@ -349,15 +389,18 @@ mod Orbit64.V2.Facelets {
             (cp, co) <- readOriented(n, "corner", t#corners, fs);
             (mp, mo) <- if (odd(n)) readOriented(n, "midge", t#midges, fs)
                         else Ok((Vector.empty(), Vector.empty()));
-            ws <- t#wings |> Vector.toList |> Result.traverse(table -> readWingsStrict(n, table, fs))
+            ws <- t#wings |> Vector.toList
+                      |> Result.traverse(table -> readWingsStrict(n, table, fs))
         ) yield {
             cornerPieces = cp, cornerTwists = co, midgePieces = mp, midgeFlips = mo,
-            wings = List.toVector(ws), centers = t#centers |> Vector.map(table -> readCenters(table, fs)),
+            wings = List.toVector(ws),
+            centers = t#centers |> Vector.map(table -> readCenters(table, fs)),
             rotations = Vector.empty(), frame = frame
         }
 
-    /// Rotate an odd cube so that its fixed centers are home. The frame is the one the centers show.
-    def normalizeOdd(n: Int32, t: Tables, fs: Vector[Int32]): Result[String, (Int32, Vector[Int32])] =
+    /// Rotate an odd cube so that its fixed centers are home; the frame is the one they show.
+    def normalizeOdd(n: Int32, t: Tables,
+                     fs: Vector[Int32]): Result[String, (Int32, Vector[Int32])] =
         let shown = t#fixed |> Vector.map(at -> Vector.get(at, fs)) |> Vector.toList;
         match List.range(0, Orbit64.Frame.count()) |> List.find(r -> frameFaces(r) == shown) {
             case Some(r) => Ok((r, unrotate(n, turnOf(r), fs)))
@@ -373,7 +416,7 @@ mod Orbit64.V2.Facelets {
         match List.range(0, Orbit64.Frame.count()) |> List.map(home)
                 |> List.find(match (_, po) -> po == Some((6, 0))) {
             case Some((rotated, _)) => Ok(rotated)
-            case None => Err("no corner slot shows the DBL corner, so the cube cannot be put in its reference pose")
+            case None => Err("no whole-cube rotation puts the DBL corner home")
         }
 
     /// The cube state shown by a facelet string, in the pose of `pose`.
@@ -384,23 +427,29 @@ mod Orbit64.V2.Facelets {
     /// the orientation as `cube#frame`; of an even cube, in its corners.
     /// Anything that is no reachable cube is an error: wrong counts, a slot
     /// that shows no piece, a piece twice, a broken orientation law or parity.
-    pub def fromFacelets(n: Int32, model: Model, pose: Pose, facelets: String): Result[String, Cube] =
-        if (n < 2 or n > 15) Err("no V2 type for the ${n}x${n}x${n}")
-        else if (model == Model.Picture) Err("the picture model has no letters: it has no letters")
+    pub def fromFacelets(n: Int32, model: Model, pose: Pose,
+                         facelets: String): Result[String, Cube] =
+        if (not Option.isEmpty(typeFault(n, model))) Err(faultText(n, model))
         else {
             let t = tables(n);
             forM (
                 fs <- parse(n, facelets);
                 _ <- checkCounts(n, fs);
-                posed <- if (odd(n)) normalizeOdd(n, t, fs) |> Result.map(match (r, c) ->
-                                (if (pose == Pose.Framed) r else 0, c))
-                         else if (pose == Pose.Canonical)
-                             normalizeEven(n, t, fs) |> Result.map(c -> (0, c))
-                         else Ok((0, fs));
+                posed <- posedStickers(n, pose, t, fs);
                 cube <- readCube(n, t, fst(posed), snd(posed));
                 _ <- Orbit64.V2.State.rank(n, model, pose, cube)
             ) yield cube
         }
+
+    /// The frame to record and the stickers in the pose the type reads them in.
+    def posedStickers(n: Int32, pose: Pose, t: Tables,
+                      fs: Vector[Int32]): Result[String, (Int32, Vector[Int32])] =
+        if (odd(n))
+            normalizeOdd(n, t, fs)
+                |> Result.map(match (r, c) -> (if (pose == Pose.Framed) r else 0, c))
+        else if (pose == Pose.Canonical)
+            normalizeEven(n, t, fs) |> Result.map(c -> (0, c))
+        else Ok((0, fs))
 
     // ---------------------------------------------------- registry level helpers
 
