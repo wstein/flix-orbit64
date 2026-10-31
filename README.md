@@ -122,11 +122,11 @@ it has no notion of a face, an axis, or a turn.
 | cube  | bits   | chars |
 |-------|--------|-------|
 | 2x2x2 |  26.39 |     5 |
-| 3x3x3 |  69.82 |    12 |
+| 3x3x3 |  69.81 |    12 |
 | 4x4x4 | 156.96 |    27 |
-| 5x5x5 | 251.90 |    43 |
+| 5x5x5 | 251.91 |    43 |
 | 6x6x6 | 390.58 |    66 |
-| 7x7x7 | 537.05 |    90 |
+| 7x7x7 | 537.06 |    90 |
 
 Widths are distinct and grow as `n^2`, so a state token's length identifies its
 puzzle. Width is the fewest characters that fit every state beneath the `00`
@@ -190,7 +190,7 @@ mixed-radix packing buys over fixed-width fields.
 | pieces, `cp` `co` `ep` `eo`| 40 values, packed at 3, 2, 4 and 1 bits | 100.0 | 1.51x |
 | orbit64                    | 12 base64url characters | 72.0 | 1.09x |
 
-The framed-state floor is 69.82 bits, and no base64url encoding can spend fewer than 12
+The framed-state floor is 69.81 bits, and no base64url encoding can spend fewer than 12
 characters on it. The other two are not wasteful by accident: facelets describe
 stickers rather than pieces, so most 54-character strings are not cubes at all,
 and the piece arrays pay index width for permutations whose ranks are much
