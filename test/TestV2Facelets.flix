@@ -56,3 +56,50 @@ def facelets2Through7AgreeWithV1Net(): Unit \ Assert =
                     }
             }
         })
+
+@Test
+def independentFaceletRowsEncodeToTheirTokens(): Unit \ Assert =
+    TestV2FaceletData.rows() |> List.forEach(match (id, _moves, facelets, token, _) ->
+        Assert.assertEq(expected = Ok(token), Orbit64.V2.Facelets.encode(id, facelets)))
+
+@Test
+def independentFaceletRowsDecodeToTheirFacelets(): Unit \ Assert =
+    TestV2FaceletData.rows() |> List.forEach(match (id, moves, facelets, token, canonical) ->
+        match Orbit64.V2.Facelets.decode(token) {
+            case Ok((e, text)) =>
+                Assert.assertEq(expected = id, e#id);
+                Assert.assertEq(expected = if (canonical == "") facelets else canonical, text)
+            case Err(why) => Assert.fail("${moves}: ${why}")
+        })
+
+@Test
+def solvedFaceletsAreTheSolvedToken(): Unit \ Assert =
+    Orbit64.V2.Registry.entries() |> List.filter(e -> e#model == Model.Color) |> List.forEach(e ->
+        let n = e#n;
+        let side = f -> String.repeat(n * n, f);
+        let solved = List#{"U", "R", "F", "D", "L", "B"} |> List.map(side) |> List.join(" ");
+        Assert.assertEq(expected = Orbit64.V2.Codec.encode(e#id, Orbit64.V2.State.solved(n, Model.Color)),
+                        Orbit64.V2.Facelets.encode(e#id, solved)))
+
+@Test
+def malformedFaceletsAreErrors(): Unit \ Assert =
+    let solved3 = "UUUUUUUUU RRRRRRRRR FFFFFFFFF DDDDDDDDD LLLLLLLLL BBBBBBBBB";
+    let fromText = text -> Orbit64.V2.Facelets.fromFacelets(3, Model.Color, Pose.Framed, text);
+    Assert.assertTrue(Result.isOk(fromText(solved3)));
+    Assert.assertTrue(Result.isErr(fromText("UUU")));
+    Assert.assertTrue(Result.isErr(fromText("XUUUUUUUU RRRRRRRRR FFFFFFFFF DDDDDDDDD LLLLLLLLL BBBBBBBBB")));
+    // One U sticker swapped for an R sticker: the color counts break.
+    Assert.assertTrue(Result.isErr(fromText("UUUUUUUUR RRRRRRRRR FFFFFFFFF DDDDDDDDD LLLLLLLLL BBBBBBBBB")));
+    // Two edge stickers exchanged: a flipped edge alone breaks the flip law.
+    Assert.assertTrue(Result.isErr(fromText("UUUUUUUUU RURRRRRRR FFFFFFFFF DDDDDDDDD LLLLLLLLL BBBBBBBBB")));
+    // Two fixed centers exchanged: not a right-handed frame.
+    Assert.assertTrue(Result.isErr(fromText("UUUUUUUUU RRRRFRRRR FFFFRFFFF DDDDDDDDD LLLLLLLLL BBBBBBBBB")));
+    Assert.assertTrue(Result.isErr(Orbit64.V2.Facelets.fromFacelets(3, Model.Picture, Pose.Framed, solved3)));
+    Assert.assertTrue(Result.isErr(Orbit64.V2.Facelets.fromFacelets(16, Model.Color, Pose.Framed, solved3)))
+
+@Test
+def aSingleTwistedCornerIsAnError(): Unit \ Assert =
+    // The URF corner twisted in place: U sticker 8, R sticker 9, F sticker 20 rotate their colors.
+    let twisted = "UUUUUUUUR FRRRRRRRR UFFFFFFFFF DDDDDDDDD LLLLLLLLL BBBBBBBBB";
+    Assert.assertTrue(Result.isErr(
+        Orbit64.V2.Facelets.fromFacelets(3, Model.Color, Pose.Framed, twisted)))
