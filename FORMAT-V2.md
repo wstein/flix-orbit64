@@ -329,8 +329,9 @@ corners are stored as in V1. The cube's orientation is then implicit in them,
 so there is no frame digit.
 
 **Pose.** The caller normalizes the pose before ranking, and the rank
-function sees only the normalized state. On odd cubes the fixed centers are
-implicitly home and are not part of the state; the frame is the last digit
+function sees only the normalized state. On odd cubes the positions of the fixed
+centers are implicit (they are home); only their rotations are stored, in the
+picture model (digit 7, below). The frame is the last digit
 (digit 8), the least significant one, and it must be `0` unless the type is
 odd and framed. On even cubes DBL is home in the canonical variant, and the
 frame is always `0`, since there is no frame digit.
@@ -392,8 +393,9 @@ To **encode** a state of entry `i`:
      odd and framed) and colors are in `0..5`; each color multiset has four
      of each color.
    - **Laws.** A canonical even state has DBL in slot DBL with twist 0, the
-     orientation laws hold, and the parity relations hold. (The fixed centers
-     of an odd cube are not part of the state, see Pose.)
+     orientation laws hold, and the parity relations hold. (The positions of the
+     fixed centers of an odd cube are implicit, see Pose; their rotations are
+     digit 7, picture model only.)
 3. Compute the digits, combine them, add `offset_i`, and write the result at
    length `L_i`.
 
