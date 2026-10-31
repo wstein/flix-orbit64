@@ -117,7 +117,7 @@ coordinate with the following value and keep the face index:
 | -------------------- | ------------------- |
 | `0` | `0` |
 | `1` | `d` |
-| `2`, when `b = 5` | `n / 2` |
+| `2`, when `b = 5` | `floor(n / 2)` |
 | `b - 2` | `n - 1 - d` |
 | `b - 1` | `n - 1` |
 
