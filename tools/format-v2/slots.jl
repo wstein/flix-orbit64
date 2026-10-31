@@ -12,7 +12,7 @@
 # The convention is V1's `orbit64-Nxn-draft@1`. Corners, midges and wings are
 # the reference tables of the 4x4x4 (even n) and 5x5x5 (odd n) with each axis
 # coordinate expanded to size n; centers follow from the facelet geometry
-# alone. The reference tables below are the ones in `Orbit64.Net`
+# alone. The reference tables are read from `Orbit64.Net`
 # (`src/Orbit64/Net.flix`); the expansion is the one `Net` applies for n <= 7,
 # used unchanged for n >= 8. A facelet is `face * n^2 + row * n + col` over the
 # faces U R F D L B.
@@ -20,97 +20,34 @@
 # Checked on every run: each facelet of the cube, except the six fixed centers
 # of an odd cube, belongs to exactly one slot.
 
-# ---- reference slots: each row lists the facelets of one slot ---------------
-# A corner lists its three stickers in order, the one that measures twist first,
-# then clockwise. A midge lists the sticker that measures flip first. A wing
-# lists its reference sticker first.
+# ---- reference slots: read from Net.flix -------------------------------------
+# Each row lists the facelets of one slot. A corner lists its three stickers in
+# order: the one that measures twist first (on U or D), then the other two
+# clockwise seen from outside the cube. A midge lists the sticker that measures
+# flip first. A wing lists its reference sticker first.
+#
+# The tables are not copied here: they are read from the literal vectors in
+# `Orbit64.Net`, so a change there changes this program's output and CI fails
+# until the generated document is regenerated.
 
-const CORNER4 = [
-    [15, 16, 35],
-    [12, 32, 67],
-    [0, 64, 83],
-    [3, 80, 19],
-    [51, 47, 28],
-    [48, 79, 44],
-    [60, 95, 76],
-    [63, 31, 92],
-]
-const WING4 = [
-    [1, 82],
-    [7, 18],
-    [8, 66],
-    [14, 34],
-    [17, 11],
-    [23, 84],
-    [24, 43],
-    [30, 59],
-    [33, 13],
-    [39, 20],
-    [40, 75],
-    [46, 50],
-    [49, 45],
-    [55, 29],
-    [56, 77],
-    [62, 93],
-    [65, 4],
-    [71, 36],
-    [72, 91],
-    [78, 52],
-    [81, 2],
-    [87, 68],
-    [88, 27],
-    [94, 61],
-]
-const CORNER5 = [
-    [24, 25, 54],
-    [20, 50, 104],
-    [0, 100, 129],
-    [4, 125, 29],
-    [79, 74, 45],
-    [75, 124, 70],
-    [95, 149, 120],
-    [99, 49, 145],
-]
-const MIDGE5 = [
-    [14, 27],
-    [22, 52],
-    [10, 102],
-    [2, 127],
-    [89, 47],
-    [77, 72],
-    [85, 122],
-    [97, 147],
-    [64, 35],
-    [60, 114],
-    [139, 110],
-    [135, 39],
-]
-const WING5 = [
-    [1, 128],
-    [9, 28],
-    [15, 103],
-    [23, 53],
-    [26, 19],
-    [34, 130],
-    [40, 69],
-    [48, 94],
-    [51, 21],
-    [59, 30],
-    [65, 119],
-    [73, 78],
-    [76, 71],
-    [84, 46],
-    [90, 121],
-    [98, 146],
-    [101, 5],
-    [109, 55],
-    [115, 144],
-    [123, 80],
-    [126, 3],
-    [134, 105],
-    [140, 44],
-    [148, 96],
-]
+const NET_SOURCE = joinpath(@__DIR__, "..", "..", "src", "Orbit64", "Net.flix")
+
+"The rows of `def name(): Vector[Vector[Int32]] = Vector#{ Vector#{..}, .. }`."
+function net_table(source::String, name::String)
+    head = raw"\(\): Vector\[Vector\[Int32\]\] = Vector#\{(.*?)\n\s*\}"
+    def = match(Regex("def " * name * head, "s"), source)
+    def === nothing && error("Net.flix: no table named $name")
+    rows = [parse.(Int, split(m.captures[1], ",")) for m in eachmatch(r"Vector#\{([\d,\s]+)\}", def.captures[1])]
+    isempty(rows) && error("Net.flix: table $name is empty")
+    rows
+end
+
+const NET = read(NET_SOURCE, String)
+const CORNER4 = net_table(NET, "cornerFacelet4")
+const WING4 = net_table(NET, "wingFacelet4")
+const CORNER5 = net_table(NET, "cornerFacelet5")
+const MIDGE5 = net_table(NET, "midgeFacelet5")
+const WING5 = net_table(NET, "wingFacelet5")
 
 # ---- expansion to size n ----------------------------------------------------
 
@@ -162,6 +99,7 @@ join_facelets(slot) = join(slot, " ")
 
 function emit(n::Int)
     check_cover(n)
+    println()
     println("## $(n)x$(n)x$(n)")
     println()
     println("Facelets `0..$(6n * n - 1)`.",
@@ -189,7 +127,6 @@ function emit(n::Int)
         println("  Z[", r, ",", c, "]: ", join_facelets(center_slots(n, r, c)))
     end
     println("```")
-    println()
 end
 
 function main()
@@ -209,6 +146,8 @@ function main()
     println("the tables are those of `Orbit64.Net`; for `n >= 8` they extend the reference")
     println("slots of the 4x4x4 (even `n`) or 5x5x5 (odd `n`) as FORMAT-V2.md describes.")
     println()
+    println("Corner stickers are listed in one fixed order: the first is on the U or D")
+    println("face, and the other two follow clockwise as seen from outside the cube.")
     for n in 2:15
         emit(n)
     end
