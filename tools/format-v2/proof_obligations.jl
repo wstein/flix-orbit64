@@ -272,6 +272,11 @@ function check_orientations(c::Cube, gens::Vector{Vector{Int32}})
             end
         end
         slots = k == :fixed ? 1 : (k == :corner && iseven(c.n)) ? 7 : length(g)
+        # Every slot must be reached. A group orbit's fibers over the slots all
+        # have the same size, so the pose count then fixes the count per slot.
+        reached = Set(c.points[t[1]][1] for t in seen)
+        check(length(reached) == slots,
+              "$(c.n)x$(c.n)x$(c.n) $k: reaches $(length(reached)) slots, expected $slots")
         check(length(seen) == slots * orientations[k],
               "$(c.n)x$(c.n)x$(c.n) $k: $(length(seen)) poses, expected $slots x $(orientations[k])")
     end
