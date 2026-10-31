@@ -56,11 +56,11 @@ continues to identify `n`, and the decoder rejects values at or above
 | Cube | State space (bits) | Token width (base64url chars) |
 | ---- | -----------------: | ----------------------------: |
 | 2×2×2 | 26.39 | 5 |
-| 3×3×3 | 69.82 | 12 |
+| 3×3×3 | 69.81 | 12 |
 | 4×4×4 | 156.96 | 27 |
-| 5×5×5 | 251.90 | 43 |
+| 5×5×5 | 251.91 | 43 |
 | 6×6×6 | 390.58 | 66 |
-| 7×7×7 | 537.05 | 90 |
+| 7×7×7 | 537.06 | 90 |
 
 ## Move vocabulary
 
