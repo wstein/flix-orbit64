@@ -1,0 +1,67 @@
+name: Format V2 checks
+
+# The generated V2 documents and test vectors are committed. This workflow
+# regenerates each one and fails with a diff when the committed copy is stale,
+# so the specification, its report, its slot tables and the Flix test vectors
+# cannot drift apart. Only Julia's standard library is used.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  generated:
+    name: generated files are current
+    runs-on: ubuntu-latest
+    # proof_obligations.jl takes about a minute (see FORMAT-V2.md), so this is
+    # well under the cap; anything near it is a hung runner.
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Julia is the only tool needed. The matching version is the one the
+      # committed outputs were generated with.
+      - name: Install Julia 1.11.5
+        uses: julia-actions/setup-julia@5c9647d97b78a5debe5164e9eec09d653d29bd71 # v2.6.1
+        with:
+          version: '1.11.5'
+
+      - name: Proof report is the script's output
+        run: |
+          julia tools/format-v2/proof_obligations.jl > "$RUNNER_TEMP/proof-obligations.md"
+          diff -u tools/format-v2/proof-obligations.md "$RUNNER_TEMP/proof-obligations.md" ||
+            { echo "::error file=tools/format-v2/proof-obligations.md::stale; run julia tools/format-v2/proof_obligations.jl > tools/format-v2/proof-obligations.md"; exit 1; }
+
+      - name: Slot tables are the script's output
+        run: |
+          julia tools/format-v2/slots.jl > "$RUNNER_TEMP/FORMAT-V2-SLOTS.md"
+          diff -u FORMAT-V2-SLOTS.md "$RUNNER_TEMP/FORMAT-V2-SLOTS.md" ||
+            { echo "::error file=FORMAT-V2-SLOTS.md::stale; run julia tools/format-v2/slots.jl > FORMAT-V2-SLOTS.md"; exit 1; }
+
+      # vectors.jl also checks its own registry against the table in
+      # FORMAT-V2.md and stops with an error on any difference.
+      - name: Test vectors are the script's output
+        run: |
+          julia tools/format-v2/vectors.jl "$RUNNER_TEMP/TestV2VectorData.flix"
+          diff -u test/TestV2VectorData.flix "$RUNNER_TEMP/TestV2VectorData.flix" ||
+            { echo "::error file=test/TestV2VectorData.flix::stale; run julia tools/format-v2/vectors.jl"; exit 1; }
+
+      # The report says its registry table is the one in FORMAT-V2.md, verbatim.
+      - name: Registry table matches the report
+        run: |
+          rows() { awk -v s="$2" '$0 ~ s {on=1; next} /^## /{on=0} on && /^\| (-:|[0-9])/' "$1"; }
+          rows FORMAT-V2.md '^## Initial registry$' > "$RUNNER_TEMP/spec-rows.txt"
+          rows tools/format-v2/proof-obligations.md '^## FORMAT-V2.md registry table$' > "$RUNNER_TEMP/report-rows.txt"
+          test -s "$RUNNER_TEMP/spec-rows.txt" || { echo "::error::no registry rows found in FORMAT-V2.md"; exit 1; }
+          diff -u "$RUNNER_TEMP/report-rows.txt" "$RUNNER_TEMP/spec-rows.txt" ||
+            { echo "::error file=FORMAT-V2.md::registry table differs from the proof report"; exit 1; }
