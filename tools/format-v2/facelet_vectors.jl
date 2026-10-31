@@ -10,9 +10,17 @@
 # Unlike vectors.jl, which draws states in coordinates, this program starts from
 # a solved facelet string and applies layer turns and whole-cube rotations to
 # it with the geometry of CubeModel.jl. It then reads the orbit coordinates off
-# the stickers with slot tables derived from geometry alone (no table is copied
-# from the Flix sources), and encodes them with the reference encoder of
-# vectors.jl, which is loaded here but not modified. Every state yields one row
+# the stickers with slot tables derived from geometry alone, and encodes them
+# with the reference encoder of vectors.jl, which is loaded here but not
+# modified.
+#
+# What is independent of the Flix sources: the corner, midge and wing slot
+# tables (derived from geometry, not copied), the 24 whole-cube frames (derived
+# from the rule of FORMAT.md, see `frames()`, and only compared with the list of
+# Orbit64.Frame as a check), the facelet moves, and the
+# encoder. What is not: the center orbit tables and the normalization of even
+# cubes (the rotation that puts the DBL corner home with twist 0) use the same
+# algorithm as the Flix code, so a mistake in that algorithm would be shared. Every state yields one row
 # for the canonical entry and one for the framed entry of its size.
 #
 # Row: (entry id, move text, facelets, token, canonical facelets)
@@ -39,11 +47,25 @@ module Vectors
 end
 
 const FACE_LETTERS = "URFDLB"
-# The 24 whole-cube frames of Orbit64.Frame: the physical faces in slots U R F D L B.
-const FRAMES = ["URFDLB", "UBRDFL", "ULBDRF", "UFLDBR", "FRDBLU", "FURBDL", "FLUBRD",
-                "FDLBUR", "DRBULF", "DFRUBL", "DLFURB", "DBLUFR", "BRUFLD", "BDRFUL",
-                "BLDFRU", "BULFDR", "LUFRDB", "LBURFD", "LDBRUF", "LFDRBU", "RDFLUB",
-                "RBDLFU", "RUBLDF", "RFULBD"]
+# The 24 whole-cube frames, from FORMAT.md's wire order: `x` turns, then `z`
+# turns, then `y` turns; ranks 0-15 are (x, 0, y), 16-19 are (0, 1, y) and 20-23
+# are (0, 3, y). A frame lists the physical face in each slot U R F D L B. A
+# whole-cube turn moves the contents of the slots: `x` (like R) carries F to U,
+# `z` (like F) carries U to R, `y` (like U) carries R to F.
+function frames()
+    turn_x(s) = [s[3], s[2], s[4], s[6], s[5], s[1]]
+    turn_z(s) = [s[5], s[1], s[3], s[2], s[4], s[6]]
+    turn_y(s) = [s[1], s[6], s[2], s[4], s[3], s[5]]
+    again(f, k, s) = foldl((acc, _) -> f(acc), 1:k; init = s)
+    pose(x, z, y) = join(again(turn_y, y, again(turn_z, z, again(turn_x, x, collect("URFDLB")))))
+    [pose(x, 0, y) for x in 0:3 for y in 0:3] ∪ [pose(0, 1, y) for y in 0:3] ∪ [pose(0, 3, y) for y in 0:3]
+end
+const FRAMES = frames()
+const FRAME_LIST_OF_FLIX = ["URFDLB", "UBRDFL", "ULBDRF", "UFLDBR", "FRDBLU", "FURBDL", "FLUBRD",
+                         "FDLBUR", "DRBULF", "DFRUBL", "DLFURB", "DBLUFR", "BRUFLD", "BDRFUL",
+                         "BLDFRU", "BULFDR", "LUFRDB", "LBURFD", "LDBRUF", "LFDRBU", "RDFLUB",
+                         "RBDLFU", "RUBLDF", "RFULBD"]
+FRAMES == FRAME_LIST_OF_FLIX || error("derived frames differ from Orbit64.Frame's list")
 const NORMALS = [(0, 1, 0), (1, 0, 0), (0, 0, 1), (0, -1, 0), (-1, 0, 0), (0, 0, -1)]
 
 # ---- facelet states and moves ------------------------------------------------
@@ -343,7 +365,7 @@ function main(out::String)
         t = build_tables(n)
         sequences = Vector{String}[String[]]
         n <= 5 && append!(sequences, single_moves(n))
-        for _ in 1:(n <= 7 ? 4 : 1)
+        for _ in 1:(n <= 7 ? 4 : 3)
             push!(sequences, random_moves(rng, n, n <= 7 ? 14 : 10))
         end
         for moves in sequences
@@ -358,14 +380,21 @@ function main(out::String)
         println(io, "    /// (entry id, moves, facelets, token, canonical facelets or empty)")
         for n in 2:15
             sel = [r for r in rows if ENTRIES[r[1] + 1].n == n]
-            println(io, "    pub def rows$n(): List[(Int32, String, String, String, String)] = List#{")
-            for (i, (id, mv, fl, tok, can)) in enumerate(sel)
-                println(io, "        ($id, \"$mv\", \"$fl\", \"$tok\", \"$can\")", i == length(sel) ? "" : ",")
+            # Chunks of at most 50 rows keep each definition under the metrics limit.
+            parts = collect(Iterators.partition(sel, 50))
+            for (k, part) in enumerate(parts)
+                println(io, "    pub def rows$(n)p$k(): List[(Int32, String, String, String, String)] = List#{")
+                for (i, (id, mv, fl, tok, can)) in enumerate(part)
+                    println(io, "        ($id, \"$mv\", \"$fl\", \"$tok\", \"$can\")", i == length(part) ? "" : ",")
+                end
+                println(io, "    }\n")
             end
-            println(io, "    }\n")
+            println(io, "    pub def rows$n(): List[(Int32, String, String, String, String)] =")
+            println(io, "        List.flatten(List#{", join(("rows$(n)p$k()" for k in 1:length(parts)), ", "), "})\n")
         end
         println(io, "    pub def rows(): List[(Int32, String, String, String, String)] = List.flatten(List#{")
-        println(io, "        ", join(("rows$n()" for n in 2:15), ", "))
+        println(io, "        ", join(("rows$n()" for n in 2:8), ", "), ",")
+        println(io, "        ", join(("rows$n()" for n in 9:15), ", "))
         println(io, "    })")
         println(io, "}")
     end
