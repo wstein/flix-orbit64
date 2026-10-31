@@ -3,8 +3,10 @@
 **Status: draft.** This document specifies the second Orbit64 state format. It
 is not a revision of [FORMAT.md](FORMAT.md): V2 drops V1's class bits and
 replaces them with a registry of puzzle types, so the two formats are separate.
-Nothing here changes what V1 tokens mean or what this library currently
-implements. The reference implementation will follow in a separate change.
+Nothing here changes what V1 tokens mean. The reference implementation is
+`Orbit64.V2` (`src/Orbit64/V2/`), checked against the reference vectors in
+`test/TestV2VectorData.flix`, which an independent Julia encoder
+(`tools/format-v2/vectors.jl`) generates from this text alone.
 
 The state counts and parity relations the format relies on are checked by
 [`tools/format-v2/proof_obligations.jl`](tools/format-v2/proof_obligations.jl),
