@@ -10,6 +10,9 @@ mod Orbit64.V2.State {
     use Orbit64.V2.Registry.{Model, Pose}
 
     /// Orbit coordinates of one cube. Components a type lacks are left empty.
+    /// The caller normalizes the pose first: fixed centers of odd cubes are
+    /// implicitly home and `frame` carries the whole-cube orientation, which
+    /// must be 0 unless the type is odd and framed.
     /// `rotations` holds `r_U r_R r_F r_D r_L r_B` and `frame` a frame rank.
     pub type alias Cube = {
         cornerPieces = Vector[Int32], cornerTwists = Vector[Int32],
@@ -238,9 +241,16 @@ mod Orbit64.V2.State {
         case Part.FrameDigit  => Int32.toBigInt(cube#frame)
     }
 
+    /// The laws index into the vectors, so they are only checked once the layout is sound.
+    def faultOf(n: Int32, model: Model, pose: Pose, cube: Cube): Option[String] =
+        match layoutFault(n, model, pose, cube) {
+            case Some(why) => Some(why)
+            case None => lawFault(n, model, pose, cube)
+        }
+
     /// The rank of a valid state of the type, or the reason it is invalid.
     pub def rank(n: Int32, model: Model, pose: Pose, cube: Cube): Result[String, BigInt] =
-        match firstFault(layoutFault(n, model, pose, cube) :: lawFault(n, model, pose, cube) :: Nil) {
+        match faultOf(n, model, pose, cube) {
             case Some(why) => Err(why)
             case None =>
                 Ok(parts(n, model, pose) |> List.foldLeft((acc, p) ->
@@ -267,7 +277,8 @@ mod Orbit64.V2.State {
         let slot = i -> if (i < 6) at(i) else if (i == 6) dbl else at(6);
         List.range(0, 8) |> List.map(slot) |> List.toVector
 
-    /// The state with the given rank. `value` must be below `count(n, model, pose)`.
+    /// The state with the given rank. `value` must be in `[0, count(n, model, pose))`;
+    /// this is not checked here, `Orbit64.V2.Codec.decode` does.
     pub def unrank(n: Int32, model: Model, pose: Pose, value: BigInt): Cube =
         let digits = splitDigits(n, model, pose, value);
         let d = p -> Map.getWithDefault(p, 0ii, digits);

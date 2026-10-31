@@ -14,7 +14,8 @@ def v1StateTokensReadAsV2ColorFramedStates(): Unit \ Assert =
         match Orbit64.V2.Codec.decode(token) {
             case Ok((e, cube)) =>
                 Assert.assertEq(expected = id, e#id);
-                Assert.assertEq(expected = Ok(token), Orbit64.V2.Codec.encode(id, cube))
+                Assert.assertEq(expected = Ok(token), Orbit64.V2.Codec.encode(id, cube));
+                assertSameCorners(e#n, token, cube)
             case Err(why) => Assert.fail("${token}: ${why}")
         })
 
@@ -28,3 +29,15 @@ def v1AndV2AgreeOnTheFramedColorStateCount(): Unit \ Assert =
     List#{2, 3, 4, 6, 7} |> List.forEach(n ->
         Assert.assertEq(expected = Orbit64.State.stateCount(n),
                         Orbit64.V2.State.count(n, Model.Color, Pose.Framed)))
+
+/// V1 and V2 must read the same corner state from the same token.
+def assertSameCorners(n: Int32, token: String, cube: Orbit64.V2.State.Cube): Unit \ Assert =
+    match Orbit64.State.decode(n, token) {
+        case Ok(state) => match Orbit64.State.orbits(state) {
+            case Orbit64.Coord.Coord.CornerCoord(pieces, twists) :: _ =>
+                Assert.assertEq(expected = pieces, cube#cornerPieces);
+                Assert.assertEq(expected = twists, cube#cornerTwists)
+            case _ => Assert.fail("${token}: V1 state has no corner coordinate")
+        }
+        case Err(why) => Assert.fail("${token}: ${why}")
+    }
