@@ -90,9 +90,10 @@ is published.
   `julia tools/format-v2/proof_obligations.jl > tools/format-v2/proof-obligations.md`
   after changing either. `vectors.jl` writes `test/TestV2VectorData.flix`
   (`julia tools/format-v2/vectors.jl`), whose tokens the Flix tests must reproduce
-- `src/Orbit64/V2/Facelets.flix` — the facelet bridge: cube state to facelet string and back,
-  `n = 2..15`, canonical and framed. `tools/format-v2/facelet_vectors.jl` is its independent
-  check; it writes `test/TestV2FaceletData.flix` (do not edit it)
+- `src/Orbit64/V2/Facelets.flix` — the facelet bridge: cube state to facelet
+  string and back, `n = 2..15`, canonical and framed.
+  `tools/format-v2/facelet_vectors.jl` is its independent check; it writes
+  `test/TestV2FaceletData.flix` (do not edit it)
 - `examples/cli-tool/` — the demo command line, a separate Flix package that
   depends on this one the same way any other consumer would
 - `flix.toml` — package metadata, dependencies, and the *lowest* Flix version
