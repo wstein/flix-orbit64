@@ -6,16 +6,20 @@ replaces them with a registry of puzzle types, so the two formats are separate.
 Nothing here changes what V1 tokens mean or what this library currently
 implements. The reference implementation will follow in a separate change.
 
-The format's claims about state counts are proved by
-[`tools/format-v2/proof_obligations.jl`](tools/format-v2/proof_obligations.jl);
-its committed output is
+The state counts and parity relations the format relies on are checked by
+[`tools/format-v2/proof_obligations.jl`](tools/format-v2/proof_obligations.jl),
+and its committed output is
 [`tools/format-v2/proof-obligations.md`](tools/format-v2/proof-obligations.md).
+[Proof obligations](#proof-obligations) says which steps that program checks
+and which rest on short arguments given here.
 
 ## Goals
 
-1. **Short tokens for small puzzles.** A token for a small puzzle costs at most
-   one character more than the information it carries. For puzzles that need
-   more than about 20 characters, one character more or less matters little.
+1. **Short tokens for small puzzles.** The target is the information-theoretic
+   minimum, `ceil(bits / 6)` characters. Every entry of the initial registry
+   meets it. The allocation rule does not guarantee it for later entries: a
+   later entry can land one length further. Beyond about 20 characters, one
+   character more or less matters little.
 2. **No wasted values.** Nothing in V2 is a bit field. Every piece of
    information is a mixed-radix digit with exactly as many values as it has
    possibilities, and parity-coupled information is not stored at all.
@@ -52,9 +56,8 @@ describes one puzzle type. It specifies:
   as `0`.
 
 **Allocation rule.** The entries are placed in registry order. Entry `i` takes
-the shortest length `L_i` whose unallocated values can still hold all its
-states, and starts its range directly after the entries already placed at that
-length:
+the shortest length whose unallocated values can still hold all its states,
+and starts its range directly after the entries already placed at that length:
 
 ```text
 used(L)  = sum of N_j over the entries j < i with L_j = L    (0 if there are none)
@@ -79,8 +82,8 @@ same way, for example as "not a known V2 state token".
   rule places `i` from what earlier entries left. So no existing token ever
   changes meaning.
 - The first entry placed at a length has offset `0`, so its zero state is
-  `A` repeated `L` times. Entries placed later at the same length start with
-  other leading characters and end in `A` characters.
+  `A` repeated `L` times. Any other entry's zero state is the length-`L_i`
+  token whose value is `offset_i`.
 
 The registry is part of this specification. Implementations may compute the
 lengths and offsets with the rule or hard-code the table below. Both give the
@@ -88,42 +91,78 @@ same result.
 
 ## Initial registry
 
-| ID | Type | States | Bits | Length | Offset | Solved token |
-| -: | ---- | -----: | ---: | -----: | -----: | ------------ |
-| 0 | 2x2x2 color canonical | 3.674e+06 | 21.81 | 4 | 0 | `AAAA` |
-| 1 | 2x2x2 color framed | 8.818e+07 | 26.39 | 5 | 0 | `AAAAA` |
-| 2 | 3x3x3 color canonical | 4.325e+19 | 65.23 | 11 | 0 | `A` x 11 |
-| 3 | 3x3x3 color framed | 1.038e+21 | 69.81 | 12 | 0 | `A` x 12 |
-| 4 | 3x3x3 picture canonical | 8.858e+22 | 76.23 | 13 | 0 | `A` x 13 |
-| 5 | 3x3x3 picture framed | 2.126e+24 | 80.81 | 14 | 0 | `A` x 14 |
-| 6 | 4x4x4 color canonical | 7.401e+45 | 152.37 | 26 | 0 | `A` x 26 |
-| 7 | 4x4x4 color framed | 1.776e+47 | 156.96 | 27 | 0 | `A` x 27 |
-| 8 | 4x4x4 picture canonical | 7.072e+53 | 178.88 | 30 | 0 | `A` x 30 |
-| 9 | 4x4x4 picture framed | 1.697e+55 | 183.47 | 31 | 0 | `A` x 31 |
-| 10 | 5x5x5 color canonical | 2.829e+74 | 247.32 | 42 | 0 | `A` x 42 |
-| 11 | 5x5x5 color framed | 6.789e+75 | 251.91 | 42 | `N_10` | `CgGWpjtIh4vYo4b_KxcD7DG7DGuzTmUAIAAAAAAAAA` |
-| 12 | 5x5x5 picture canonical | 5.289e+93 | 311.34 | 52 | 0 | `A` x 52 |
-| 13 | 5x5x5 picture framed | 1.269e+95 | 315.93 | 53 | 0 | `A` x 53 |
-| 14 | 6x6x6 color canonical | 1.572e+116 | 386.00 | 65 | 0 | `A` x 65 |
-| 15 | 6x6x6 color framed | 3.772e+117 | 390.58 | 66 | 0 | `A` x 66 |
-| 16 | 6x6x6 picture canonical | 1.310e+148 | 492.03 | 83 | 0 | `A` x 83 |
-| 17 | 6x6x6 picture framed | 3.144e+149 | 496.62 | 83 | `N_16` | see the report |
-| 18 | 7x7x7 color canonical | 1.950e+160 | 532.47 | 89 | 0 | `A` x 89 |
-| 19 | 7x7x7 color framed | 4.680e+161 | 537.06 | 90 | 0 | `A` x 90 |
-| 20 | 7x7x7 picture canonical | 3.039e+211 | 702.53 | 118 | 0 | `A` x 118 |
-| 21 | 7x7x7 picture framed | 7.295e+212 | 707.12 | 118 | `N_20` | see the report |
+The initial registry holds the `n x n x n` cube for `n = 2..15`, described in
+the next section. These rows are copied verbatim from the proof report, which
+also lists the exact counts, the solved tokens, and the free space left at
+each length. `N_i` in the offset column is entry `i`'s state count.
 
-The exact state counts, the full solved tokens and the free space left at each
-length are in [the proof report](tools/format-v2/proof-obligations.md). The
-smallest puzzles keep plenty of room. The 4-character length is 22% used and
-the 5-character length 8%, so many more small types fit before any of them
+| ID | Type | States | Bits | Length | Offset |
+| -: | ---- | -----: | ---: | -----: | -----: |
+| 0 | 2x2x2 color canonical | 3.674e+06 | 21.81 | 4 | 0 |
+| 1 | 2x2x2 color framed | 8.818e+07 | 26.39 | 5 | 0 |
+| 2 | 3x3x3 color canonical | 4.325e+19 | 65.23 | 11 | 0 |
+| 3 | 3x3x3 color framed | 1.038e+21 | 69.81 | 12 | 0 |
+| 4 | 3x3x3 picture canonical | 8.858e+22 | 76.23 | 13 | 0 |
+| 5 | 3x3x3 picture framed | 2.126e+24 | 80.81 | 14 | 0 |
+| 6 | 4x4x4 color canonical | 7.401e+45 | 152.37 | 26 | 0 |
+| 7 | 4x4x4 color framed | 1.776e+47 | 156.96 | 27 | 0 |
+| 8 | 4x4x4 picture canonical | 7.072e+53 | 178.88 | 30 | 0 |
+| 9 | 4x4x4 picture framed | 1.697e+55 | 183.47 | 31 | 0 |
+| 10 | 5x5x5 color canonical | 2.829e+74 | 247.32 | 42 | 0 |
+| 11 | 5x5x5 color framed | 6.789e+75 | 251.91 | 42 | `N_10` |
+| 12 | 5x5x5 picture canonical | 5.289e+93 | 311.34 | 52 | 0 |
+| 13 | 5x5x5 picture framed | 1.269e+95 | 315.93 | 53 | 0 |
+| 14 | 6x6x6 color canonical | 1.572e+116 | 386.00 | 65 | 0 |
+| 15 | 6x6x6 color framed | 3.772e+117 | 390.58 | 66 | 0 |
+| 16 | 6x6x6 picture canonical | 1.310e+148 | 492.03 | 83 | 0 |
+| 17 | 6x6x6 picture framed | 3.144e+149 | 496.62 | 83 | `N_16` |
+| 18 | 7x7x7 color canonical | 1.950e+160 | 532.47 | 89 | 0 |
+| 19 | 7x7x7 color framed | 4.680e+161 | 537.06 | 90 | 0 |
+| 20 | 7x7x7 picture canonical | 3.039e+211 | 702.53 | 118 | 0 |
+| 21 | 7x7x7 picture framed | 7.295e+212 | 707.12 | 118 | `N_20` |
+| 22 | 8x8x8 color canonical | 3.517e+217 | 722.67 | 121 | 0 |
+| 23 | 8x8x8 color framed | 8.442e+218 | 727.26 | 122 | 0 |
+| 24 | 8x8x8 picture canonical | 2.335e+289 | 961.26 | 161 | 0 |
+| 25 | 8x8x8 picture framed | 5.605e+290 | 965.85 | 161 | `N_24` |
+| 26 | 9x9x9 color canonical | 1.417e+277 | 920.68 | 154 | 0 |
+| 27 | 9x9x9 color framed | 3.401e+278 | 925.26 | 155 | 0 |
+| 28 | 9x9x9 picture canonical | 1.681e+376 | 1249.79 | 209 | 0 |
+| 29 | 9x9x9 picture framed | 4.034e+377 | 1254.38 | 210 | 0 |
+| 30 | 10x10x10 color canonical | 8.298e+349 | 1162.41 | 194 | 0 |
+| 31 | 10x10x10 color framed | 1.992e+351 | 1166.99 | 195 | 0 |
+| 32 | 10x10x10 picture canonical | 4.007e+477 | 1586.56 | 265 | 0 |
+| 33 | 10x10x10 picture framed | 9.616e+478 | 1591.15 | 266 | 0 |
+| 34 | 11x11x11 color canonical | 1.085e+425 | 1411.94 | 236 | 0 |
+| 35 | 11x11x11 color framed | 2.605e+426 | 1416.52 | 237 | 0 |
+| 36 | 11x11x11 picture canonical | 8.947e+587 | 1953.13 | 326 | 0 |
+| 37 | 11x11x11 picture framed | 2.147e+589 | 1957.72 | 327 | 0 |
+| 38 | 12x12x12 color canonical | 2.064e+513 | 1705.19 | 285 | 0 |
+| 39 | 12x12x12 color framed | 4.953e+514 | 1709.78 | 285 | `N_38` |
+| 40 | 12x12x12 picture canonical | 6.616e+712 | 2367.94 | 395 | 0 |
+| 41 | 12x12x12 picture framed | 1.588e+714 | 2372.52 | 396 | 0 |
+| 42 | 13x13x13 color canonical | 8.764e+603 | 2006.25 | 335 | 0 |
+| 43 | 13x13x13 color framed | 2.103e+605 | 2010.84 | 336 | 0 |
+| 44 | 13x13x13 picture canonical | 4.583e+846 | 2812.55 | 469 | 0 |
+| 45 | 13x13x13 picture framed | 1.100e+848 | 2817.13 | 470 | 0 |
+| 46 | 14x14x14 color canonical | 5.410e+707 | 2351.04 | 392 | 0 |
+| 47 | 14x14x14 color framed | 1.298e+709 | 2355.62 | 393 | 0 |
+| 48 | 14x14x14 picture canonical | 1.051e+995 | 3305.39 | 551 | 0 |
+| 49 | 14x14x14 picture framed | 2.523e+996 | 3309.98 | 552 | 0 |
+| 50 | 15x15x15 color canonical | 7.458e+813 | 2703.63 | 451 | 0 |
+| 51 | 15x15x15 color framed | 1.790e+815 | 2708.21 | 452 | 0 |
+| 52 | 15x15x15 picture canonical | 2.259e+1152 | 3828.04 | 639 | 0 |
+| 53 | 15x15x15 picture framed | 5.422e+1153 | 3832.62 | 639 | `N_52` |
+
+The smallest puzzles keep plenty of room. The 4-character length is 22% used
+and the 5-character length 8%, so many more small types fit before any of them
 needs a longer token.
 
 ## The n x n x n cube types
 
-Entries 0 to 21 are members of one family: the `n x n x n` cube for `n = 2..7`,
-in two **sticker models** and two **pose variants**. A 2x2x2 has no centers,
-so its picture model equals its color model and is not registered separately.
+Entries 0 to 53 are members of one family: the `n x n x n` cube for
+`n = 2..15`, in two **sticker models** and two **pose variants**. A 2x2x2 has
+no centers, so its picture model equals its color model and is not registered
+separately.
 
 ### Pieces and orbits
 
@@ -138,10 +177,11 @@ within an orbit.
 | centers `Z` | 24 each | `floor((n - 2)^2 / 4)` orbits | fixed by position |
 | fixed centers | 6 | `n` odd | rotation in `0..3` |
 
-Wings are numbered by depth, with `W1` the outermost. A center orbit is named
-`Z[r,c]` after the lowest facelet it occupies on `U`, at row `r` and column
-`c`. Center orbits are ordered by that facelet's index. This is V1's orbit
-order, `Orbit.layout(n)`.
+Wing orbit `Wd` holds the wings at depth `d`, so `W1` is the outermost. A
+center orbit is named `Z[r,c]` after the lowest facelet it occupies on `U`, at
+row `r` and column `c` (both counted from 0). Center orbits are ordered by that
+facelet's index. For `n <= 7` this is the order of V1's center tables
+(`Net.centerTables`).
 
 A wing or center piece has no orientation of its own. A cubie's orientation is
 the rotation that takes it from its home position to its current one. For a
@@ -180,15 +220,22 @@ future registry entry, see [Extensions](#extensions).
 Canonical is the default. Use framed only when the use case needs the cube's
 orientation in space, for example a display or a camera-relative scan.
 Converting framed to canonical is total and loses only the frame. Converting
-canonical to framed gives the frame rank `0`.
+canonical to framed sets the frame rank to `0` on odd cubes. On even cubes the
+canonical state, with DBL home, is itself the framed state.
 
 ### Conventions
 
 V2 uses V1's slot convention `orbit64-Nxn-draft@1` unchanged: the corner and
 midge slot orders, the twist and flip conventions, and the wing and center slot
-tables. These are defined in [FORMAT.md](FORMAT.md) and `Orbit64.Net`. The six
-colors are the face indexes `U R F D L B` = `0..5`. Frames use V1's `Frame`
-order of the 24 right-handed whole-cube frames.
+tables. These are defined in [FORMAT.md](FORMAT.md) and `Orbit64.Net` for
+`n <= 7`. For `n >= 8` V2 extends them by FORMAT.md's rule for the 6x6x6 and
+7x7x7 ("6×6×6 and 7×7×7 slot order"). Use the 4x4x4 (`b = 4`, even `n`) or
+5x5x5 (`b = 5`, odd `n`) reference slots, with wing depth `d` running from 1 to
+`w`, and with each center orbit's 24 slots ordered by facelet index.
+
+The six colors are the face indexes `U R F D L B` = `0..5`. Frames use V1's
+`Frame` order of the 24 right-handed whole-cube frames. A piece is numbered by
+its home slot, so the solved state is the identity.
 
 The new conventions for the picture model are:
 
@@ -240,40 +287,54 @@ first. Digits that do not exist for a size or model are skipped.
 | 7 | fixed-center rotations (picture, odd) | `2^11` |
 | 8 | frame (framed, odd) | `24` |
 
-In the even canonical variant, the DBL corner (slot 6) is home with twist 0. It
-is left out, and the seven other corners are numbered `0..6` in slot order. In
-the even framed variant, all eight corners are stored as in V1. The cube's
-orientation is then implicit in them, so there is no frame digit.
+**Even canonical corners.** The DBL corner (slot and piece 6) is home with
+twist 0 and is left out. The other seven slots and pieces `s` are renumbered
+`s - [s > 6]`, so the DRB slot and the DRB piece both become 6. Twists keep
+V1's per-slot convention. Digit 2 holds the twists of the first six of these
+seven slots, and the seventh follows from the twist law, since DBL's twist is
+0. In the even framed variant, all eight corners are stored as in V1. The
+cube's orientation is then implicit in them, so there is no frame digit.
 
-Digit 7 combines the six fixed-center rotations:
+**Fixed-center rotations.** Digit 7 combines the six rotations:
 `r_U + 4 r_R + 16 r_F + 64 r_D + 256 r_L + 1024 * floor(r_B / 2)`. The parity
-of `r_B` follows from the relation `par(R) = par(C)` below, where
+of `r_B` follows from the relation `R = C` below, where
 `R = r_U + r_R + r_F + r_D + r_L + r_B`.
 
 ### Parity relations
 
 Reachable states satisfy the orientation laws (corner twists sum to 0 mod 3,
-midge flips to 0 mod 2) and the following parity relations. These are all of
-them (obligation P2). In each relation, the left side is a **forced**
-component. It is stored with the parity-reduced rank (or, for `R`, without the
-low bit of `r_B`), and its parity is computed from the free components on the
-right. A component written `C`, `M`, `W1` or `Z[r,c]` stands for that orbit's
-permutation parity.
+midge flips to 0 mod 2) and these parity relations, mod 2. Here `C`, `M`,
+`Wd` and `Z[r,c]` stand for the permutation parities of those orbits, and `R`
+for the parity of the total fixed-center rotation.
 
-| Size | Picture model | Color model |
-| ---- | ------------- | ----------- |
-| 2x2x2 | none | none |
-| 3x3x3 | `M = C`, `R = C` | `M = C` |
-| 4x4x4 | `Z[1,1] = C` | none |
-| 5x5x5 | `M = C`, `Z[1,1] = C`, `Z[1,2] = C + W1`, `R = C` | `M = C` |
-| 6x6x6 | `Z[1,1] = C`, `Z[1,2] = C + W1 + W2`, `Z[1,3] = C + W1 + W2`, `Z[2,2] = C` | none |
-| 7x7x7 | `M = C`, `Z[1,1] = C`, `Z[1,2] = C + W1 + W2`, `Z[1,3] = C + W1`, `Z[1,4] = C + W1 + W2`, `Z[2,2] = C`, `Z[2,3] = C + W2`, `R = C` | `M = C` |
+**Picture model.**
 
-The sums are mod 2. Corners, wings and the color model's center multisets are
-never forced. In the picture model, every center orbit and the fixed-center
-rotation parity are forced. These relations hold in both pose variants. On
-even cubes, `C` is the parity of all eight corners, which equals the parity of
-the seven stored ones when DBL is home.
+- `M = C` and `R = C` (odd cubes);
+- for every center orbit `Z[r,c]`, with `d = min(c, n - 1 - c)`:
+
+  ```text
+  Z[r,c] = C + Wr + Wd
+  ```
+
+  where a term `Wk` is absent when the cube has no wing orbit at depth `k`.
+  That is the middle depth of an odd cube, so a `+`-center orbit gives
+  `Z[r,c] = C + Wr`. An X-center orbit (`r = d`) gives `Z[r,c] = C`, because
+  the two equal terms cancel.
+
+**Color model.** `M = C` on odd cubes, and nothing else.
+
+These are all the relations (obligation P2), and they hold in both pose
+variants. On even cubes, `C` is the parity of all eight corners, which equals
+the parity of the seven stored ones when DBL is home. A center orbit `Z` is a
+picture-model **forced** component, stored with the parity-reduced rank. So is
+`M`. For `R`, the low bit of `r_B` is not stored. A decoder computes the
+forced parities from the free ones on the right. Corners, wings and the color
+model's center multisets are never forced.
+
+For example, the 7x7x7 picture model has `M = C`, `R = C`, `Z[1,1] = C`,
+`Z[1,2] = C + W1 + W2`, `Z[1,3] = C + W1`, `Z[1,4] = C + W1 + W2`,
+`Z[2,2] = C` and `Z[2,3] = C + W2`. The proof report lists the relations for
+every size as computed.
 
 ### Encoding and decoding
 
@@ -281,9 +342,15 @@ To **encode** a state of entry `i`:
 
 1. For a canonical entry, normalize the pose. For a framed odd entry, record
    the frame and normalize.
-2. Validate: the permutations are permutations, the orientation laws hold, the
-   parity relations hold, and each color multiset has four of each color. An
-   invalid state is an error, never a token.
+2. Validate. An invalid state is an error, never a token. The state is
+   invalid unless:
+   - every permutation is a permutation of its orbit;
+   - twists are in `0..2`, flips in `0..1`, rotations in `0..3`, the frame is
+     in `0..23` and colors are in `0..5`;
+   - each color multiset has four of each color;
+   - a canonical state has its reference home: fixed centers on odd cubes, DBL
+     in slot DBL with twist 0 on even cubes;
+   - the orientation laws and the parity relations hold.
 3. Compute the digits, combine them, add `offset_i`, and write the result at
    length `L_i`.
 
@@ -296,47 +363,62 @@ state encodes to exactly one rank.
 
 ## Proof obligations
 
-Each claim the format relies on is proved here: as a short argument or by
-`proof_obligations.jl`, which needs only Julia's standard library.
+Each claim the format relies on is listed here, with how it is established.
+"Checked" means that `proof_obligations.jl` computes it with exact integer
+arithmetic and stops with an error if it fails. The script needs only Julia's
+standard library and checks `n = 2..15` in about a minute.
 
-- **P1. Ranks are bijections.** Each digit is a bijection onto its radix:
-  Lehmer codes, the combinatorial number system, positional orientation digits,
-  and the parity-reduced rank for a fixed parity. A mixed-radix Horner
+- **P1. Ranks are bijections.** *Argument.* Each digit is a bijection onto its
+  radix: Lehmer codes, the combinatorial number system, positional orientation
+  digits, and the parity-reduced rank for a fixed parity. A mixed-radix Horner
   combination of bijections is a bijection onto the product of the radixes.
   This product equals `N_i` by P2.
-- **P2. The counts are exact.** Let `H` be the group of reachable states with
-  the reference home: generated by every layer turn except the middle layers
-  (odd) or the three layers holding DBL (even). The script computes
-  - an **upper bound** on `|H|` from invariants. The twist and flip laws hold
-    for every generator. The GF(2) parity relations are all the linear forms
-    that vanish on every generator of the full group, restricted to fixed
-    centers at home. Each piece in the picture model has exactly the
-    orientations in the table above.
-  - a **lower bound** on `|H|`, as the product of the orbit lengths of a
-    Schreier-Sims chain built from elements of `H`. Every element in the chain
-    lies in the group, so the product never overstates `|H|`. Random elements
-    only decide how fast the bound grows, never whether it holds.
+- **P2. The counts and relations are exact.** Let `H` be the group of reachable
+  states with the reference home, generated by every layer turn except the
+  middle layers (odd) or the three layers holding DBL (even). The script
+  establishes `lower <= |H| <= upper` with `lower = upper`:
+  - **Upper bound.** Every reachable state satisfies:
+    - the twist and flip laws. *Checked* on every generator. That this
+      suffices is an *argument*: the twist and flip of a piece are measured
+      against fixed per-slot reference facelets, so they add up under
+      composition.
+    - the per-piece orientation counts. *Checked*: for one piece of each orbit,
+      the orbit of its (facelet, tangent) points under the generators of `H`
+      has exactly `slots x orientations` elements. The stabilizer argument
+      under [Pieces and orbits](#pieces-and-orbits) explains why.
+    - the parity relations. *Checked*: they are the GF(2) linear forms that
+      vanish on every generator of the full group, restricted to fixed centers
+      at home. Parity is a homomorphism, so each form vanishes on the whole
+      group. Each relation halves the count.
 
-  The bounds are equal for every `n = 2..7`, so the picture counts and the
-  parity relations above are exact. The color model's reachable states are the
-  picture model's states with center identities and rotations forgotten. Two
-  same-colored centers of one orbit can always be swapped, and a fixed center
-  can always be turned, without changing the colors, so the color relations are
-  exactly the picture relations that involve no center or `R`. Then
-  `24 * N(color canonical) = V1 State.stateCount(n)` for every `n`.
-- **P3. The pose normalization is well defined.** The reference (fixed centers
-  on odd cubes, DBL with its twist on even cubes) has exactly 24 poses. The 24
-  whole-cube rotations reach all of them, and only the identity keeps the
-  reference home. So every state has exactly one canonical form and framed
-  counts are 24 times canonical counts. On odd cubes, moves move fixed centers
-  only rigidly, as a rotation. On even cubes, a corner has `8 * 3 = 24` poses.
-- **P4. Ranges are disjoint and stable.** This follows from the allocation
-  rule, see [Growth rules](#registry-and-allocation).
-- **P5. Lengths are exact.** The lengths and offsets above are computed with
-  exact integer arithmetic. No length sits at a rounding boundary.
-- **P6. Solved is all `A`.** The solved state has identity permutations, zero
-  orientations and frame rank 0, so every digit is 0 and its rank is 0. Its
-  token is `A` repeated `L_i` when `offset_i = 0`.
+    The script also *checks* that these relations equal the closed form above
+    for every `n = 2..15`.
+  - **Lower bound.** *Checked*: the product of the orbit lengths of a
+    Schreier-Sims chain built from elements of `H`. Every element in the chain
+    lies in `H`, so the product never overstates `|H|`. Random elements only
+    decide how fast the bound grows, never whether it holds.
+  - **Color model.** *Argument*, using `|H| = upper`, which says that every
+    picture state satisfying the relations is reachable. The color model's
+    states are the picture states with center identities and rotations
+    forgotten. Two same-colored centers of one orbit can always be swapped,
+    and a fixed center can always be turned, without changing the colors. So
+    the color relations are exactly the picture relations that involve no
+    center and no `R`. The script *checks* that
+    `24 * N(color canonical) = V1 State.stateCount(n)` for every `n`.
+- **P3. The pose normalization is well defined.** *Argument.* The reference
+  has exactly 24 poses: fixed centers on odd cubes, DBL with its twist on even
+  cubes. On odd cubes moves move fixed centers only rigidly, as a rotation. On
+  even cubes a corner has `8 * 3 = 24` poses. The 24 whole-cube rotations reach
+  all of them, and only the identity keeps the reference home. So every state
+  has exactly one canonical form, and framed counts are 24 times canonical
+  counts.
+- **P4. Ranges are disjoint and stable.** *Argument*, from the allocation rule;
+  see the growth rules.
+- **P5. Lengths and offsets are exact.** *Checked* with exact integers. The
+  fullest length is 42, at 97.72% after entry 11.
+- **P6. Solved is the zero state.** *Argument.* The solved state has identity
+  permutations, zero orientations and frame rank 0, so every digit is 0 and
+  its rank is 0. Its token is `A` repeated `L_i` when `offset_i = 0`.
 
 Every future entry must come with the same obligations: an exact count with a
 proof, a bijective rank with zero for its zero state, and reference vectors.
@@ -349,21 +431,26 @@ space. Those formats are not state tokens, and a V2 token is only a state
 token. V1's canonical form, the pattern class under rotation, mirror and
 recoloring, is a separate function and not a V2 pose variant.
 
-The digit layouts of the color framed entries are V1's coordinate order. In
-the initial registry, entries 1, 3, 7, 15 and 19 start at offset 0 at V1's
-token widths 5, 12, 27, 66 and 90. A V1 state token for the 2x2x2, 3x3x3,
-4x4x4, 6x6x6 or 7x7x7 is therefore the V2 token of the same state. A V1 5x5x5
-token has 43 characters, a length where the initial registry has no entries,
-so a V2 decoder rejects it rather than misreading it. This is a property of
-the initial registry, not a promise: label V2 tokens where they could be
-confused with V1 tokens or other strings, for example by a field name or a
-`orbit64v2:` prefix.
+**V1 tokens read by V2.** The digit layouts of the color framed entries are
+V1's coordinate order. In the initial registry, entries 1, 3, 7, 15 and 19
+start at offset 0 at V1's token widths 5, 12, 27, 66 and 90. A V1 state token
+for the 2x2x2, 3x3x3, 4x4x4, 6x6x6 or 7x7x7 is therefore the V2 token of the
+same state. A V1 5x5x5 token has 43 characters, a length where the initial
+registry has no entries, so a V2 decoder rejects it rather than misreading it.
+This is a property of the initial registry, not a promise.
+
+**V2 tokens read by V1.** This direction is unsafe. A V2 token has no class
+bits, so a V1 decoder can take it for a move sequence or an algorithm. For
+example, an 11-character 3x3x3 canonical token can start with `Q` to `f`,
+which is V1's move-sequence class. Wherever a V1 decoder might see V2 tokens,
+V2 tokens MUST be labeled, for example by a field name or an `orbit64v2:`
+prefix.
 
 ## Extensions
 
 New types are appended to the registry. Directions already anticipated:
 
-- **Larger cubes** (`n > 7`) and **cuboids** `a x b x c`, appended member by
+- **Larger cubes** (`n > 15`) and **cuboids** `a x b x c`, appended member by
   member when needed. A family is a naming convention, not a token feature.
 - **Unconstrained variants**: physically assembled states that ignore the
   orientation laws and parity relations. A scanner needs them to report a
@@ -371,8 +458,8 @@ New types are appended to the registry. Directions already anticipated:
 - **Partial distinguishability**: cubes where only some stickers differ, for
   example a logo on one center. Such an entry declares which pieces are
   equivalent. The color and picture models are the two extremes.
-- **Masks**: states with unknown pieces, for partial scans and learning
-  goals such as "only the cross matters".
+- **Masks**: states with unknown pieces, for partial scans and learning goals
+  such as "only the cross matters".
 - **Other puzzles and shape changers**: pyramids, megaminxes, Square-1,
   bandaged cubes. Each needs its own rank function and count proof.
 
@@ -382,10 +469,13 @@ records the physical state.
 
 ## Open items before V2 leaves draft
 
-1. Inline the V1 slot tables (`orbit64-Nxn-draft@1`) here, so that V2 no longer
-   depends on another document.
+1. Inline the slot tables here, so that V2 no longer depends on another
+   document: V1's tables for `n <= 7`, and the generated ones for `n = 8..15`.
 2. Implement V2 in this library. Commit reference vectors for every entry: the
    solved state, single turns, a frame, and random states checked against an
-   independent facelet simulation.
-3. Port the other implementations (cubacle, cube-assembler, cubelab) only
+   independent facelet simulation. Include V1's vectors as V2 vectors for the
+   sizes in [Relation to V1](#relation-to-v1).
+3. Check in CI that `proof-obligations.md` is the script's output and that this
+   document's registry table matches it.
+4. Port the other implementations (cubacle, cube-assembler, cubelab) only
    after that.
