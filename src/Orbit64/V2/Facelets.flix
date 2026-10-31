@@ -20,6 +20,14 @@
 /// slot and the solved cube shows face colors, a piece's colors are the faces
 /// of its home slot's facelets, so no color table is needed.
 ///
+/// This is the same table as the rule of `FORMAT-V2.md` ("Conventions"), which
+/// takes the 4x4x4 reference for even `n` and the 5x5x5 reference for odd `n`.
+/// The wings of the 4x4x4 serve every `n`; a corner uses only the axis values
+/// `0` and `n - 1`, so the corners of the 5x5x5 are those of the 4x4x4 for even
+/// `n`; midges exist only on odd cubes, where the rule takes the 5x5x5. V1's
+/// `Net` confirms the result for `n = 2..7`, and the Julia program
+/// `tools/format-v2/facelet_vectors.jl` derives the tables from geometry for all `n`.
+///
 /// A whole-cube rotation is applied to a facelet string through the geometry
 /// of `FORMAT.md`, not through V1's `x`, `z`, `y` composition: frame `r` is
 /// the rotation that moves physical face `faces(r)[i]` into slot `i`.
@@ -168,11 +176,19 @@ mod Orbit64.V2.Facelets {
 
     /// The `(a, b)` grid coordinates of a position on a face, as in `geometry`.
     def gridOf(face: Int32, position: Vec): (Int32, Int32) =
+        if (face < 3) gridOfFront(face, position) else gridOfBack(face, position)
+
+    def gridOfFront(face: Int32, position: Vec): (Int32, Int32) =
         let (x, y, z) = position;
         match face {
             case 0 => (x, z)
             case 1 => (-z, -y)
-            case 2 => (x, -y)
+            case _ => (x, -y)
+        }
+
+    def gridOfBack(face: Int32, position: Vec): (Int32, Int32) =
+        let (x, y, z) = position;
+        match face {
             case 3 => (x, -z)
             case 4 => (z, -y)
             case _ => (-x, -y)
@@ -317,15 +333,21 @@ mod Orbit64.V2.Facelets {
 
     /// The stickers of a facelet string, as face indices, or why it is no string of `n^2` per face.
     def parse(n: Int32, text: String): Result[String, Vector[Int32]] =
-        let chars = String.toList(text) |> List.filter(c -> c != ' ');
-        let length = List.length(chars);
-        if (length != 6 * n * n)
-            Err("expected ${6 * n * n} facelets for the ${n}x${n}x${n}, got ${length}")
-        else
-            chars |> Result.traverse(c -> match List.indexOf(c, "URFDLB" |> String.toList) {
-                case Some(i) => Ok(i)
-                case None => Err("facelet '${c}' is not one of U R F D L B")
-            }) |> Result.map(List.toVector)
+        String.toList(text) |> List.filter(c -> c != ' ')
+            |> Result.traverse(letterIndex)
+            |> Result.flatMap(indices -> {
+                let length = List.length(indices);
+                if (length != 6 * n * n)
+                    Err("expected ${6 * n * n} facelets for the ${n}x${n}x${n}, got ${length}")
+                else Ok(List.toVector(indices))
+            })
+
+    /// The face index of a facelet letter; a tab or newline is a bad letter like any other.
+    def letterIndex(c: Char): Result[String, Int32] =
+        match List.indexOf(c, "URFDLB" |> String.toList) {
+            case Some(i) => Ok(i)
+            case None => Err("facelet '${c}' is not one of U R F D L B")
+        }
 
     def checkCounts(n: Int32, fs: Vector[Int32]): Result[String, Unit] =
         match List.range(0, 6) |> List.find(f -> Vector.count(x -> x == f, fs) != n * n) {
@@ -370,11 +392,11 @@ mod Orbit64.V2.Facelets {
     /// A wing carries no twist: its two stickers sit in the order of its home slot or not at all.
     def readWingsStrict(n: Int32, table: Vector[Vector[Int32]],
                         fs: Vector[Int32]): Result[String, Vector[Int32]] =
+        let solved = Vector.range(0, 6 * n * n) |> Vector.map(i -> faceOf(n, i));
+        let homes = List.range(0, Vector.length(table)) |> List.map(p -> seenAt(table, p, solved));
         List.range(0, Vector.length(table)) |> Result.traverse(slot -> {
             let seen = seenAt(table, slot, fs);
-            match List.range(0, Vector.length(table))
-                    |> List.find(p -> seenAt(table, p, Vector.range(0, 6 * n * n)
-                                              |> Vector.map(i -> faceOf(n, i))) == seen) {
+            match List.indexOf(seen, homes) {
                 case Some(p) => Ok(p)
                 case None => Err(noPiece("wing", slot, seen))
             }
@@ -430,16 +452,18 @@ mod Orbit64.V2.Facelets {
     pub def fromFacelets(n: Int32, model: Model, pose: Pose,
                          facelets: String): Result[String, Cube] =
         if (not Option.isEmpty(typeFault(n, model))) Err(faultText(n, model))
-        else {
-            let t = tables(n);
-            forM (
-                fs <- parse(n, facelets);
-                _ <- checkCounts(n, fs);
-                posed <- posedStickers(n, pose, t, fs);
-                cube <- readCube(n, t, fst(posed), snd(posed));
-                _ <- Orbit64.V2.State.rank(n, model, pose, cube)
-            ) yield cube
-        }
+        else readStickers(n, model, pose, facelets)
+
+    def readStickers(n: Int32, model: Model, pose: Pose,
+                     facelets: String): Result[String, Cube] =
+        let t = tables(n);
+        forM (
+            fs <- parse(n, facelets);
+            _ <- checkCounts(n, fs);
+            posed <- posedStickers(n, pose, t, fs);
+            cube <- readCube(n, t, fst(posed), snd(posed));
+            _ <- Orbit64.V2.State.rank(n, model, pose, cube)
+        ) yield cube
 
     /// The frame to record and the stickers in the pose the type reads them in.
     def posedStickers(n: Int32, pose: Pose, t: Tables,
