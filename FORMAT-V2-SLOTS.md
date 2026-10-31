@@ -14,6 +14,9 @@ slot, reference sticker first; a center slot is one facelet. For `n <= 7`
 the tables are those of `Orbit64.Net`; for `n >= 8` they extend the reference
 slots of the 4x4x4 (even `n`) or 5x5x5 (odd `n`) as FORMAT-V2.md describes.
 
+Corner stickers are listed in one fixed order: the first is on the U or D
+face, and the other two follow clockwise as seen from outside the cube.
+
 ## 2x2x2
 
 Facelets `0..23`.
@@ -1593,4 +1596,3 @@ centers, 24 slots each, ascending
   Z[6,6]: 96 98 126 128 321 323 351 353 546 548 576 578 771 773 801 803 996 998 1026 1028 1221 1223 1251 1253
   Z[6,7]: 97 111 113 127 322 336 338 352 547 561 563 577 772 786 788 802 997 1011 1013 1027 1222 1236 1238 1252
 ```
-
