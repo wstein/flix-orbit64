@@ -20,11 +20,11 @@
 #   3. Encodes each state with its own mixed-radix Horner implementation, decodes
 #      the token with its own decoder, and asserts that the state comes back.
 #
-# Assumption about the solved state of a color-model center orbit: FORMAT-V2.md
-# does not inline the slot tables, so the solved colors are defined here as the
-# ones that make the all-zero multiset rank the solved state, that is, colors
-# ascending by slot: slots 0-3 color 0, slots 4-7 color 1, ..., slots 20-23
-# color 5. Picture-model orbits and all permutations are solved at the identity.
+# Solved state of a color-model center orbit: FORMAT-V2.md states it normatively
+# (colors ascending by slot, in the slot order of FORMAT-V2-SLOTS.md), so the
+# all-zero multiset ranks the solved state. That is, slots 0-3 have color 0,
+# slots 4-7 color 1, ..., slots 20-23 color 5. Picture-model orbits and all
+# permutations are solved at the identity.
 
 using Random
 using Printf
