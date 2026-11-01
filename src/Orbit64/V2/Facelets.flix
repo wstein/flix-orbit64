@@ -7,7 +7,11 @@
 /// ignores spaces. This is the notation of V1's `Orbit64.Net`, for every
 /// `n = 2..15`.
 ///
-/// Only the color model has letters: its stickers are exactly the six colors.
+/// The color model writes the letters. The picture model, where every sticker
+/// is distinct, writes one base64url symbol per facelet instead: the sticker's
+/// index among the stickers of its piece type, and for a fixed center of an odd
+/// cube also its rotation. "Picture facelets" in `FORMAT-V2.md` is normative.
+/// A picture string is as long as a color string, with the same six fields.
 ///
 /// The slot tables follow the V1 slot convention `orbit64-Nxn-draft@1` and
 /// its extension to `n >= 8` ("Conventions" in `FORMAT-V2.md`). Three
@@ -262,37 +266,60 @@ mod Orbit64.V2.Facelets {
 
     // ---------------------------------------------------------- cube to stickers
 
-    def writeOriented(n: Int32, sticker: Array[Int32, r], table: Vector[Vector[Int32]],
-                      pieces: Vector[Int32], twists: Vector[Int32]): Unit \ r =
+    /// What each sticker of each piece shows: the face color of its home facelet.
+    def colorLabels(n: Int32, table: Vector[Vector[Int32]]): Vector[Vector[Int32]] =
+        Vector.map(row -> Vector.map(i -> faceOf(n, i), row), table)
+
+    /// What each sticker of each piece shows in the picture model: `m p + j`.
+    def pictureLabels(table: Vector[Vector[Int32]]): Vector[Vector[Int32]] =
+        Vector.range(0, Vector.length(table)) |> Vector.map(p -> {
+            let m = Vector.length(Vector.get(p, table));
+            Vector.range(0, m) |> Vector.map(j -> m * p + j)
+        })
+
+    def labelsOf(n: Int32, model: Model, table: Vector[Vector[Int32]]): Vector[Vector[Int32]] =
+        if (model == Model.Picture) pictureLabels(table) else colorLabels(n, table)
+
+    def writeOriented(sticker: Array[Int32, r], table: Vector[Vector[Int32]],
+                      labels: Vector[Vector[Int32]], pieces: Vector[Int32],
+                      twists: Vector[Int32]): Unit \ r =
         Vector.range(0, Vector.length(table)) |> Vector.forEach(slot -> {
             let m = Vector.length(Vector.get(slot, table));
-            let home = Vector.get(Vector.get(slot, pieces), table);
+            let shown = Vector.get(Vector.get(slot, pieces), labels);
             let twist = Vector.get(slot, twists);
             Vector.range(0, m) |> Vector.forEach(k ->
-                Array.put(faceOf(n, Vector.get(Int32.modulo(k - twist + m, m), home)),
+                Array.put(Vector.get(Int32.modulo(k - twist + m, m), shown),
                           Vector.get(k, Vector.get(slot, table)), sticker))
         })
 
-    def writeWings(n: Int32, sticker: Array[Int32, r], table: Vector[Vector[Int32]],
-                   pieces: Vector[Int32]): Unit \ r =
-        writeOriented(n, sticker, table, pieces, Vector.repeat(24, 0))
+    def writeWings(sticker: Array[Int32, r], table: Vector[Vector[Int32]],
+                   labels: Vector[Vector[Int32]], pieces: Vector[Int32]): Unit \ r =
+        writeOriented(sticker, table, labels, pieces, Vector.repeat(24, 0))
 
     def writeCenters(sticker: Array[Int32, r], table: Vector[Int32],
                      colors: Vector[Int32]): Unit \ r =
         Vector.range(0, Vector.length(table)) |> Vector.forEach(slot ->
             Array.put(Vector.get(slot, colors), Vector.get(slot, table), sticker))
 
-    /// The stickers of a canonical-pose cube; fixed centers are home.
-    def paint(n: Int32, t: Tables, cube: Cube): Vector[Int32] =
+    /// A fixed center shows its face color, or in the picture model its piece and rotation.
+    def fixedValue(model: Model, cube: Cube, face: Int32): Int32 =
+        if (model == Model.Picture) 4 * face + Vector.get(face, cube#rotations) else face
+
+    /// The stickers of a canonical-pose cube; the fixed centers sit at home.
+    def paint(n: Int32, t: Tables, model: Model, cube: Cube): Vector[Int32] =
         region rc {
             let sticker = Array.repeat(rc, 6 * n * n, 0);
+            let labels = table -> labelsOf(n, model, table);
             Vector.range(0, Vector.length(t#fixed)) |> Vector.forEach(f ->
-                Array.put(f, Vector.get(f, t#fixed), sticker));
-            writeOriented(n, sticker, t#corners, cube#cornerPieces, cube#cornerTwists);
-            if (odd(n)) writeOriented(n, sticker, t#midges, cube#midgePieces, cube#midgeFlips)
+                Array.put(fixedValue(model, cube, f), Vector.get(f, t#fixed), sticker));
+            writeOriented(sticker, t#corners, labels(t#corners), cube#cornerPieces,
+                          cube#cornerTwists);
+            if (odd(n)) writeOriented(sticker, t#midges, labels(t#midges), cube#midgePieces,
+                                      cube#midgeFlips)
             else ();
             Vector.range(0, Vector.length(t#wings)) |> Vector.forEach(i ->
-                writeWings(n, sticker, Vector.get(i, t#wings), Vector.get(i, cube#wings)));
+                writeWings(sticker, Vector.get(i, t#wings), labels(Vector.get(i, t#wings)),
+                           Vector.get(i, cube#wings)));
             Vector.range(0, Vector.length(t#centers)) |> Vector.forEach(i ->
                 writeCenters(sticker, Vector.get(i, t#centers), Vector.get(i, cube#centers)));
             Array.toVector(sticker)
@@ -304,37 +331,103 @@ mod Orbit64.V2.Facelets {
     /// Why a type has no facelet letters, if it has none.
     def typeFault(n: Int32, model: Model): Option[String] =
         if (n < 2 or n > 15) Some("no V2 type for the ${n}x${n}x${n}")
-        else if (model == Model.Picture) Some("the picture model has no letters")
+        else if (n == 2 and model == Model.Picture)
+            Some("the 2x2x2 has no picture entry: its picture model is the color model")
         else None
 
-    def spell(n: Int32, fs: Vector[Int32]): String =
+    /// The base64url alphabet of tokens, in index order.
+    def symbols(): String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+    /// The symbol of a sticker value: a letter in the color model, base64url in the picture model.
+    def symbolOf(model: Model, value: Int32): String =
+        if (model == Model.Picture) "${String.charAt(value, symbols())}"
+        else Vector.get(value, letters())
+
+    def spell(n: Int32, model: Model, fs: Vector[Int32]): String =
         Vector.range(0, 6) |> Vector.map(face ->
             Vector.range(0, n * n)
-                |> Vector.map(i -> Vector.get(Vector.get(face * n * n + i, fs), letters()))
+                |> Vector.map(i -> symbolOf(model, Vector.get(face * n * n + i, fs)))
                 |> Vector.join(""))
             |> Vector.join(" ")
+
+    // ------------------------------------------------- fixed center rotations
+
+    def cross(a: Vec, b: Vec): Vec =
+        let (ax, ay, az) = a;
+        let (bx, by, bz) = b;
+        (ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx)
+
+    /// The reference direction of a face: toward row 0, so toward `B` on `U` and `F` on `D`.
+    def reference(face: Int32): Vec = match face {
+        case 0 => (0, 0, -1)
+        case 3 => (0, 0, 1)
+        case _ => (0, 1, 0)
+    }
+
+    /// A direction on a face turned `k` clockwise quarter turns, seen from outside.
+    def spin(normal: Vec, direction: Vec, k: Int32): Vec =
+        if (k <= 0) direction else spin(normal, cross(direction, normal), k - 1)
+
+    /// The clockwise quarter turns from the reference direction of `face` to `direction`.
+    def quarterTurns(face: Int32, direction: Vec): Int32 =
+        List.range(0, 4)
+            |> List.find(k -> spin(normalOf(face), reference(face), k) == direction)
+            |> Option.getWithDefault(0)
+
+    /// Where the fixed center of `face` with rotation `r` lands under `move`, and its new rotation.
+    def carryFixed(move: Vec -> Vec, face: Int32, r: Int32): (Int32, Int32) =
+        let own = spin(normalOf(face), reference(face), r);
+        let landed = faceOfNormal(move(normalOf(face)));
+        (landed, quarterTurns(landed, move(own)))
+
+    /// `permuted` is `before` with its facelets moved; carry the fixed centers along.
+    def turnFixed(n: Int32, move: Vec -> Vec, before: Vector[Int32],
+                  permuted: Vector[Int32]): Vector[Int32] =
+        region rc {
+            let out = Array.repeat(rc, Vector.length(permuted), 0);
+            Vector.range(0, Vector.length(permuted)) |> Vector.forEach(i ->
+                Array.put(Vector.get(i, permuted), i, out));
+            Vector.range(0, 6) |> Vector.forEach(face -> {
+                let value = Vector.get(Vector.get(face, fixedFacelets(n)), before);
+                let (landed, r) = carryFixed(move, face, Int32.modulo(value, 4));
+                Array.put(4 * (value / 4) + r, Vector.get(landed, fixedFacelets(n)), out)
+            });
+            Array.toVector(out)
+        }
+
+    /// The picture of a cube turned by `turn`: stickers and fixed center rotations.
+    def rotatePicture(n: Int32, turn: Turn, fs: Vector[Int32]): Vector[Int32] =
+        turnFixed(n, v -> forward(turn, v), fs, rotate(n, turn, fs))
+
+    /// The picture of a cube turned back by `turn`.
+    def unrotatePicture(n: Int32, turn: Turn, fs: Vector[Int32]): Vector[Int32] =
+        turnFixed(n, v -> backward(turn, v), fs, unrotate(n, turn, fs))
 
     /// The facelet string of a cube state of the type `(n, model, pose)`.
     ///
     /// A canonical cube is written in its reference pose. A framed cube of an
     /// odd size is that picture rotated by `cube#frame`; a framed cube of an
-    /// even size shows its pose in its corners already. Only the color model
-    /// has letters.
+    /// even size shows its pose in its corners already. The color model writes
+    /// letters and the picture model base64url symbols.
     pub def toFacelets(n: Int32, model: Model, pose: Pose, cube: Cube): Result[String, String] =
         if (not Option.isEmpty(typeFault(n, model))) Err(faultText(n, model))
         else
             Orbit64.V2.State.rank(n, model, pose, cube)
                 |> Result.map(_ -> {
-                    let fs = paint(n, tables(n), cube);
-                    spell(n, if (odd(n)) rotate(n, turnOf(cube#frame), fs) else fs)
+                    let fs = paint(n, tables(n), model, cube);
+                    spell(n, model, if (not odd(n)) fs
+                                    else if (model == Model.Picture)
+                                        rotatePicture(n, turnOf(cube#frame), fs)
+                                    else rotate(n, turnOf(cube#frame), fs))
                 })
 
     // ---------------------------------------------------------- stickers to cube
 
     /// The stickers of a facelet string, as face indices, or why it is no string of `n^2` per face.
-    def parse(n: Int32, text: String): Result[String, Vector[Int32]] =
+    def parse(n: Int32, text: String,
+              symbolIndex: Char -> Result[String, Int32]): Result[String, Vector[Int32]] =
         String.toList(text) |> List.filter(c -> c != ' ')
-            |> Result.traverse(letterIndex)
+            |> Result.traverse(symbolIndex)
             |> Result.flatMap(indices -> {
                 let length = List.length(indices);
                 if (length != 6 * n * n)
@@ -372,8 +465,8 @@ mod Orbit64.V2.Facelets {
                     )
                 |> Option.map(o -> (p, o)))
 
-    def noPiece(what: String, slot: Int32, seen: Vector[Int32]): String =
-        let shown = seen |> Vector.map(f -> Vector.get(f, letters())) |> Vector.join("");
+    def noPiece(model: Model, what: String, slot: Int32, seen: Vector[Int32]): String =
+        let shown = seen |> Vector.map(v -> symbolOf(model, v)) |> Vector.join("");
         "${what} slot ${slot} shows ${shown}, which is no ${what} of this cube"
 
     def readOriented(n: Int32, what: String, table: Vector[Vector[Int32]],
@@ -382,7 +475,7 @@ mod Orbit64.V2.Facelets {
             let seen = seenAt(table, slot, fs);
             match readPiece(n, table, seen) {
                 case Some(po) => Ok(po)
-                case None => Err(noPiece(what, slot, seen))
+                case None => Err(noPiece(Model.Color, what, slot, seen))
             }
         }) |> Result.map(ps -> (pick(fst, ps), pick(snd, ps)))
 
@@ -398,7 +491,7 @@ mod Orbit64.V2.Facelets {
             let seen = seenAt(table, slot, fs);
             match List.indexOf(seen, homes) {
                 case Some(p) => Ok(p)
-                case None => Err(noPiece("wing", slot, seen))
+                case None => Err(noPiece(Model.Color, "wing", slot, seen))
             }
         }) |> Result.map(List.toVector)
 
@@ -424,20 +517,22 @@ mod Orbit64.V2.Facelets {
     def normalizeOdd(n: Int32, t: Tables,
                      fs: Vector[Int32]): Result[String, (Int32, Vector[Int32])] =
         let shown = t#fixed |> Vector.map(at -> Vector.get(at, fs)) |> Vector.toList;
+        frameShown(shown) |> Result.map(r -> (r, unrotate(n, turnOf(r), fs)))
+
+    /// The frame whose faces, in slot order, are `shown`.
+    def frameShown(shown: List[Int32]): Result[String, Int32] =
         match List.range(0, Orbit64.Frame.count()) |> List.find(r -> frameFaces(r) == shown) {
-            case Some(r) => Ok((r, unrotate(n, turnOf(r), fs)))
+            case Some(r) => Ok(r)
             case None => Err("the six fixed centers are not a right-handed whole-cube frame")
         }
 
     /// Rotate an even cube so that its DBL corner is in slot DBL with twist 0.
-    def normalizeEven(n: Int32, t: Tables, fs: Vector[Int32]): Result[String, Vector[Int32]] =
-        let home = r -> {
-            let rotated = unrotate(n, turnOf(r), fs);
-            (rotated, readPiece(n, t#corners, seenAt(t#corners, 6, rotated)))
-        };
-        match List.range(0, Orbit64.Frame.count()) |> List.map(home)
-                |> List.find(match (_, po) -> po == Some((6, 0))) {
-            case Some((rotated, _)) => Ok(rotated)
+    /// `atHome` says whether a rotated string has the DBL corner home with twist 0.
+    def normalizeEven(n: Int32, fs: Vector[Int32],
+                      atHome: Vector[Int32] -> Bool): Result[String, Vector[Int32]] =
+        match List.range(0, Orbit64.Frame.count())
+                |> List.map(r -> unrotate(n, turnOf(r), fs)) |> List.find(atHome) {
+            case Some(rotated) => Ok(rotated)
             case None => Err("no whole-cube rotation puts the DBL corner home")
         }
 
@@ -452,13 +547,14 @@ mod Orbit64.V2.Facelets {
     pub def fromFacelets(n: Int32, model: Model, pose: Pose,
                          facelets: String): Result[String, Cube] =
         if (not Option.isEmpty(typeFault(n, model))) Err(faultText(n, model))
+        else if (model == Model.Picture) readPictureStickers(n, pose, facelets)
         else readStickers(n, model, pose, facelets)
 
     def readStickers(n: Int32, model: Model, pose: Pose,
                      facelets: String): Result[String, Cube] =
         let t = tables(n);
         forM (
-            fs <- parse(n, facelets);
+            fs <- parse(n, facelets, letterIndex);
             _ <- checkCounts(n, fs);
             posed <- posedStickers(n, pose, t, fs);
             cube <- readCube(n, t, fst(posed), snd(posed));
@@ -472,8 +568,124 @@ mod Orbit64.V2.Facelets {
             normalizeOdd(n, t, fs)
                 |> Result.map(match (r, c) -> (if (pose == Pose.Framed) r else 0, c))
         else if (pose == Pose.Canonical)
-            normalizeEven(n, t, fs) |> Result.map(c -> (0, c))
+            normalizeEven(n, fs, rotated ->
+                readPiece(n, t#corners, seenAt(t#corners, 6, rotated)) == Some((6, 0)))
+                |> Result.map(c -> (0, c))
         else Ok((0, fs))
+
+    // ------------------------------------------------------- picture to cube
+
+    /// The value of a base64url symbol.
+    def symbolIndex(c: Char): Result[String, Int32] =
+        match List.indexOf(c, String.toList(symbols())) {
+            case Some(i) => Ok(i)
+            case None => Err("facelet '${c}' is not a base64url symbol")
+        }
+
+    /// The stickers of one piece type: where they sit, how many values they
+    /// can show, and `per`, how many values name the same piece.
+    type alias Group = {
+        what = String, facelets = Vector[Int32], limit = Int32, per = Int32
+    }
+
+    def groupOf(what: String, facelets: Vector[Int32], limit: Int32, per: Int32): Group =
+        { what = what, facelets = facelets, limit = limit, per = per }
+
+    /// Every sticker class of a cube. A sticker never leaves its class.
+    def groups(t: Tables): List[Group] =
+        let midges = if (Vector.isEmpty(t#midges)) Nil
+                     else groupOf("midge", Vector.flatten(t#midges), 24, 1) :: Nil;
+        let fixed = if (Vector.isEmpty(t#fixed)) Nil
+                    else groupOf("fixed center", t#fixed, 24, 4) :: Nil;
+        let wings = t#wings |> Vector.toList
+            |> List.map(w -> groupOf("wing", Vector.flatten(w), 48, 1));
+        let centers = t#centers |> Vector.toList |> List.map(c -> groupOf("center", c, 24, 1));
+        List.flatten((groupOf("corner", Vector.flatten(t#corners), 24, 1) :: Nil) :: midges :: wings
+                     :: centers :: fixed :: Nil)
+
+    /// A sticker on a facelet of the wrong class, or a piece shown twice.
+    def checkGroup(vs: Vector[Int32], g: Group): Result[String, Unit] =
+        let values = g#facelets |> Vector.map(at -> Vector.get(at, vs));
+        let shows = v -> symbolOf(Model.Picture, v);
+        match g#facelets |> Vector.toList |> List.find(at -> Vector.get(at, vs) >= g#limit) {
+            case Some(at) => Err("facelet ${at} shows '${shows(Vector.get(at, vs))}', "
+                                 + "which is no ${g#what} sticker")
+            case None =>
+                match values |> Vector.toList |> List.find(v ->
+                        Vector.count(w -> w / g#per == v / g#per, values) > 1) {
+                    case Some(v) => Err("${g#what} sticker '${shows(v)}' occurs more than once")
+                    case None => Ok(())
+                }
+        }
+
+    /// The piece and twist spelled by the `m` symbols of a slot: `m p + (k - o) mod m`.
+    def readPictureSlot(seen: Vector[Int32]): Option[(Int32, Int32)] =
+        let m = Vector.length(seen);
+        let first = Vector.get(0, seen);
+        let p = first / m;
+        let o = Int32.modulo(m - Int32.modulo(first, m), m);
+        if (List.range(0, m) |> List.forAll(k ->
+                Vector.get(k, seen) == m * p + Int32.modulo(k - o + m, m))) Some((p, o))
+        else None
+
+    /// The pieces and twists of a table of slots; a `strict` slot admits no twist.
+    def readPictureOriented(what: String, table: Vector[Vector[Int32]], strict: Bool,
+                            vs: Vector[Int32]): Result[String, (Vector[Int32], Vector[Int32])] =
+        List.range(0, Vector.length(table)) |> Result.traverse(slot -> {
+            let seen = seenAt(table, slot, vs);
+            match readPictureSlot(seen) {
+                case Some((p, o)) =>
+                    if (strict and o != 0) Err(noPiece(Model.Picture, what, slot, seen))
+                    else Ok((p, o))
+                case None => Err(noPiece(Model.Picture, what, slot, seen))
+            }
+        }) |> Result.map(ps -> (pick(fst, ps), pick(snd, ps)))
+
+    /// The coordinates of a canonical-pose picture; the frame is `frame`.
+    def readPictureCube(n: Int32, t: Tables, frame: Int32,
+                        vs: Vector[Int32]): Result[String, Cube] =
+        forM (
+            (cp, co) <- readPictureOriented("corner", t#corners, false, vs);
+            (mp, mo) <- if (odd(n)) readPictureOriented("midge", t#midges, false, vs)
+                        else Ok((Vector.empty(), Vector.empty()));
+            ws <- t#wings |> Vector.toList |> Result.traverse(table ->
+                      readPictureOriented("wing", table, true, vs) |> Result.map(fst))
+        ) yield {
+            cornerPieces = cp, cornerTwists = co, midgePieces = mp, midgeFlips = mo,
+            wings = List.toVector(ws),
+            centers = t#centers |> Vector.map(table -> readCenters(table, vs)),
+            rotations = t#fixed |> Vector.map(at -> Int32.modulo(Vector.get(at, vs), 4)),
+            frame = frame
+        }
+
+    /// The frame to record and the symbols in the pose the type reads them in.
+    def posedPicture(n: Int32, pose: Pose, t: Tables,
+                     vs: Vector[Int32]): Result[String, (Int32, Vector[Int32])] =
+        if (odd(n))
+            frameShown(t#fixed |> Vector.map(at -> Vector.get(at, vs) / 4) |> Vector.toList)
+                |> Result.map(r -> (if (pose == Pose.Framed) r else 0,
+                                    unrotatePicture(n, turnOf(r), vs)))
+        else if (pose == Pose.Canonical)
+            normalizeEven(n, vs, rotated ->
+                readPictureSlot(seenAt(t#corners, 6, rotated)) == Some((6, 0)))
+                |> Result.map(c -> (0, c))
+        else Ok((0, vs))
+
+    /// Every sticker is of its class and every slot spells one piece, in any pose.
+    def checkPieces(n: Int32, t: Tables, vs: Vector[Int32]): Result[String, Unit] =
+        Result.traverse(g -> checkGroup(vs, g), groups(t))
+            |> Result.flatMap(_ -> readPictureCube(n, t, 0, vs))
+            |> Result.map(_ -> ())
+
+    def readPictureStickers(n: Int32, pose: Pose, facelets: String): Result[String, Cube] =
+        let t = tables(n);
+        forM (
+            vs <- parse(n, facelets, symbolIndex);
+            _ <- checkPieces(n, t, vs);
+            posed <- posedPicture(n, pose, t, vs);
+            cube <- readPictureCube(n, t, fst(posed), snd(posed));
+            _ <- Orbit64.V2.State.rank(n, Model.Picture, pose, cube)
+        ) yield cube
 
     // ---------------------------------------------------- registry level helpers
 
