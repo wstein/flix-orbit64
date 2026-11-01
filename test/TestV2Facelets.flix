@@ -192,5 +192,6 @@ def unsupportedTypesAreErrors(): Unit \ Assert =
         case Ok(_) => ""
         case Err(why) => why
     };
-    Assert.assertTrue(String.contains(substr = "picture model", reason(3, Model.Picture)));
+    Assert.assertTrue(String.contains(substr = "no picture entry", reason(2, Model.Picture)));
+    Assert.assertTrue(Result.isErr(Orbit64.V2.Facelets.fromFacelets(3, Model.Picture, Pose.Framed, solved3)));
     Assert.assertTrue(String.contains(substr = "no V2 type", reason(16, Model.Color)))
