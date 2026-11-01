@@ -56,6 +56,14 @@ jobs:
           diff -u test/TestV2VectorData.flix "$RUNNER_TEMP/TestV2VectorData.flix" ||
             { echo "::error file=test/TestV2VectorData.flix::stale; run julia tools/format-v2/vectors.jl"; exit 1; }
 
+      # The picture-model facelet vectors come from an independent sticker
+      # simulation; the color-model ones are not compared here.
+      - name: Picture facelet vectors are the script's output
+        run: |
+          julia tools/format-v2/facelet_picture_vectors.jl "$RUNNER_TEMP/TestV2FaceletPictureData.flix"
+          diff -u test/TestV2FaceletPictureData.flix "$RUNNER_TEMP/TestV2FaceletPictureData.flix" ||
+            { echo "::error file=test/TestV2FaceletPictureData.flix::stale; run julia tools/format-v2/facelet_picture_vectors.jl"; exit 1; }
+
       # The report says its registry table is the one in FORMAT-V2.md, verbatim.
       - name: Registry table matches the report
         run: |

@@ -401,4 +401,6 @@ function main(out::String)
     println(stderr, "wrote ", length(rows), " rows to ", out)
 end
 
-main(isempty(ARGS) ? joinpath(@__DIR__, "..", "..", "test", "TestV2FaceletData.flix") : ARGS[1])
+# Run only as a script: facelet_picture_vectors.jl includes this file for its tools.
+abspath(PROGRAM_FILE) == (@__FILE__) &&
+    main(isempty(ARGS) ? joinpath(@__DIR__, "..", "..", "test", "TestV2FaceletData.flix") : ARGS[1])
