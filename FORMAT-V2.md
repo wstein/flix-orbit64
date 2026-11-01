@@ -487,8 +487,8 @@ the facelet's class is known, and a value outside the class's range is an
 error. Such a string has no meaning to repair.
 
 **Validation.** Reading never crashes. It fails with a reason. The type comes
-first: `n` outside `2..15`, or a picture-model 2x2x2, has no facelet string and
-fails before any character is read. Then the picture model checks, in this
+first: `n` outside `2..15`, or a picture-model 2x2x2, has no picture string (the 2x2x2
+is written as a color string) and fails before any character is read. Then the picture model checks, in this
 order:
 
 1. a character outside the alphabet, or a count other than `6 n^2`;
@@ -520,19 +520,24 @@ pose is checked: the pose comes before the pieces, because the pieces are read
 from the string already turned to its reference. In order:
 
 1. the type, as above;
-2. a character outside `U R F D L B` (the first one), then a count other than
+2. a character outside `U R F D L B` (the first one), then a length other than
    `6 n^2`;
 3. a color that does not occur `n^2` times (the first of `U R F D L B`);
 4. the pose: on odd cubes the six fixed centers are not the faces of a frame;
    on even canonical cubes no rotation puts DBL home;
 5. a corner, midge or wing slot that shows no piece of this cube (corners,
    midges, wings outermost orbit first, each by slot), or a wing with a twist;
-6. the laws of [Encoding and decoding](#encoding-and-decoding), in the order of
-   the picture model's step 5 less the rotation and center-parity laws, which
-   the color model does not have.
+6. the layout stage of [Encoding and decoding](#encoding-and-decoding), which
+   the color model reaches only here: a piece shown twice (corners, midges,
+   wings), or a center orbit that is not four of each color;
+7. the laws of the same section, in the order of the picture model's step 5
+   less the rotation and center-parity laws, which the color model does not
+   have.
 
-Both models thus fail on the type, then the symbols, then the length, then the
-counts, and last on the laws; they differ only in the order of the pose and the
+The two models agree on the type first, then the symbols, then the length, and
+on the laws last. They differ in between: the picture model checks class
+ranges and repeated stickers before the pieces and has no per-color count; the
+color model checks per-color counts before the pose and the layout after the
 pieces.
 
 **Example.** The solved 3x3x3 is
@@ -664,6 +669,6 @@ records the physical state.
    ports cubacle, cube-assembler and cubelab. The picture-model bridge, whose
    string [Picture facelets](#picture-facelets) fixes, exists in
    `Orbit64.V2.Facelets` only; the three ports still need it. The Chrome
-   extension has no bridge by design, since it decodes nothing.
+   extension has no bridge by design, since it never decodes a state.
 2. V1's vectors are only checked as V2 tokens, see
    [Relation to V1](#relation-to-v1).
