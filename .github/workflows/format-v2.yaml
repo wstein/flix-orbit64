@@ -32,7 +32,7 @@ jobs:
       # Julia is the only tool needed. The matching version is the one the
       # committed outputs were generated with.
       - name: Install Julia 1.11.5
-        uses: julia-actions/setup-julia@5c9647d97b78a5debe5164e9eec09d653d29bd71 # v2.6.1
+        uses: julia-actions/setup-julia@da908477b5db94c10ffce8cfea9f2b3b9d5db687 # v3.0.3
         with:
           version: '1.11.5'
 
