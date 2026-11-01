@@ -127,3 +127,95 @@ def fromFaceletsDeclinesAnImpossibleCenterCount(): Unit \ Assert =
     // where every color must appear on exactly four.
     refuses(said = "exactly four times",
             "five centers of one color", 4, withFacelet(5, 1, stickersOf(4)))
+
+//
+// The parity law. On an odd cube the corner and midge permutations must agree
+// in parity; facelets that show only two swapped corners, or only two swapped
+// midges, are no cube, and `State.encode` refuses the same state. The even
+// cubes have no such law, so the same swaps are ordinary states there.
+//
+
+def exchange(a: Int32, b: Int32, v: Vector[Int32]): Vector[Int32] =
+    Vector.init(i ->
+        if (i == a) Vector.get(b, v)
+        else if (i == b) Vector.get(a, v)
+        else Vector.get(i, v), Vector.length(v))
+
+def exchangeCorners(cs: List[Orbit64.Coord.Coord]): List[Orbit64.Coord.Coord] =
+    cs |> List.map(c -> match c {
+        case Orbit64.Coord.Coord.CornerCoord(p, t) =>
+            Orbit64.Coord.Coord.CornerCoord(exchange(0, 1, p), t)
+        case _ => c
+    })
+
+def exchangeMidges(cs: List[Orbit64.Coord.Coord]): List[Orbit64.Coord.Coord] =
+    cs |> List.map(c -> match c {
+        case Orbit64.Coord.Coord.MidgeCoord(p, f) =>
+            Orbit64.Coord.Coord.MidgeCoord(exchange(0, 1, p), f)
+        case _ => c
+    })
+
+def drawn(n: Int32, cs: List[Orbit64.Coord.Coord]): Vector[Int32] =
+    match Orbit64.Net.toFacelets(n, Orbit64.State.canonical(cs)) {
+        case Ok(fs) => fs
+        case Err(_) => Vector#{}
+    }
+
+def solvedOrbitsOf(n: Int32): List[Orbit64.Coord.Coord] =
+    Orbit64.State.orbits(Orbit64.State.solved(n))
+
+///
+/// The reported case: a solved cube with two corners exchanged.
+///
+@Test
+def fromFaceletsDeclinesTwoSwappedCornersOnAnOddCube(): Unit \ Assert =
+    List#{3, 5, 7} |> List.forEach(n ->
+        refuses(said = "corner and midge permutation parity must match",
+                "two swapped corners", n, drawn(n, exchangeCorners(solvedOrbitsOf(n)))))
+
+///
+/// The same law from the other side: two swapped midges.
+///
+@Test
+def fromFaceletsDeclinesTwoSwappedMidgesOnAnOddCube(): Unit \ Assert =
+    List#{3, 5, 7} |> List.forEach(n ->
+        refuses(said = "corner and midge permutation parity must match",
+                "two swapped midges", n, drawn(n, exchangeMidges(solvedOrbitsOf(n)))))
+
+///
+/// A swap in each orbit is a legal parity and reads back, and encodes.
+///
+@Test
+def fromFaceletsAcceptsMatchingParityOnAnOddCube(): Unit \ Assert =
+    List#{3, 5, 7} |> List.forEach(n -> {
+        let both = exchangeMidges(exchangeCorners(solvedOrbitsOf(n)));
+        Assert.assertEq(
+            expected = Ok(Orbit64.State.canonical(both)),
+            Orbit64.Net.fromFacelets(n, drawn(n, both)));
+        Assert.assertTrueWithMsg(
+            Result.isOk(Orbit64.Net.fromFacelets(n, drawn(n, both))
+                |> Result.flatMap(s -> Orbit64.State.encode(n, s))),
+            "a matching-parity ${n}x${n}x${n} did not encode")
+    })
+
+///
+/// Even cubes carry no corner/midge law: centers and wings absorb parity.
+///
+@Test
+def fromFaceletsAcceptsSwappedCornersOnAnEvenCube(): Unit \ Assert =
+    List#{2, 4, 6} |> List.forEach(n -> {
+        let swapped = exchangeCorners(solvedOrbitsOf(n));
+        Assert.assertEq(
+            expected = Ok(Orbit64.State.canonical(swapped)),
+            Orbit64.Net.fromFacelets(n, drawn(n, swapped)))
+    })
+
+///
+/// What the reader refuses, `encode` refuses too, so no facelet route yields a
+/// token that a coordinate route would not.
+///
+@Test
+def encodeRefusesWhatTheReaderRefusesForParity(): Unit \ Assert =
+    Assert.assertEq(
+        expected = Err("corner and midge permutation parity must match"),
+        Orbit64.State.encode(3, Orbit64.State.canonical(exchangeCorners(solvedOrbitsOf(3)))))

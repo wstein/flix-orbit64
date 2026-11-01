@@ -102,7 +102,8 @@ def aStateReadFromFaceletsEncodes(): Unit \ Assert =
 // generator. These states come from `Coord.unrank` on spread-out coordinates
 // instead: arbitrary wing permutations, arbitrary center colorings, arbitrary
 // twists, none of them reachable-looking and all of them valid, since `unrank`
-// is onto exactly the coordinates the format admits.
+// is onto exactly the coordinates the format admits. On odd cubes the midge
+// permutation is moved into the corners' parity class, as the parity law requires.
 //
 // Deterministic, so a failure is reproducible and a passing run is not luck.
 //
@@ -136,10 +137,10 @@ def seeds(): List[Int32] = List.range(0, 8)
 def seededStatesReadBackFromTheirFacelets(): Unit \ Assert =
     List#{2, 3, 4, 5} |> List.forEach(n ->
         seeds() |> List.forEach(s -> {
-            let orbits = seededState(n, s);
+            let state = legalState(n, seededState(n, s));
             Assert.assertTrueWithMsg(
-                Orbit64.Net.toFacelets(n, Orbit64.State.canonical(orbits))
-                    |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)) == Ok(Orbit64.State.canonical(orbits)),
+                Orbit64.Net.toFacelets(n, state)
+                    |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)) == Ok(state),
                 "seed ${s} of the ${n}x${n}x${n} did not read back")
         }))
 
@@ -151,7 +152,7 @@ def seededStatesReadBackFromTheirFacelets(): Unit \ Assert =
 def seededFaceletsSurviveBeingReadAndDrawn(): Unit \ Assert =
     List#{2, 3, 4, 5} |> List.forEach(n ->
         seeds() |> List.forEach(s ->
-            match Orbit64.Net.toFacelets(n, Orbit64.State.canonical(seededState(n, s))) {
+            match Orbit64.Net.toFacelets(n, legalState(n, seededState(n, s))) {
                 case Err(why) => Assert.assertTrueWithMsg(false,
                     "seed ${s} of the ${n}x${n}x${n} gave no facelets: ${why}")
                 case Ok(fs) => Assert.assertTrueWithMsg(

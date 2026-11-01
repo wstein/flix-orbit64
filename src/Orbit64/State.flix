@@ -132,7 +132,12 @@ mod Orbit64.State {
             |> Option.map(why -> "the ${Coord.kind(c)} coordinate is not a cube: ${why}"))
             |> List.head
 
-    def parityFault(n: Int32, orbits: List[Coord]): Option[String] =
+    ///
+    /// Why an odd cube's corners and midges cannot sit in these permutations, or
+    /// nothing. The law couples two orbits, so `Orbit64.Coord.faultOf` cannot state
+    /// it; `encode` and `Orbit64.Net.fromFacelets` share it from here.
+    ///
+    pub def parityFault(n: Int32, orbits: List[Coord]): Option[String] =
         if (not carriesFrame(n)) None
         else match orbits {
             case CornerCoord(corners, _) :: MidgeCoord(midges, _) :: _ =>
