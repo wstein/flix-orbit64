@@ -247,8 +247,8 @@ function write_rows(io, rows)
     println(io, "mod TestV2FaceletPictureData {")
     println(io, "    /// (entry id, moves, facelets, token, canonical facelets or empty)")
     for n in 3:15
-        # Three lines per row: 19 rows keep each definition under the metrics limit of 60.
-        parts = collect(Iterators.partition(ids(n), 19))
+        # Three lines per row: 18 rows keep each definition within the metrics limit of 60.
+        parts = collect(Iterators.partition(ids(n), 18))
         for (k, part) in enumerate(parts)
             println(io, "    pub def rows$(n)p$k(): List[(Int32, String, String, String, String)] = List#{")
             for (i, (id, mv, fl, tok, can)) in enumerate(part)
