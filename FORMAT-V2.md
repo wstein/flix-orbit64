@@ -503,6 +503,13 @@ error. Such a string has no meaning to repair.
 
 Steps 1 to 3 guarantee the layout, so step 5 sees a sound state.
 
+When several things fail in the same step, the first of this order is
+reported. Step 1: the first bad character, then the count. Step 2: the classes
+in the order corner, midge, wings (outermost orbit first), centers (orbit
+order), fixed centers, and within a class a range error before a repeat.
+Step 3: corners, midges, wings, each by slot. Step 5: the corner twist sum,
+the midge flip sum, `M = C`, `R = C`, then the center orbits in orbit order.
+
 **Example.** The solved 3x3x3 is
 `GGJEAADCA BBLREXOJW EDCSIQRLN PKMMMISOV HFFVQTUNQ KHIWUUXPT`. In the `U` field
 the center is `A` (fixed center `U`, rotation 0), the corners are `G` (6, the
@@ -632,5 +639,6 @@ records the physical state.
    cube-assembler, cubelab) exist. Each needs the facelet bridge added, for
    the color model and for the picture model, now that `Orbit64.V2.Facelets`
    fixes their behavior and [Picture facelets](#picture-facelets) their
-   string. V1's vectors are only checked as V2 tokens, see
+   string.
+2. V1's vectors are only checked as V2 tokens, see
    [Relation to V1](#relation-to-v1).

@@ -227,3 +227,18 @@ def aCubeThatBreaksALawHasNoPicture(): Unit \ Assert =
         case Ok(_) => Assert.fail("accepted")
         case Err(why) => Assert.assertTrue(String.contains(substr = "rotation parity", why))
     }
+
+@Test
+def theFirstFailureOfAStepIsTheOneReported(): Unit \ Assert =
+    let solved = pictureSolved3();
+    // Step 2: a repeated corner sticker and a midge out of range; corners come first.
+    assertPictureRejected(3, "corner sticker 'A' occurs more than once",
+                          picturePut(3, solved, (0, 'A') :: (1, 'Y') :: Nil));
+    // Within a class a range error comes before a repeat.
+    assertPictureRejected(3, "which is no corner sticker",
+                          picturePut(3, solved, (0, 'A') :: (2, 'Y') :: Nil));
+    // Step 5: a twisted corner and a flipped midge; the twist sum comes first.
+    let flipped = (5, pictureAt(solved, 10)) :: (10, pictureAt(solved, 5)) :: Nil;
+    assertPictureRejected(3, "corner twists must sum to 0 mod 3",
+                          picturePut(3, solved, List.append(flipped,
+                              (8, 'B') :: (9, 'C') :: (20, 'A') :: Nil)))
