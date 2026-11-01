@@ -498,8 +498,8 @@ error. Such a string has no meaning to repair.
    includes two fixed centers exchanged); on even canonical cubes no rotation
    puts DBL home;
 5. the laws of [Encoding and decoding](#encoding-and-decoding): the
-   corner twist and midge flip sums, `M = C`, the center parities, and
-   `R = C`, which is the parity of the fixed centers' rotations.
+   corner twist and midge flip sums, `M = C`, `R = C` (the parity of the
+   fixed centers' rotations), and the center parities.
 
 Steps 1 to 3 guarantee the layout, so step 5 sees a sound state.
 
@@ -507,8 +507,9 @@ When several things fail in the same step, the first of this order is
 reported. Step 1: the first bad character, then the count. Step 2: the classes
 in the order corner, midge, wings (outermost orbit first), centers (orbit
 order), fixed centers, and within a class a range error before a repeat.
-Step 3: corners, midges, wings, each by slot. Step 5: the corner twist sum,
-the midge flip sum, `M = C`, `R = C`, then the center orbits in orbit order.
+Step 3: corners, midges, wings (outermost orbit first), each by slot. Step 5:
+the corner twist sum, the midge flip sum, `M = C`, `R = C`, then the center
+orbits in orbit order.
 
 **Example.** The solved 3x3x3 is
 `GGJEAADCA BBLREXOJW EDCSIQRLN PKMMMISOV HFFVQTUNQ KHIWUUXPT`. In the `U` field
