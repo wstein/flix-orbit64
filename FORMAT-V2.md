@@ -210,7 +210,8 @@ stabilizer.
   centers carry no rotation.
 - **Picture.** Every sticker is distinguishable and its rotation is visible.
   Center pieces are numbered by their home slot, and each fixed center records
-  its rotation.
+  its rotation. [Picture facelets](#picture-facelets) fixes how the stickers
+  are written as a string.
 
 The picture model covers any cube whose stickers all differ, such as labeled,
 printed or photo cubes. A cube with only some distinguishable stickers is a
@@ -406,6 +407,117 @@ forced parities, then unrank the forced components and complete the
 orientations. Every rank below `N_i` decodes to a valid state, and every valid
 state encodes to exactly one rank.
 
+## Picture facelets
+
+A facelet string is how a cube is shown to a person or a scanner. The color
+model writes one of the letters `U R F D L B` per facelet (V1's notation, see
+`Orbit64.V2.Facelets`). The picture model cannot: every sticker is distinct,
+and a fixed center also has a rotation. This section fixes the picture
+model's string. `Orbit64.V2.Facelets.toFacelets` and `fromFacelets` implement
+it for `n = 3..15`, canonical and framed. A 2x2x2 has no picture entry, so a
+picture-model 2x2x2 is written as a color string.
+
+**Layout.** The string has `6 n^2` facelets, numbered
+`face * n^2 + row * n + col` as in FORMAT.md. It is written as six fields of
+`n^2` symbols in the order `U R F D L B`, separated by one space, and reading
+ignores spaces. It is `6 n^2 + 5` characters long, 59 for the 3x3x3 and 1355
+for the 15x15x15, the same as a color string.
+
+**Sticker classes.** The facelets fall into classes that no turn or
+whole-cube rotation takes a sticker out of:
+
+| Class | Facelets | Exists when |
+| ----- | -------: | ----------- |
+| corner stickers | 24 | always |
+| midge stickers | 24 | `n` odd |
+| wing stickers of `Wd` | 48 each | `d = 1..w` |
+| center stickers of `Z[r,c]` | 24 each | one per center orbit |
+| fixed centers | 6 | `n` odd |
+
+**Symbols.** A facelet holds one symbol of the base64url alphabet (the one of
+tokens), written for its **value**, a number below 64. The value names the
+sticker on the facelet by its index within its own class, so the same value
+means different stickers on different classes:
+
+| Class | Value | Range |
+| ----- | ----- | ----: |
+| corner | `3 p + j` | 0..23 |
+| midge | `2 p + j` | 0..23 |
+| wing of `Wd` | `2 p + j` | 0..47 |
+| center orbit | `p` | 0..23 |
+| fixed center | `4 p + r` | 0..23 |
+
+Here `p` is the sticker's piece (its home slot in the orbit's slot table of
+[FORMAT-V2-SLOTS.md](FORMAT-V2-SLOTS.md); for a fixed center, its home face
+`0..5`) and `j` is the position of the sticker's home facelet in that slot's
+facelet list. A slot lists its reference facelet first, then the others
+clockwise as seen from outside. In a corner slot `j = 0..2`; in a midge or wing
+slot `j = 0..1`. A center sticker has no `j`: it is the piece.
+
+For a fixed center, `r` is the rotation `0..3`. It is measured where the
+sticker is: the number of clockwise quarter turns, seen from outside, from the
+reference direction of the facelet's face to the sticker's own reference
+direction (the direction that pointed toward row 0 of its home face on the
+solved cube). In the canonical pose the facelet's face is the piece's home
+face, so the symbol of face `f` is `4 f + r_f`, with the `r_f` of
+[Conventions](#conventions).
+
+**Slot rule.** A corner or midge slot with `m` facelets, holding piece `p` with
+twist (or flip) `o`, shows the value `m p + (k - o) mod m` on its `k`-th
+facelet. A wing shows `2 p + k`, so its twist is always 0. This is the same
+rule as the color model's, applied to sticker indices instead of faces.
+
+**Poses.** *Canonical* writes the cube in its reference pose and reads any
+whole-cube orientation, as in the color model. *Framed* writes the orientation:
+on odd cubes the canonical picture rotated by the frame, on even cubes the
+corners show it. Rotating a cube moves every sticker to the same class's
+facelet it would reach physically, and a value changes only for a fixed center,
+whose `r` is measured again at its new facelet. A reader finds the pose of an
+odd cube from the pieces `v div 4` on the six fixed centers, which must be the
+faces of one of the 24 frames, and of an even canonical cube from the unique
+rotation that puts the DBL corner home with twist 0.
+
+**Why this form.** The 1350 stickers of a 15x15x15 need `ceil(log_64 1350) = 2`
+symbols each if every sticker has a global number, so a string of 2700
+symbols. Every sticker stays in its class, and the largest class has 48
+stickers, so the index within the class fits in one symbol, and the string
+stays as short as a color string. The price is that a string cannot say that a
+corner sticker sits on a midge facelet: the value only means something once
+the facelet's class is known, and a value outside the class's range is an
+error. Such a string has no meaning to repair.
+
+**Validation.** Reading never crashes. It fails with a reason, in this order:
+
+1. a character outside the alphabet, or a count other than `6 n^2`;
+2. per class: a value at or above the class range (a sticker of the wrong
+   piece type), or a repeated sticker (for fixed centers, a repeated piece
+   `v div 4`);
+3. a corner, midge or wing slot whose symbols do not spell one piece by the
+   slot rule, or a wing with a twist;
+4. the pose: on odd cubes the fixed centers are not the faces of a frame (this
+   includes two fixed centers exchanged); on even canonical cubes no rotation
+   puts DBL home;
+5. the laws of [Encoding and decoding](#encoding-and-decoding): the
+   corner twist and midge flip sums, `M = C`, the center parities, and
+   `R = C`, which is the parity of the fixed centers' rotations.
+
+Steps 1 to 3 guarantee the layout, so step 5 sees a sound state.
+
+**Example.** The solved 3x3x3 is
+`GGJEAADCA BBLREXOJW EDCSIQRLN PKMMMISOV HFFVQTUNQ KHIWUUXPT`. In the `U` field
+the center is `A` (fixed center `U`, rotation 0), the corners are `G` (6, the
+ULB corner's `U` sticker), `J` (9, UBR), `D` (3, UFL) and `A` (0, URF), and the
+midges `G` (UB), `E` (UL), `A` (UR) and `C` (UF). Turning the `U` center a
+quarter turn writes `B` there and breaks `R = C`, so a single such turn is
+rejected.
+
+The vectors are `test/TestV2FaceletPictureData.flix`, generated by
+`tools/format-v2/facelet_picture_vectors.jl`. It applies layer turns, inner
+layers and whole-cube rotations to a model that tracks every sticker and the
+tangent direction of each facelet, so the fixed centers' rotations come from
+the motion and not from the formula above. The reference encoder then checks
+the laws on each state.
+
 ## Proof obligations
 
 Each claim the format relies on is listed here, with how it is established.
@@ -516,14 +628,9 @@ records the physical state.
 
 ## Open items before V2 leaves draft
 
-1. Facelet bridge for the picture model. `Orbit64.V2.Facelets` converts between
-   states and facelet strings for the color model, `n = 2..15`, canonical and
-   framed, and its vectors (`test/TestV2FaceletData.flix`) are checked against
-   an independent facelet simulation (`tools/format-v2/facelet_vectors.jl`).
-   Still open: a sticker-identity facelet representation for the picture
-   model, including the rotations of the fixed centers of an odd cube. V1's
-   vectors are only checked as V2 tokens, see
+1. Ports of the coordinate codec to the other implementations (cubacle,
+   cube-assembler, cubelab) exist. Each needs the facelet bridge added, for
+   the color model and for the picture model, now that `Orbit64.V2.Facelets`
+   fixes their behavior and [Picture facelets](#picture-facelets) their
+   string. V1's vectors are only checked as V2 tokens, see
    [Relation to V1](#relation-to-v1).
-2. Ports of the coordinate codec to the other implementations (cubacle,
-   cube-assembler, cubelab) exist. Each needs the color-model facelet bridge
-   added, now that `Orbit64.V2.Facelets` fixes its behavior.
