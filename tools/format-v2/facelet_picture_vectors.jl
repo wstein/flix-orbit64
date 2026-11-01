@@ -14,6 +14,7 @@
 # turns, inner layers and whole-cube rotations. Unlike it, the state it moves is
 # the *point* state of CubeModel.jl: every facelet carries four tangent
 # directions, so the program knows which sticker is on every facelet and, for
+# a fixed center, how far it has turned. Nothing is tracked by coordinates. The
 # stickers are then written as symbols, the coordinates are read off the
 # symbols, and the reference encoder of vectors.jl turns the coordinates into
 # the token. That encoder validates the orientation laws and the parity
@@ -230,9 +231,12 @@ function picture_sequences(rng, n)
     sequences = Vector{String}[String[]]
     n == 3 && append!(sequences, single_moves(n))
     isodd(n) && push!(sequences, slice_moves(n))
-    count, length_ = n <= 7 ? (3, 12) : (1, 8)
-    for _ in 1:count
-        push!(sequences, random_moves(rng, n, length_))
+    count, length_ = n <= 7 ? (3, 12) : (2, 8)
+    for k in 1:count
+        moves = random_moves(rng, n, length_)
+        # Large cubes: the second sequence ends in whole-cube rotations.
+        n > 7 && k == 2 && append!(moves, ["x", "y'"])
+        push!(sequences, moves)
     end
     sequences
 end
@@ -243,13 +247,18 @@ function write_rows(io, rows)
     println(io, "mod TestV2FaceletPictureData {")
     println(io, "    /// (entry id, moves, facelets, token, canonical facelets or empty)")
     for n in 3:15
-        println(io, "    pub def rows$n(): List[(Int32, String, String, String, String)] = List#{")
-        sel = ids(n)
-        for (i, (id, mv, fl, tok, can)) in enumerate(sel)
-            println(io, "        ($id, \"$mv\", \"$fl\",\n         \"$tok\",\n         \"$can\")",
-                    i == length(sel) ? "" : ",")
+        # Three lines per row: 19 rows keep each definition under the metrics limit of 60.
+        parts = collect(Iterators.partition(ids(n), 19))
+        for (k, part) in enumerate(parts)
+            println(io, "    pub def rows$(n)p$k(): List[(Int32, String, String, String, String)] = List#{")
+            for (i, (id, mv, fl, tok, can)) in enumerate(part)
+                println(io, "        ($id, \"$mv\", \"$fl\",\n         \"$tok\",\n         \"$can\")",
+                        i == length(part) ? "" : ",")
+            end
+            println(io, "    }\n")
         end
-        println(io, "    }\n")
+        println(io, "    pub def rows$n(): List[(Int32, String, String, String, String)] =")
+        println(io, "        List.flatten(List#{", join(("rows$(n)p$k()" for k in 1:length(parts)), ", "), "})\n")
     end
     println(io, "    pub def rows(): List[(Int32, String, String, String, String)] = List.flatten(List#{")
     println(io, "        ", join(("rows$n()" for n in 3:9), ", "), ",")
