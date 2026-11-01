@@ -516,12 +516,14 @@ records the physical state.
 
 ## Open items before V2 leaves draft
 
-1. Facelet bridge. Extend the reference implementation (`Orbit64.V2`,
-   coordinates only) with a bridge between states and facelet strings, and its
-   vectors with single turns and states checked against an independent facelet
-   simulation. The committed vectors are the solved state and random states
-   drawn in coordinates. V1's vectors are only checked as V2 tokens, see
+1. Facelet bridge for the picture model. `Orbit64.V2.Facelets` converts between
+   states and facelet strings for the color model, `n = 2..15`, canonical and
+   framed, and its vectors (`test/TestV2FaceletData.flix`) are checked against
+   an independent facelet simulation (`tools/format-v2/facelet_vectors.jl`).
+   Still open: a sticker-identity facelet representation for the picture
+   model, including the rotations of the fixed centers of an odd cube. V1's
+   vectors are only checked as V2 tokens, see
    [Relation to V1](#relation-to-v1).
 2. Ports of the coordinate codec to the other implementations (cubacle,
-   cube-assembler, cubelab) exist. Each needs the facelet bridge added, after
-   item 1 fixes its behavior.
+   cube-assembler, cubelab) exist. Each needs the color-model facelet bridge
+   added, now that `Orbit64.V2.Facelets` fixes its behavior.
