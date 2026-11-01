@@ -258,7 +258,9 @@ to both draw to those stickers and read back from them, at the 4x4x4 and the
 On odd cubes, `fromFacelets` accepts one of the 24 right-handed fixed-center
 orientations, normalizes facelets for coordinate recovery, and returns the
 corresponding `FramedState`. It rejects center arrangements that are not a
-whole-cube rotation.
+whole-cube rotation. It also rejects
+facelets whose corner and midge permutations differ in parity, such as a solved
+cube with only two corners swapped, with the same reason `State.encode` gives.
 
 ## One token per pattern
 

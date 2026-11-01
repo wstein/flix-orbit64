@@ -570,6 +570,10 @@ mod Orbit64.Net {
     /// On an odd cube the fixed centers select the stored frame. The reader
     /// restores the canonical facelet orientation before it reads coordinates,
     /// then returns both those coordinates and that frame.
+    ///
+    /// Facelets that no sequence of turns can reach are refused with a reason:
+    /// a twist or flip sum off its modulus, a color count off four, and, on an
+    /// odd cube, corner and midge permutations of different parity.
     pub def fromFacelets(n: Int32, facelets: Vector[Int32]): Result[String, Orbit64.State.FramedState] =
         if (not canDraw(n))
             Err("no slot convention for the ${n}x${n}x${n}: this module has one "
@@ -583,6 +587,7 @@ mod Orbit64.Net {
             normalizeFrame(n, facelets)
                 |> Result.flatMap(match (frame, canonical) -> readOrbits(n, canonical)
                 |> Result.flatMap(allCubes)
+                |> Result.flatMap(orbits -> parityCube(n, orbits))
                 |> Result.map(orbits -> Orbit64.State.FramedState.FramedState(frame, orbits)))
 
     ///
@@ -1097,6 +1102,19 @@ mod Orbit64.Net {
                 |> List.head {
             case Some((o, why)) => Err("the ${o} these facelets show are not a cube: ${why}")
             case None           => Ok(orbits)
+        }
+
+    ///
+    /// The one law that spans two orbits. On an odd cube the corner and midge
+    /// permutations must have the same parity once the frame is undone, so
+    /// facelets showing two swapped corners are no cube. `Orbit64.State.encode`
+    /// already refuses such a state; the reader says so first, with the same reason.
+    ///
+    def parityCube(n: Int32, orbits: List[Coord]): Result[String, List[Coord]] =
+        match Orbit64.State.parityFault(n, orbits) {
+            case Some(why) =>
+                Err("the corners and midges these facelets show are not a cube: ${why}")
+            case None      => Ok(orbits)
         }
 
     ///
