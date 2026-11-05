@@ -665,10 +665,10 @@ records the physical state.
 
 ## Open items before V2 leaves draft
 
-1. The color-model facelet bridge exists in `Orbit64.V2.Facelets` and in the
-   ports cubacle, cube-assembler and cubelab. The picture-model bridge, whose
-   string [Picture facelets](#picture-facelets) fixes, exists in
-   `Orbit64.V2.Facelets` only; the three ports still need it. The Chrome
-   extension has no bridge by design, since it never decodes a state.
-2. V1's vectors are only checked as V2 tokens, see
+The color-model and the picture-model facelet bridges exist in
+`Orbit64.V2.Facelets` and in the ports cubacle, cube-assembler and cubelab;
+[Picture facelets](#picture-facelets) fixes the picture string. The Chrome
+extension has no bridge by design, since it never decodes a state.
+
+1. V1's vectors are only checked as V2 tokens, see
    [Relation to V1](#relation-to-v1).
