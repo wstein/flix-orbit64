@@ -11,6 +11,13 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: ci
+    groups:
+      actions:
+        patterns: ['*']
