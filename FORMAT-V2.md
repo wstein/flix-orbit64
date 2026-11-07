@@ -1,6 +1,6 @@
 # Orbit64 V2 state token format
 
-**Status: draft.** This document specifies the second Orbit64 state format. It
+**Status: final.** This document specifies the second Orbit64 state format. It
 is not a revision of [FORMAT.md](FORMAT.md): V2 drops V1's class bits and
 replaces them with a registry of puzzle types, so the two formats are separate.
 Nothing here changes what V1 tokens mean. The reference implementation is
@@ -487,11 +487,11 @@ the facelet's class is known, and a value outside the class's range is an
 error. Such a string has no meaning to repair.
 
 **Validation.** Reading never crashes. It fails with a reason. The type comes
-first: `n` outside `2..15`, or a picture-model 2x2x2, has no picture string (the 2x2x2
+first: `n` outside `2..15`, or a picture-model 2x2x2, has no string of its own (the 2x2x2
 is written as a color string) and fails before any character is read. Then the picture model checks, in this
 order:
 
-1. a character outside the alphabet, or a count other than `6 n^2`;
+1. a character outside the alphabet, or a length other than `6 n^2`;
 2. per class: a value at or above the class range (a sticker of the wrong
    piece type), or a repeated sticker (for fixed centers, a repeated piece
    `v div 4`);
@@ -507,7 +507,7 @@ order:
 Steps 1 to 3 guarantee the layout, so step 5 sees a sound state.
 
 When several things fail in the same step, the first of this order is
-reported. Step 1: the first bad character, then the count. Step 2: the classes
+reported. Step 1: the first bad character, then the length. Step 2: the classes
 in the order corner, midge, wings (outermost orbit first), centers (orbit
 order), fixed centers, and within a class a range error before a repeat.
 Step 3: corners, midges, wings (outermost orbit first), each by slot. Step 5:
@@ -538,7 +538,8 @@ The two models agree on the type first, then the symbols, then the length, and
 on the laws last. They differ in between: the picture model checks class
 ranges and repeated stickers before the pieces and has no per-color count; the
 color model checks per-color counts before the pose and the layout after the
-pieces.
+pieces. The pose is checked after the pieces in the picture model and before them in
+the color model.
 
 **Example.** The solved 3x3x3 is
 `GGJEAADCA BBLREXOJW EDCSIQRLN PKMMMISOV HFFVQTUNQ KHIWUUXPT`. In the `U` field
@@ -663,12 +664,13 @@ Symmetries of a sticker's design, such as a `0` that looks the same after a
 half turn, belong in a goal or target definition, not in the token. The token
 records the physical state.
 
-## Open items before V2 leaves draft
+## Known limitations
 
 The color-model and the picture-model facelet bridges exist in
 `Orbit64.V2.Facelets` and in the ports cubacle, cube-assembler and cubelab;
 [Picture facelets](#picture-facelets) fixes the picture string. The Chrome
 extension has no bridge by design, since it never decodes a state.
 
-1. V1's vectors are only checked as V2 tokens, see
-   [Relation to V1](#relation-to-v1).
+V1's vectors are only checked as V2 tokens, see
+[Relation to V1](#relation-to-v1). This is a known limitation of the
+current vectors.
