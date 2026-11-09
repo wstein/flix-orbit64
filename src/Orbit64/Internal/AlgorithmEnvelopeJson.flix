@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /// Internal JSON shape adapter for the independent algorithm envelope.
-mod Orbit64.Algorithm.EnvelopeJson {
+mod Orbit64.Internal.AlgorithmEnvelopeJson {
     use Orbit64.Algorithm.Algorithm.Algorithm
     use Orbit64.Algorithm.Node
     use Orbit64.Move.Move.LayerTurn
