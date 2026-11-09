@@ -1,5 +1,9 @@
 # flix-orbit64
 
+The separate [algorithm DAG envelope review draft](FORMAT-ALGORITHM-DAG.md)
+adds canonical JSON interchange that preserves the complete typed graph. It is
+independent of V2 state tokens and does not retire existing V1 APIs yet.
+
 [![Build and Test](https://github.com/wstein/flix-orbit64/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/wstein/flix-orbit64/actions/workflows/build-and-test.yaml)
 [![Docs](https://github.com/wstein/flix-orbit64/actions/workflows/docs.yaml/badge.svg)](https://wstein.github.io/flix-orbit64/)
 [![Release](https://img.shields.io/github/v/release/wstein/flix-orbit64)](https://github.com/wstein/flix-orbit64/releases/latest)

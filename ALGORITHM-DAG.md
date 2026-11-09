@@ -1,5 +1,9 @@
 # Orbit64 algorithm DAG proposal
 
+The separate [algorithm DAG envelope review draft](FORMAT-ALGORITHM-DAG.md)
+adds canonical JSON interchange that preserves the complete typed graph. It is
+independent of V2 state tokens and does not retire existing V1 APIs yet.
+
 Status: the typed, validated `Orbit64.Algorithm` core is implemented on the
 development branch. It represents primitive layer-turn terminals plus exact
 `Concat`, `Repeat`, `Inverse`, `Block`, `PackedBlock`, `Partition`, and
