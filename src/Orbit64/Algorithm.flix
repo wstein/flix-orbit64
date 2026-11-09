@@ -69,9 +69,10 @@ mod Orbit64.Algorithm {
             Result[String, List[Metadata]] = match nodes {
         case Nil => Ok(previousMetas)
         case node :: rest =>
-            nodeMetadata(n, node, index, previousMetas)
-                |> Result.flatMap(meta ->
-                    buildMetadata(n, rest, index + 1, meta :: previousMetas))
+            match nodeMetadata(n, node, index, previousMetas) {
+                case Err(why) => Err(why)
+                case Ok(meta) => buildMetadata(n, rest, index + 1, meta :: previousMetas)
+            }
     }
 
     def rootMetadata(root: Int32, count: Int32,
@@ -146,26 +147,33 @@ mod Orbit64.Algorithm {
 
     def countsForReferences(references: List[Int32], index: Int32,
                             previousMetas: List[Metadata]): Result[String, List[BigInt]] =
-        match references {
-            case Nil => Ok(Nil)
-            case reference :: rest =>
-                expandedForReference(reference, index, previousMetas)
-                    |> Result.flatMap(size ->
-                        countsForReferences(rest, index, previousMetas)
-                            |> Result.map(sizes -> size :: sizes))
+        referenceCountsLoop(references, index, previousMetas, Nil)
+
+    def referenceCountsLoop(references: List[Int32], index: Int32,
+                            previousMetas: List[Metadata], out: List[BigInt]):
+            Result[String, List[BigInt]] = match references {
+        case Nil => Ok(List.reverse(out))
+        case reference :: rest => match expandedForReference(reference, index, previousMetas) {
+            case Err(why) => Err(why)
+            case Ok(size) => referenceCountsLoop(rest, index, previousMetas, size :: out)
         }
+    }
 
     def packedCounts(symbols: List[Int32], alphabetCounts: List[BigInt],
-                     index: Int32): Result[String, List[BigInt]] = match symbols {
-        case Nil => Ok(Nil)
-        case symbol :: rest =>
-            if (symbol < 0) Err("node ${index}: packed symbol cannot be negative")
-            else match listAt(symbol, alphabetCounts) {
-                case None => Err("node ${index}: packed symbol is outside its alphabet")
-                case Some(size) => packedCounts(rest, alphabetCounts, index)
-                    |> Result.map(sizes -> size :: sizes)
-            }
-    }
+                     index: Int32): Result[String, List[BigInt]] =
+        packedCountsLoop(symbols, alphabetCounts, index, Nil)
+
+    def packedCountsLoop(symbols: List[Int32], alphabetCounts: List[BigInt],
+                         index: Int32, out: List[BigInt]): Result[String, List[BigInt]] =
+        match symbols {
+            case Nil => Ok(List.reverse(out))
+            case symbol :: rest =>
+                if (symbol < 0) Err("node ${index}: packed symbol cannot be negative")
+                else match listAt(symbol, alphabetCounts) {
+                    case None => Err("node ${index}: packed symbol is outside its alphabet")
+                    case Some(size) => packedCountsLoop(rest, alphabetCounts, index, size :: out)
+                }
+        }
 
     def partitionCounts(parts: List[BigInt], boundaries: List[Int32],
                         index: Int32): Result[String, List[BigInt]] =
@@ -201,13 +209,15 @@ mod Orbit64.Algorithm {
         else None
 
     def partitionCountsUnchecked(parts: List[BigInt], boundaries: List[Int32]): List[BigInt] =
-        match boundaries {
-            case _ :: Nil => Nil
-            case start :: end :: rest =>
-                sum(sliceUnchecked(parts, start, end))
-                    :: partitionCountsUnchecked(parts, end :: rest)
-            case Nil => Nil
-        }
+        partitionCountsLoop(parts, boundaries, Nil)
+
+    def partitionCountsLoop(parts: List[BigInt], boundaries: List[Int32],
+                            out: List[BigInt]): List[BigInt] = match boundaries {
+        case start :: end :: rest =>
+            let count = sum(sliceUnchecked(parts, start, end));
+            partitionCountsLoop(parts, end :: rest, count :: out)
+        case _ => List.reverse(out)
+    }
 
     def sliceCounts(parts: List[BigInt], start: Int32, end: Int32,
                     index: Int32): Result[String, List[BigInt]] =
@@ -364,14 +374,20 @@ mod Orbit64.Algorithm {
         match ranges {
             case Nil => Ok(acc)
             case (start, end) :: rest =>
-                foldParts(nodes, metas, sequence, start, end, backwards, acc, visit)
-                    |> Result.flatMap(next ->
-                        foldRangeList(nodes, metas, sequence, rest, backwards, next, visit))
+                match foldParts(nodes, metas, sequence, start, end, backwards, acc, visit) {
+                    case Err(why) => Err(why)
+                    case Ok(next) =>
+                        foldRangeList(nodes, metas, sequence, rest, backwards, next, visit)
+                }
         }
 
-    def partitionRanges(boundaries: List[Int32]): List[(Int32, Int32)] = match boundaries {
-        case start :: end :: rest => (start, end) :: partitionRanges(end :: rest)
-        case _ => Nil
+    def partitionRanges(boundaries: List[Int32]): List[(Int32, Int32)] =
+        partitionRangeLoop(boundaries, Nil)
+
+    def partitionRangeLoop(boundaries: List[Int32], out: List[(Int32, Int32)]):
+            List[(Int32, Int32)] = match boundaries {
+        case start :: end :: rest => partitionRangeLoop(end :: rest, (start, end) :: out)
+        case _ => List.reverse(out)
     }
 
     def packedReferences(alphabet: List[Int32], symbols: List[Int32]): List[Int32] =
