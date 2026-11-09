@@ -113,7 +113,7 @@ jobs:
       # and runs the typos release its own tag names, so the two move together.
       - name: American spelling
         if: runner.os == 'Linux'
-        uses: crate-ci/typos@7f9d0819ca1c008ade73f4b41fa9d258d48f605b # v1.51.1
+        uses: crate-ci/typos@4c8b7f51ca60df14e3c5ca82770dfbbe6c3dae85 # v1.52.0
 
       # Last on purpose: a stale badge is metadata, and failing earlier would
       # hide the build and spelling results behind it. Repository-wide rather
