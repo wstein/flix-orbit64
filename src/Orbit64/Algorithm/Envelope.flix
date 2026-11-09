@@ -39,24 +39,24 @@ mod Orbit64.Algorithm.Envelope {
     pub def encodeWith(limits: Limits, n: Int32, graph: Orbit64.Algorithm.Algorithm):
             Result[Fault, String] =
         let Algorithm(nodes, _) = graph;
-        Orbit64.Algorithm.EnvelopeBudget.settings(limits)
-            |> Result.flatMap(_ -> Orbit64.Algorithm.EnvelopeBudget.graph(limits, nodes))
+        Orbit64.Internal.AlgorithmEnvelopeBudget.settings(limits)
+            |> Result.flatMap(_ -> Orbit64.Internal.AlgorithmEnvelopeBudget.graph(limits, nodes))
             |> Result.flatMap(_ -> semantic(n, graph))
             |> Result.flatMap(_ -> render(limits, n, graph))
 
     def render(limits: Limits, n: Int32, graph: Orbit64.Algorithm.Algorithm):
             Result[Fault, String] =
-        let text = Orbit64.Algorithm.EnvelopeJson.write(n, graph);
-        Orbit64.Algorithm.EnvelopeBudget.input(limits, text) |> Result.map(_ -> text)
+        let text = Orbit64.Internal.AlgorithmEnvelopeJson.write(n, graph);
+        Orbit64.Internal.AlgorithmEnvelopeBudget.input(limits, text) |> Result.map(_ -> text)
 
     /// Preflight parsing, retain every node field, and reject noncanonical spelling.
     pub def decodeWith(limits: Limits, text: String):
             Result[Fault, (Int32, Orbit64.Algorithm.Algorithm)] =
-        Orbit64.Algorithm.EnvelopeBudget.settings(limits)
-            |> Result.flatMap(_ -> Orbit64.Algorithm.EnvelopeBudget.input(limits, text))
+        Orbit64.Internal.AlgorithmEnvelopeBudget.settings(limits)
+            |> Result.flatMap(_ -> Orbit64.Internal.AlgorithmEnvelopeBudget.input(limits, text))
             |> Result.flatMap(_ -> Util.Json.parse(text)
                 |> Result.mapErr(_ -> Fault.Malformed("invalid JSON")))
-            |> Result.flatMap(json -> Orbit64.Algorithm.EnvelopeJson.read(
+            |> Result.flatMap(json -> Orbit64.Internal.AlgorithmEnvelopeJson.read(
                     limits#maxCountDigits, limits#maxNodes,
                     Int32.max(limits#maxReferences, limits#maxSymbols), json)
                 |> Result.mapErr(readFault))

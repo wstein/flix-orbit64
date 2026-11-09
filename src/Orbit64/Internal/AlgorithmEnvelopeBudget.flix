@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /// Internal resource checks, performed before JSON parsing and DAG metadata.
-mod Orbit64.Algorithm.EnvelopeBudget {
+mod Orbit64.Internal.AlgorithmEnvelopeBudget {
     use Orbit64.Algorithm.Envelope.{Fault, Limits}
     use Orbit64.Algorithm.Node
 
