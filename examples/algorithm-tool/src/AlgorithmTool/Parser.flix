@@ -1,5 +1,5 @@
 /// Parser for the compact native Orbit64 algorithm source grammar.
-mod AlgorithmTool.Parser {
+pub mod AlgorithmTool.Parser {
 
     use AlgorithmTool.Ast.Program.{Program}
     use AlgorithmTool.Ast.Definition.{Definition}

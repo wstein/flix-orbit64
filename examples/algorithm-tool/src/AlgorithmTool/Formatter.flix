@@ -1,5 +1,5 @@
 /// Canonical readable rendering of the native algorithm AST.
-mod AlgorithmTool.Formatter {
+pub mod AlgorithmTool.Formatter {
 
     use AlgorithmTool.Ast.Program.{Program}
     use AlgorithmTool.Ast.Definition.{Definition}

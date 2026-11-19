@@ -1,5 +1,5 @@
 /// Source-level, notation-aware algorithm syntax.
-mod AlgorithmTool.Ast {
+pub mod AlgorithmTool.Ast {
 
     /// A program with ordered definitions and one exported name.
     pub enum Program with Eq, ToString {

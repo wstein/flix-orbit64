@@ -1,5 +1,5 @@
 /// Lower native source expressions into the notation-independent Orbit64 DAG.
-mod AlgorithmTool.Lowering {
+pub mod AlgorithmTool.Lowering {
 
     use AlgorithmTool.Ast.Program.{Program}
     use AlgorithmTool.Ast.Definition.{Definition}

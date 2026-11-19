@@ -1,5 +1,5 @@
 /// Connect source lowering, the Orbit64 token codec, and source reconstruction.
-mod AlgorithmTool.RoundTrip {
+pub mod AlgorithmTool.RoundTrip {
 
     /// Encode source as class `10`, decode it, and reconstruct canonical source.
     pub def roundTrip(n: Int32, source: String): Result[String, (String, String)] =
