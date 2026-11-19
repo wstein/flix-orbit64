@@ -1,15 +1,16 @@
 /// Parser for the compact native Orbit64 algorithm source grammar.
 pub mod AlgorithmTool.Parser {
 
+    use orbit64::Orbit64
     use AlgorithmTool.Ast.Program.{Program}
     use AlgorithmTool.Ast.Definition.{Definition}
     use AlgorithmTool.Ast.Expr.{Move, Reference, Concat, Repeat, Inverse}
     use AlgorithmTool.Ast.Expr.{Conjugate, Commutator, Slice}
     use AlgorithmTool.Parser.Token.{Name, Terminal, Number, Def, Export, Equals, LeftParen}
     use AlgorithmTool.Parser.Token.{RightParen, LeftBracket, RightBracket, Colon, Comma, Prime}
-    use Orbit64.Move.Move.{LayerTurn}
-    use Orbit64.Move.Face.{U, R, F, D, L, B}
-    use Orbit64.Move.Amount.{Clockwise, Half}
+    use orbit64::Orbit64.Move.Move.{LayerTurn}
+    use orbit64::Orbit64.Move.Face.{U, R, F, D, L, B}
+    use orbit64::Orbit64.Move.Amount.{Clockwise, Half}
 
     enum Token {
         case Name(String)

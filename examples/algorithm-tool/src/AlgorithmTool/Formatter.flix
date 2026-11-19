@@ -1,6 +1,7 @@
 /// Canonical readable rendering of the native algorithm AST.
 pub mod AlgorithmTool.Formatter {
 
+    use orbit64::Orbit64
     use AlgorithmTool.Ast.Program.{Program}
     use AlgorithmTool.Ast.Definition.{Definition}
     use AlgorithmTool.Ast.Expr.{Move, Reference, Concat, Repeat, Inverse}

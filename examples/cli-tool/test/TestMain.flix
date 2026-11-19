@@ -1,3 +1,5 @@
+use orbit64::Orbit64
+
 @Test
 def theSuperflipEncodesToItsKnownToken(): Unit \ Assert =
     Assert.assertEq(expected = Ok("AAAAAAAAAL_o"), Orbit64.State.encode(3, superflip()))
