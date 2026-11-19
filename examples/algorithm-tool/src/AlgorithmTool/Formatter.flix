@@ -1,6 +1,5 @@
 /// Canonical readable rendering of the native algorithm AST.
 pub mod AlgorithmTool.Formatter {
-
     use orbit64::Orbit64
     use AlgorithmTool.Ast.Program.{Program}
     use AlgorithmTool.Ast.Definition.{Definition}
@@ -20,8 +19,7 @@ pub mod AlgorithmTool.Formatter {
         case Concat(children) => children |> List.map(formatExpr) |> List.join(" ")
         case Repeat(child, count) => "(${formatExpr(child)})${count}"
         case Inverse(child) => "(${formatExpr(child)})'"
-        case Conjugate(left, right) =>
-            "[${formatExpr(left)}: ${formatExpr(right)}]"
+        case Conjugate(left, right) => "[${formatExpr(left)}: ${formatExpr(right)}]"
         case Commutator(left, right) => "[${formatExpr(left)}, ${formatExpr(right)}]"
         case Slice(name, start, end) => "${name}[${start}:${end}]"
     }
@@ -30,10 +28,10 @@ pub mod AlgorithmTool.Formatter {
 
     def formatDefinitions(definitions: List[AlgorithmTool.Ast.Definition]): String =
         match definitions {
-        case Nil => ""
-        case Definition(name, body) :: rest =>
-            String.concat("def ${name} = ${formatExpr(body)}\n", formatDefinitions(rest))
-    }
+            case Nil => ""
+            case Definition(name, body) :: rest =>
+                String.concat("def ${name} = ${formatExpr(body)}\n", formatDefinitions(rest))
+        }
 
     def moveText(move: Orbit64.Move.Move): String = match move {
         case Orbit64.Move.Move.LayerTurn(face, depth, amount) =>
@@ -56,5 +54,4 @@ pub mod AlgorithmTool.Formatter {
         case Orbit64.Move.Amount.Half => "2"
         case Orbit64.Move.Amount.CounterClockwise => "'"
     }
-
 }

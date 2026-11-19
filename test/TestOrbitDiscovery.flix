@@ -19,7 +19,6 @@
 //
 
 mod OrbitDiscovery {
-
     use Orbit64.Orbit.Orbit
     use Orbit64.Orbit.Orbit.{Corners, Midges, Wings, Centers}
 
@@ -33,9 +32,7 @@ mod OrbitDiscovery {
     /// edge, 1 for a center, 0 for a piece buried inside the cube.
     ///
     def visible(n: Int32, x: Int32, y: Int32, z: Int32): Int32 =
-        (if (onFace(n, x)) 1 else 0) +
-        (if (onFace(n, y)) 1 else 0) +
-        (if (onFace(n, z)) 1 else 0)
+        (if (onFace(n, x)) 1 else 0) + (if (onFace(n, y)) 1 else 0) + (if (onFace(n, z)) 1 else 0)
 
     def encode(n: Int32, x: Int32, y: Int32, z: Int32): Int32 = (x * n + y) * n + z
 
@@ -46,10 +43,22 @@ mod OrbitDiscovery {
     /// Every cubie that shows at least one sticker.
     ///
     def surface(n: Int32): List[Int32] =
-        List.range(0, n) |> List.flatMap(x ->
-            List.range(0, n) |> List.flatMap(y ->
-                List.range(0, n) |> List.filterMap(z ->
-                    if (visible(n, x, y, z) > 0) Some(encode(n, x, y, z)) else None)))
+        List.range(0, n) |>
+            List.flatMap(
+                x ->
+                    List.range(0, n) |>
+                        List.flatMap(
+                            y ->
+                                List.range(0, n) |>
+                                    List.filterMap(
+                                        z ->
+                                            if (visible(n, x, y, z) > 0)
+                                                Some(encode(n, x, y, z))
+                                            else
+                                                None
+                                    )
+                        )
+            )
 
     ///
     /// Where the cubie `p` lands when layer `k` perpendicular to `axis` is given
@@ -83,9 +92,12 @@ mod OrbitDiscovery {
     /// a piece nothing ever moves still shows up.
     ///
     def turns(n: Int32): List[(Int32, Int32)] =
-        List.range(0, 3) |> List.flatMap(axis ->
-            layers(n) |> List.flatMap(k ->
-                surface(n) |> List.map(p -> (p, rotate(n, axis, k, p)))))
+        List.range(0, 3) |>
+            List.flatMap(
+                axis ->
+                    layers(n) |>
+                        List.flatMap(k -> surface(n) |> List.map(p -> (p, rotate(n, axis, k, p))))
+            )
 
     ///
     /// The orbits of an `n`-cube, as connected components of the turn graph.
@@ -101,11 +113,16 @@ mod OrbitDiscovery {
         };
         let same = query facts, rules select (x, y) from Same(x, y);
         // A component is named by its least member, so every member agrees.
-        let rep = same |> Vector.toList |> List.foldLeft((m, xy) -> {
-            let (x, y) = xy;
-            let best = Map.get(x, m) |> Option.getWithDefault(y);
-            Map.insert(x, Int32.min(best, y), m)
-        }, Map#{});
+        let rep = same |>
+            Vector.toList |>
+            List.foldLeft(
+                (m, xy) -> {
+                    let (x, y) = xy;
+                    let best = Map.get(x, m) |> Option.getWithDefault(y);
+                    Map.insert(x, Int32.min(best, y), m)
+                },
+                Map#{}
+            );
         let reps = Map.valuesOf(rep);
         reps |> List.distinct |> List.map(r -> (r, List.count(x -> x == r, reps)))
 
@@ -123,11 +140,11 @@ mod OrbitDiscovery {
     ///
     def classify(faces: Int32, size: Int32): Option[Orbit] =
         match (faces, size) {
-            case (3, 8)  => Some(Corners)
+            case (3, 8) => Some(Corners)
             case (2, 12) => Some(Midges)
             case (2, 24) => Some(Wings)
             case (1, 24) => Some(Centers)
-            case _       => None
+            case _ => None
         }
 
     ///
@@ -147,8 +164,8 @@ mod OrbitDiscovery {
     /// `derivedLayout` threw away without saying so.
     ///
     pub def unrecognized(n: Int32): List[(Int32, Int32)] =
-        components(n)
-            |> List.filterMap(match (r, size) -> {
+        components(n) |>
+            List.filterMap(match (r, size) -> {
                 let (x, y, z) = decode(n, r);
                 let faces = visible(n, x, y, z);
                 if (known(faces, size)) None else Some((faces, size))
@@ -159,33 +176,34 @@ mod OrbitDiscovery {
     /// compared against `Orbit.layout` without agreeing on an order.
     ///
     pub def derivedLayout(n: Int32): List[Orbit] =
-        components(n)
-            |> List.filterMap(match (r, size) -> {
+        components(n) |>
+            List.filterMap(match (r, size) -> {
                 let (x, y, z) = decode(n, r);
                 classify(visible(n, x, y, z), size)
-            })
-            |> List.sort
+            }) |>
+            List.sort
 
     ///
     /// Every component is accounted for: the pieces classified, plus the fixed
     /// centers, must be every surface cubie there is.
     ///
     pub def accountedFor(n: Int32): (Int32, Int32) =
-        let counted = components(n)
-            |> List.map(match (_, size) -> size)
-            |> List.sum;
+        let counted = components(n) |> List.map(match (_, size) -> size) |> List.sum;
         (counted, List.length(surface(n)))
-
 }
 
 // ---------- the layout, derived rather than asserted ----------
 
 @Test
 def derivedLayoutAgreesWithArithmetic(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n ->
-        Assert.assertEq(
-            expected = List.sort(Orbit64.Orbit.layout(n)),
-            OrbitDiscovery.derivedLayout(n)))
+    List.range(2, 8) |>
+        List.forEach(
+            n ->
+                Assert.assertEq(
+                    expected = List.sort(Orbit64.Orbit.layout(n)),
+                    OrbitDiscovery.derivedLayout(n)
+                )
+        )
 
 ///
 /// Nothing the geometry finds is quietly discarded.
@@ -198,14 +216,20 @@ def derivedLayoutAgreesWithArithmetic(): Unit \ Assert =
 ///
 @Test
 def everyComponentIsAShapeTheFormatKnows(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n ->
-        Assert.assertEqWithMsg(expected = (Nil: List[(Int32, Int32)]),
-            OrbitDiscovery.unrecognized(n),
-            "the ${n}x${n}x${n} has components derivedLayout drops without saying so"))
+    List.range(2, 8) |>
+        List.forEach(
+            n ->
+                Assert.assertEqWithMsg(
+                    expected = (Nil: List[(Int32, Int32)]),
+                    OrbitDiscovery.unrecognized(n),
+                    "the ${n}x${n}x${n} has components derivedLayout drops without saying so"
+                )
+        )
 
 @Test
 def everySurfacePieceLandsInSomeComponent(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n -> {
-        let (counted, total) = OrbitDiscovery.accountedFor(n);
-        Assert.assertEq(expected = total, counted)
-    })
+    List.range(2, 8) |>
+        List.forEach(n -> {
+            let (counted, total) = OrbitDiscovery.accountedFor(n);
+            Assert.assertEq(expected = total, counted)
+        })

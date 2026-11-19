@@ -7,7 +7,10 @@
 
 def namedExamples(): List[(Int32, String)] = List#{
     // Named patterns.
-    (3, "AAAAAAAAAAAA"),
+    (
+        3,
+        "AAAAAAAAAAAA"
+    ),
     (3, "AAAABeBQZgAA"),
     (3, "KJZ7jorgHRfo"),
     (3, "KCvKi0WENEAA"),
@@ -30,21 +33,49 @@ def namedExamples(): List[(Int32, String)] = List#{
 }
 
 def randomTwoExamples(): List[(Int32, String)] = List#{
-    (2, "ASj79"), (2, "CrRYm"), (2, "Amjka"), (2, "BVQaG"),
-    (2, "ALV8G"), (2, "CMS0m"), (2, "AxzxP"), (2, "D36jK"),
-    (2, "BNcbL"), (2, "A00ev"), (2, "D3m1M"), (2, "CoeJ4"),
-    (2, "DD-1D"), (2, "DBY4w"), (2, "DdXjV"), (2, "E4zeN"),
-    (2, "Drzco"), (2, "CZ5g_"), (2, "CYVMd"), (2, "D6BcP")
+    (2, "ASj79"),
+    (2, "CrRYm"),
+    (2, "Amjka"),
+    (2, "BVQaG"),
+    (2, "ALV8G"),
+    (2, "CMS0m"),
+    (2, "AxzxP"),
+    (2, "D36jK"),
+    (2, "BNcbL"),
+    (2, "A00ev"),
+    (2, "D3m1M"),
+    (2, "CoeJ4"),
+    (2, "DD-1D"),
+    (2, "DBY4w"),
+    (2, "DdXjV"),
+    (2, "E4zeN"),
+    (2, "Drzco"),
+    (2, "CZ5g_"),
+    (2, "CYVMd"),
+    (2, "D6BcP")
 }
 
 def randomThreeExamples(): List[(Int32, String)] = List#{
-    (3, "AebrMQDGIp0Y"), (3, "B_7na2IjVReI"), (3, "M3Fo9OBFtLeH"),
-    (3, "D43T566hd_BK"), (3, "C74b3GZ9sNjP"), (3, "JSOrygifSQ9R"),
-    (3, "ABqKvn8US5eU"), (3, "KcKVeVhRWxXu"), (3, "BUreBVbi5iMU"),
-    (3, "FHAqilB0Aa0a"), (3, "BxZGmWobFuL-"), (3, "GFLRF-Wu1ZIV"),
-    (3, "M2uZrNtxX7ou"), (3, "Fea9c1vQkT7o"), (3, "Ck3gVxuwYhJF"),
-    (3, "HVHwtzhJwSAB"), (3, "KHNhUtSA90wQ"), (3, "DTv0NFFEn1ma"),
-    (3, "Jg2S42xw8ut9"), (3, "NKeb5_R-wr9z")
+    (3, "AebrMQDGIp0Y"),
+    (3, "B_7na2IjVReI"),
+    (3, "M3Fo9OBFtLeH"),
+    (3, "D43T566hd_BK"),
+    (3, "C74b3GZ9sNjP"),
+    (3, "JSOrygifSQ9R"),
+    (3, "ABqKvn8US5eU"),
+    (3, "KcKVeVhRWxXu"),
+    (3, "BUreBVbi5iMU"),
+    (3, "FHAqilB0Aa0a"),
+    (3, "BxZGmWobFuL-"),
+    (3, "GFLRF-Wu1ZIV"),
+    (3, "M2uZrNtxX7ou"),
+    (3, "Fea9c1vQkT7o"),
+    (3, "Ck3gVxuwYhJF"),
+    (3, "HVHwtzhJwSAB"),
+    (3, "KHNhUtSA90wQ"),
+    (3, "DTv0NFFEn1ma"),
+    (3, "Jg2S42xw8ut9"),
+    (3, "NKeb5_R-wr9z")
 }
 
 def randomFourExamples(): List[(Int32, String)] = List#{
@@ -94,25 +125,38 @@ def randomFiveExamples(): List[(Int32, String)] = List#{
 }
 
 def examples(): List[(Int32, String)] =
-    List.append(namedExamples(), List.append(randomTwoExamples(),
-        List.append(randomThreeExamples(), List.append(randomFourExamples(),
-            randomFiveExamples()))))
+    List.append(
+        namedExamples(),
+        List.append(
+            randomTwoExamples(),
+            List.append(
+                randomThreeExamples(),
+                List.append(randomFourExamples(), randomFiveExamples())
+            )
+        )
+    )
 
 @Test
 def publishedStateExamplesAreCanonicalAndRoundTrip(): Unit \ Assert =
     let corpus = examples();
     Assert.assertEq(expected = 100, List.length(corpus));
-    corpus |> List.forEach(match (n, token) ->
-        match Orbit64.State.decode(n, token) {
-            case Err(e) => Assert.assert(false,
-                RichString.fromString("published example ${token} did not decode: ${e}"))
+    corpus |>
+        List.forEach(match (n, token) -> match Orbit64.State.decode(n, token) {
+            case Err(e) =>
+                Assert.assert(
+                    false,
+                    RichString.fromString("published example ${token} did not decode: ${e}")
+                )
             case Ok(state) => {
                 Assert.assertEq(expected = Ok(token), Orbit64.State.encode(n, state));
                 match Orbit64.Net.toFacelets(n, state) {
-                    case Err(e) => Assert.assert(false,
-                        RichString.fromString("published example ${token} did not render: ${e}"))
-                    case Ok(facelets) => Assert.assertEq(expected = Ok(state),
-                        Orbit64.Net.fromFacelets(n, facelets))
+                    case Err(e) =>
+                        Assert.assert(
+                            false,
+                            RichString.fromString("published example ${token} did not render: ${e}")
+                        )
+                    case Ok(facelets) =>
+                        Assert.assertEq(expected = Ok(state), Orbit64.Net.fromFacelets(n, facelets))
                 }
             }
         })

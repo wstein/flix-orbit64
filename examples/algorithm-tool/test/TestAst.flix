@@ -7,13 +7,23 @@ use orbit64::Orbit64.Move.Amount.{Clockwise, CounterClockwise}
 
 @Test
 def sourceAstKeepsExactOperatorsAndNames(): Unit \ Assert =
-    let program = Program(List#{
-        Definition("a", Repeat(Concat(List#{
-            Move(LayerTurn(U, 0, Clockwise)),
-            Move(LayerTurn(R, 0, CounterClockwise))
-        }), 33ii)),
-        Definition("b", Inverse(Reference("a")))
-    }, "b");
+    let program =
+        Program(
+            List#{
+                Definition(
+                    "a",
+                    Repeat(
+                        Concat(List#{
+                            Move(LayerTurn(U, 0, Clockwise)),
+                            Move(LayerTurn(R, 0, CounterClockwise))
+                        }),
+                        33ii
+                    )
+                ),
+                Definition("b", Inverse(Reference("a")))
+            },
+            "b"
+        );
     Assert.assertEq(expected = "b", match program {
         case Program(_, export) => export
     })

@@ -10,9 +10,11 @@ def theSuperflipDecodesBackIdentically(): Unit \ Assert =
 
 @Test
 def theNetOfTheSuperflipShowsItsUFace(): Unit \ Assert =
-    Assert.assertEq(expected = Ok(true),
-                    Orbit64.Net.draw(3, superflip(), false)
-                        |> Result.map(net -> String.contains(substr = " U  B  U ", net)))
+    Assert.assertEq(
+        expected = Ok(true),
+        Orbit64.Net.draw(3, superflip(), false) |>
+            Result.map(net -> String.contains(substr = " U  B  U ", net))
+    )
 
 @Test
 def theSizeTableAbbreviatesLargeNumbers(): Unit \ Assert =

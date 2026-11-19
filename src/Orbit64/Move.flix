@@ -6,7 +6,6 @@
 /// aliases, or notation constructs: those can expand to this vocabulary.
 ///
 pub mod Orbit64.Move {
-
     /// A primitive layer turn.
     pub enum Move with Eq, ToString {
         case LayerTurn(Face, Int32, Amount)
@@ -24,8 +23,7 @@ pub mod Orbit64.Move {
 
     /// The six faces in the canonical Orbit64 and spaced WCA notation order:
     /// `U R F D L B`.
-    pub def faces(): List[Face] =
-        Face.U :: Face.R :: Face.F :: Face.D :: Face.L :: Face.B :: Nil
+    pub def faces(): List[Face] = Face.U :: Face.R :: Face.F :: Face.D :: Face.L :: Face.B :: Nil
 
     /// The one-letter WCA face label used in spaced face notation.
     pub def notation(face: Face): String = match face {
@@ -55,21 +53,21 @@ pub mod Orbit64.Move {
     }
 
     /// The number of primitive moves available at size `n`.
-    pub def alphabetSize(n: Int32): BigInt =
-        18ii * Int32.toBigInt(n / 2)
+    pub def alphabetSize(n: Int32): BigInt = 18ii * Int32.toBigInt(n / 2)
 
     /// Explain why `move` is not defined for the `n x n x n` cube.
     pub def faultOf(n: Int32, move: Move): Option[String] = match move {
         case Move.LayerTurn(_, depth, _) =>
-            if (n < 2) Some("cube size must be at least 2")
-            else depthFault(n, depth)
+            if (n < 2) Some("cube size must be at least 2") else depthFault(n, depth)
     }
 
     def depthFault(n: Int32, depth: Int32): Option[String] =
-        if (depth < 0) Some("layer depth cannot be negative")
+        if (depth < 0)
+            Some("layer depth cannot be negative")
         else if (depth >= n / 2)
             Some("layer depth ${depth} is outside 0..${n / 2 - 1} for ${n}x${n}x${n}")
-        else None
+        else
+            None
 
     /// Rank a move in face, depth, amount order.
     pub def rank(n: Int32, move: Move): BigInt = match move {
@@ -83,61 +81,78 @@ pub mod Orbit64.Move {
 
     /// Recover a move from a rank below `alphabetSize(n)`.
     pub def unrank(n: Int32, value: BigInt): Move =
-        let amount = BigInt.modulo(value, 3ii) |> BigInt.tryToInt32
-            |> Option.getWithDefault(0) |> amountUnrank;
+        let amount =
+            BigInt.modulo(value, 3ii) |>
+                BigInt.tryToInt32 |>
+                Option.getWithDefault(0) |>
+                amountUnrank;
         let quotient = value / 3ii;
         let layers = Int32.toBigInt(n / 2);
-        let depth = BigInt.modulo(quotient, layers) |> BigInt.tryToInt32
-            |> Option.getWithDefault(0);
-        let face = (quotient / layers) |> BigInt.tryToInt32
-            |> Option.getWithDefault(0) |> faceUnrank;
+        let depth =
+            BigInt.modulo(quotient, layers) |> BigInt.tryToInt32 |> Option.getWithDefault(0);
+        let face =
+            (quotient / layers) |> BigInt.tryToInt32 |> Option.getWithDefault(0) |> faceUnrank;
         Move.LayerTurn(face, depth, amount)
 
     /// Encode a literal sequence of primitive moves.
     pub def encode(n: Int32, moves: List[Move]): Result[String, String] =
-        if (n < 2) Err("cube size must be at least 2")
-        else match firstFault(n, moves) {
-            case Some(why) => Err("move sequence is invalid: ${why}")
-            case None =>
-                let base = alphabetSize(n);
-                let count = List.length(moves);
-                let ordinary = moves |> List.foldLeft((acc, move) ->
-                    acc * base + rank(n, move), 0ii);
-                let wireRank = sequenceOffset(base, count) + ordinary;
-                Orbit64.Internal.Encoding.encodeDelimitedRank(1, n / 2, wireRank)
-        }
+        if (n < 2)
+            Err("cube size must be at least 2")
+        else
+            match firstFault(n, moves) {
+                case Some(why) => Err("move sequence is invalid: ${why}")
+                case None =>
+                    let base = alphabetSize(n);
+                    let count = List.length(moves);
+                    let ordinary =
+                        moves |> List.foldLeft((acc, move) -> acc * base + rank(n, move), 0ii);
+                    let wireRank = sequenceOffset(base, count) + ordinary;
+                    Orbit64.Internal.Encoding.encodeDelimitedRank(1, n / 2, wireRank)
+            }
 
     /// Decode a literal move sequence and return its odd/even layer class.
     pub def decode(token: String): Result[String, (LayerClass, List[Move])] =
-        Orbit64.Internal.Encoding.decodeDelimitedRank(1, token)
-            |> Result.flatMap(match (layers, wireRank) ->
-                decodeSequence(layers, wireRank))
+        Orbit64.Internal.Encoding.decodeDelimitedRank(1, token) |>
+            Result.flatMap(match (layers, wireRank) -> decodeSequence(layers, wireRank))
 
-    def decodeSequence(layers: Int32, wireRank: BigInt):
-            Result[String, (LayerClass, List[Move])] =
-        if (layers > 1073741823) Err("layer count exceeds the Int32 cube-size range")
+    def decodeSequence(layers: Int32, wireRank: BigInt): Result[String, (LayerClass, List[Move])] =
+        if (layers > 1073741823)
+            Err("layer count exceeds the Int32 cube-size range")
         else
             let n = layers * 2;
             let base = alphabetSize(n);
             let (count, ordinary) = sequenceRange(base, wireRank, 0, 0ii, 1ii);
             Ok((LayerClass.LayerClass(layers), splitMoves(n, count, ordinary, Nil)))
 
-    def sequenceOffset(base: BigInt, count: Int32): BigInt =
-        offsetLoop(base, count, 0, 0ii, 1ii)
+    def sequenceOffset(base: BigInt, count: Int32): BigInt = offsetLoop(base, count, 0, 0ii, 1ii)
 
-    def offsetLoop(base: BigInt, count: Int32, index: Int32,
-                   offset: BigInt, block: BigInt): BigInt =
-        if (index == count) offset
-        else offsetLoop(base, count, index + 1, offset + block, block * base)
+    def offsetLoop(
+        base: BigInt,
+        count: Int32,
+        index: Int32,
+        offset: BigInt,
+        block: BigInt
+    ): BigInt =
+        if (index == count)
+            offset
+        else
+            offsetLoop(base, count, index + 1, offset + block, block * base)
 
-    def sequenceRange(base: BigInt, wireRank: BigInt, count: Int32,
-                      offset: BigInt, block: BigInt): (Int32, BigInt) =
-        if (wireRank < offset + block) (count, wireRank - offset)
-        else sequenceRange(base, wireRank, count + 1, offset + block, block * base)
+    def sequenceRange(
+        base: BigInt,
+        wireRank: BigInt,
+        count: Int32,
+        offset: BigInt,
+        block: BigInt
+    ): (Int32, BigInt) =
+        if (wireRank < offset + block)
+            (count, wireRank - offset)
+        else
+            sequenceRange(base, wireRank, count + 1, offset + block, block * base)
 
-    def splitMoves(n: Int32, count: Int32, value: BigInt,
-                   out: List[Move]): List[Move] =
-        if (count == 0) out
+    def splitMoves(n: Int32, count: Int32, value: BigInt, out: List[Move]): List[Move] =
+        if (count == 0)
+            out
         else
             let base = alphabetSize(n);
             let quotient = value / base;
@@ -165,8 +180,8 @@ pub mod Orbit64.Move {
     }
 
     def amountRank(amount: Amount): Int32 = match amount {
-        case Amount.Clockwise        => 0
-        case Amount.Half             => 1
+        case Amount.Clockwise => 0
+        case Amount.Half => 1
         case Amount.CounterClockwise => 2
     }
 
@@ -175,5 +190,4 @@ pub mod Orbit64.Move {
         case 1 => Amount.Half
         case _ => Amount.CounterClockwise
     }
-
 }

@@ -6,7 +6,6 @@
 /// coupled components are not stored: they are recomputed on decoding.
 ///
 pub mod Orbit64.V2.State {
-
     use Orbit64.V2.Registry.{Model, Pose}
 
     /// Orbit coordinates of one cube. Components a type lacks are left empty.
@@ -15,10 +14,14 @@ pub mod Orbit64.V2.State {
     /// must be 0 unless the type is odd and framed.
     /// `rotations` holds `r_U r_R r_F r_D r_L r_B` and `frame` a frame rank.
     pub type alias Cube = {
-        cornerPieces = Vector[Int32], cornerTwists = Vector[Int32],
-        midgePieces = Vector[Int32], midgeFlips = Vector[Int32],
-        wings = Vector[Vector[Int32]], centers = Vector[Vector[Int32]],
-        rotations = Vector[Int32], frame = Int32
+        cornerPieces = Vector[Int32],
+        cornerTwists = Vector[Int32],
+        midgePieces = Vector[Int32],
+        midgeFlips = Vector[Int32],
+        wings = Vector[Vector[Int32]],
+        centers = Vector[Vector[Int32]],
+        rotations = Vector[Int32],
+        frame = Int32
     }
 
     /// One digit of the layout; wing and center digits are numbered from 1.
@@ -43,8 +46,7 @@ pub mod Orbit64.V2.State {
 
     /// The `(row, column)` names of the center orbits, ordered by lowest facelet.
     pub def centerOrbits(n: Int32): List[(Int32, Int32)] =
-        List.range(1, n - 1) |> List.flatMap(r ->
-            List.range(r, n - 1 - r) |> List.map(c -> (r, c)))
+        List.range(1, n - 1) |> List.flatMap(r -> List.range(r, n - 1 - r) |> List.map(c -> (r, c)))
 
     def parts(n: Int32, model: Model, pose: Pose): List[Part] =
         let odd = isOdd(n);
@@ -63,14 +65,14 @@ pub mod Orbit64.V2.State {
         List.range(0, exponent) |> List.foldLeft((acc, _) -> acc * base, 1ii)
 
     def radix(n: Int32, model: Model, pose: Pose, part: Part): BigInt = match part {
-        case Part.CornerPerm   => factorial(List.length(cornerSlots(n, pose)))
-        case Part.CornerTwist  => power(3ii, List.length(cornerSlots(n, pose)) - 1)
-        case Part.MidgePerm    => factorial(12) / 2ii
-        case Part.MidgeFlip    => power(2ii, 11)
-        case Part.Wing(_)      => factorial(24)
-        case Part.Center(_)    => centerRadix(model)
-        case Part.FixedRot     => power(2ii, 11)
-        case Part.FrameDigit   => 24ii
+        case Part.CornerPerm => factorial(List.length(cornerSlots(n, pose)))
+        case Part.CornerTwist => power(3ii, List.length(cornerSlots(n, pose)) - 1)
+        case Part.MidgePerm => factorial(12) / 2ii
+        case Part.MidgeFlip => power(2ii, 11)
+        case Part.Wing(_) => factorial(24)
+        case Part.Center(_) => centerRadix(model)
+        case Part.FixedRot => power(2ii, 11)
+        case Part.FrameDigit => 24ii
     }
 
     def centerRadix(model: Model): BigInt =
@@ -85,14 +87,19 @@ pub mod Orbit64.V2.State {
         let identity = k -> Vector.range(0, k);
         let color = Vector.range(0, 24) |> Vector.map(i -> i / 4);
         let odd = isOdd(n);
-        { cornerPieces = identity(8), cornerTwists = Vector.repeat(8, 0),
-          midgePieces = if (odd) identity(12) else Vector.empty(),
-          midgeFlips = if (odd) Vector.repeat(12, 0) else Vector.empty(),
-          wings = Vector.repeat(wingOrbits(n), identity(24)),
-          centers = Vector.repeat(List.length(centerOrbits(n)),
-                        if (model == Model.Color) color else identity(24)),
-          rotations = if (odd and model == Model.Picture) Vector.repeat(6, 0) else Vector.empty(),
-          frame = 0 }
+        {
+            cornerPieces = identity(8),
+            cornerTwists = Vector.repeat(8, 0),
+            midgePieces = if (odd) identity(12) else Vector.empty(),
+            midgeFlips = if (odd) Vector.repeat(12, 0) else Vector.empty(),
+            wings = Vector.repeat(wingOrbits(n), identity(24)),
+            centers = Vector.repeat(
+                List.length(centerOrbits(n)),
+                if (model == Model.Color) color else identity(24)
+            ),
+            rotations = if (odd and model == Model.Picture) Vector.repeat(6, 0) else Vector.empty(),
+            frame = 0
+        }
 
     // ---------------------------------------------------------------- validation
 
@@ -117,7 +124,12 @@ pub mod Orbit64.V2.State {
         if (k >= 1 and k <= wingOrbits(n)) parityOf(Vector.get(k - 1, cube#wings)) else 0
 
     /// The parity the `index`-th (from 1) center orbit must have, in the picture model.
-    def requiredCenterParity(n: Int32, cornerParity: Int32, wing: Int32 -> Int32, index: Int32): Int32 =
+    def requiredCenterParity(
+        n: Int32,
+        cornerParity: Int32,
+        wing: Int32 -> Int32,
+        index: Int32
+    ): Int32 =
         match List.drop(index - 1, centerOrbits(n)) {
             case (r, c) :: _ =>
                 let d = Int32.min(c, n - 1 - c);
@@ -141,25 +153,48 @@ pub mod Orbit64.V2.State {
         let w = wingOrbits(n);
         let m = List.length(centerOrbits(n));
         firstFault(
-            check(isPermutation(cube#cornerPieces, 8), "corner pieces are not a permutation of 8") ::
-            check(inRange(cube#cornerTwists, 8, 3), "corner twists must be 8 values in 0..2") ::
-            check(if (odd) isPermutation(cube#midgePieces, 12)
-                  else Vector.length(cube#midgePieces) == 0,
-                  "midge pieces must be a permutation of 12 on odd cubes and empty otherwise") ::
-            check(if (odd) inRange(cube#midgeFlips, 12, 2) else Vector.length(cube#midgeFlips) == 0,
-                  "midge flips must be 12 values in 0..1 on odd cubes and empty otherwise") ::
-            check(Vector.length(cube#wings) == w and
-                      Vector.forAll(v -> isPermutation(v, 24), cube#wings),
-                  "expected ${w} wing permutations of 24") ::
-            check(Vector.length(cube#centers) == m, "expected ${m} center orbits") ::
-            check(Vector.forAll(v -> centerValid(model, v), cube#centers),
-                  "a center orbit is not a valid color multiset or permutation of 24") ::
-            check(if (odd and model == Model.Picture) inRange(cube#rotations, 6, 4)
-                  else Vector.length(cube#rotations) == 0,
-                  "rotations must be 6 values in 0..3 on odd picture cubes and empty otherwise") ::
-            check(frameValid(odd and pose == Pose.Framed, cube#frame),
-                  "frame must be 0..23 on odd framed cubes and 0 otherwise") ::
-            Nil)
+            check(
+                isPermutation(cube#cornerPieces, 8),
+                "corner pieces are not a permutation of 8"
+            ) ::
+                check(inRange(cube#cornerTwists, 8, 3), "corner twists must be 8 values in 0..2") ::
+                check(
+                    if (odd)
+                        isPermutation(cube#midgePieces, 12)
+                    else
+                        Vector.length(cube#midgePieces) == 0,
+                    "midge pieces must be a permutation of 12 on odd cubes and empty otherwise"
+                ) ::
+                check(
+                    if (odd)
+                        inRange(cube#midgeFlips, 12, 2)
+                    else
+                        Vector.length(cube#midgeFlips) == 0,
+                    "midge flips must be 12 values in 0..1 on odd cubes and empty otherwise"
+                ) ::
+                check(
+                    Vector.length(cube#wings) == w and
+                        Vector.forAll(v -> isPermutation(v, 24), cube#wings),
+                    "expected ${w} wing permutations of 24"
+                ) ::
+                check(Vector.length(cube#centers) == m, "expected ${m} center orbits") ::
+                check(
+                    Vector.forAll(v -> centerValid(model, v), cube#centers),
+                    "a center orbit is not a valid color multiset or permutation of 24"
+                ) ::
+                check(
+                    if (odd and model == Model.Picture)
+                        inRange(cube#rotations, 6, 4)
+                    else
+                        Vector.length(cube#rotations) == 0,
+                    "rotations must be 6 values in 0..3 on odd picture cubes and empty otherwise"
+                ) ::
+                check(
+                    frameValid(odd and pose == Pose.Framed, cube#frame),
+                    "frame must be 0..23 on odd framed cubes and 0 otherwise"
+                ) ::
+                Nil
+        )
 
     def lawFault(n: Int32, model: Model, pose: Pose, cube: Cube): Option[String] =
         let odd = isOdd(n);
@@ -167,28 +202,50 @@ pub mod Orbit64.V2.State {
         let wing = k -> wingParity(n, cube, k);
         let rotationParity = Int32.modulo(sumOf(cube#rotations), 2);
         firstFault(
-            check(Int32.modulo(sumOf(cube#cornerTwists), 3) == 0, "corner twists must sum to 0 mod 3") ::
-            check(not odd or Int32.modulo(sumOf(cube#midgeFlips), 2) == 0,
-                  "midge flips must sum to 0 mod 2") ::
-            check(not dropsCorner(n, pose) or
-                      (Vector.get(6, cube#cornerPieces) == 6 and Vector.get(6, cube#cornerTwists) == 0),
-                  "a canonical even cube has its DBL corner home with twist 0") ::
-            check(not odd or parityOf(cube#midgePieces) == c, "midge parity must equal corner parity") ::
-            check(not (odd and model == Model.Picture) or rotationParity == c,
-                  "fixed-center rotation parity must equal corner parity") ::
-            check(model == Model.Color or
-                      Vector.range(0, Vector.length(cube#centers)) |> Vector.forAll(i ->
-                          parityOf(Vector.get(i, cube#centers))
-                              == requiredCenterParity(n, c, wing, i + 1)),
-                  "a center orbit parity breaks the picture relation") ::
-            Nil)
+            check(
+                Int32.modulo(sumOf(cube#cornerTwists), 3) == 0,
+                "corner twists must sum to 0 mod 3"
+            ) ::
+                check(
+                    not odd or Int32.modulo(sumOf(cube#midgeFlips), 2) == 0,
+                    "midge flips must sum to 0 mod 2"
+                ) ::
+                check(
+                    not dropsCorner(n, pose) or
+                        (
+                            Vector.get(6, cube#cornerPieces) == 6 and
+                                Vector.get(6, cube#cornerTwists) == 0
+                        ),
+                    "a canonical even cube has its DBL corner home with twist 0"
+                ) ::
+                check(
+                    not odd or parityOf(cube#midgePieces) == c,
+                    "midge parity must equal corner parity"
+                ) ::
+                check(
+                    not (odd and model == Model.Picture) or rotationParity == c,
+                    "fixed-center rotation parity must equal corner parity"
+                ) ::
+                check(
+                    model == Model.Color or
+                        Vector.range(0, Vector.length(cube#centers)) |>
+                            Vector.forAll(
+                                i ->
+                                    parityOf(Vector.get(i, cube#centers)) ==
+                                        requiredCenterParity(n, c, wing, i + 1)
+                            ),
+                    "a center orbit parity breaks the picture relation"
+                ) ::
+                Nil
+        )
 
     // ------------------------------------------------------------------- ranking
 
     /// Little-endian: the first value is the units digit.
     def orientationRank(values: Vector[Int32], count: Int32, base: Int32): BigInt =
-        List.range(0, count) |> List.reverse
-            |> List.foldLeft((acc, i) -> acc * big(base) + big(Vector.get(i, values)), 0ii)
+        List.range(0, count) |>
+            List.reverse |>
+            List.foldLeft((acc, i) -> acc * big(base) + big(Vector.get(i, values)), 0ii)
 
     def big(x: Int32): BigInt = Int32.toBigInt(x)
 
@@ -197,11 +254,17 @@ pub mod Orbit64.V2.State {
     /// The inverse, restoring the forced last orientation.
     def orientationUnrank(value: BigInt, count: Int32, base: Int32): Vector[Int32] =
         let b = Int32.toBigInt(base);
-        let digits = List.range(0, count) |> List.foldLeft((acc, _) -> {
-            let (v, out) = acc;
-            let d = BigInt.modulo(v, b) |> BigInt.tryToInt32 |> Option.getWithDefault(0);
-            (v / b, d :: out)
-        }, (value, Nil)) |> snd |> List.reverse;
+        let digits = List.range(0, count) |>
+            List.foldLeft(
+                (acc, _) -> {
+                    let (v, out) = acc;
+                    let d = BigInt.modulo(v, b) |> BigInt.tryToInt32 |> Option.getWithDefault(0);
+                    (v / b, d :: out)
+                },
+                (value, Nil)
+            ) |>
+            snd |>
+            List.reverse;
         let forced = Int32.modulo(base - Int32.modulo(List.sum(digits), base), base);
         List.append(digits, forced :: Nil) |> List.toVector
 
@@ -211,7 +274,9 @@ pub mod Orbit64.V2.State {
 
     def storedPieces(n: Int32, pose: Pose, cube: Cube): Vector[Int32] =
         let shift = p -> if (dropsCorner(n, pose) and p > 6) p - 1 else p;
-        cornerSlots(n, pose) |> List.map(s -> shift(Vector.get(s, cube#cornerPieces))) |> List.toVector
+        cornerSlots(n, pose) |>
+            List.map(s -> shift(Vector.get(s, cube#cornerPieces))) |>
+            List.toVector
 
     def storedTwists(n: Int32, pose: Pose, cube: Cube): Vector[Int32] =
         cornerSlots(n, pose) |> List.map(s -> Vector.get(s, cube#cornerTwists)) |> List.toVector
@@ -226,19 +291,21 @@ pub mod Orbit64.V2.State {
     def midgeDigit(m: Vector[Int32]): BigInt = Orbit64.Rank.permRankWithParity(m, parityOf(m))
 
     def digitOf(n: Int32, model: Model, pose: Pose, cube: Cube, part: Part): BigInt = match part {
-        case Part.CornerPerm  => Orbit64.Rank.permRank(storedPieces(n, pose, cube))
+        case Part.CornerPerm => Orbit64.Rank.permRank(storedPieces(n, pose, cube))
         case Part.CornerTwist =>
             let twists = storedTwists(n, pose, cube);
             orientationRank(twists, Vector.length(twists) - 1, 3)
-        case Part.MidgePerm   => midgeDigit(cube#midgePieces)
-        case Part.MidgeFlip   => orientationRank(cube#midgeFlips, 11, 2)
-        case Part.Wing(i)     => Orbit64.Rank.permRank(Vector.get(i - 1, cube#wings))
-        case Part.Center(i)   =>
+        case Part.MidgePerm => midgeDigit(cube#midgePieces)
+        case Part.MidgeFlip => orientationRank(cube#midgeFlips, 11, 2)
+        case Part.Wing(i) => Orbit64.Rank.permRank(Vector.get(i - 1, cube#wings))
+        case Part.Center(i) =>
             let v = Vector.get(i - 1, cube#centers);
-            if (model == Model.Color) Orbit64.Rank.multisetRank(v, 4, 6)
-            else Orbit64.Rank.permRankWithParity(v, parityOf(v))
-        case Part.FixedRot    => rotationDigit(cube#rotations)
-        case Part.FrameDigit  => Int32.toBigInt(cube#frame)
+            if (model == Model.Color)
+                Orbit64.Rank.multisetRank(v, 4, 6)
+            else
+                Orbit64.Rank.permRankWithParity(v, parityOf(v))
+        case Part.FixedRot => rotationDigit(cube#rotations)
+        case Part.FrameDigit => Int32.toBigInt(cube#frame)
     }
 
     /// The laws index into the vectors, so they are only checked once the layout is sound.
@@ -253,8 +320,14 @@ pub mod Orbit64.V2.State {
         match faultOf(n, model, pose, cube) {
             case Some(why) => Err(why)
             case None =>
-                Ok(parts(n, model, pose) |> List.foldLeft((acc, p) ->
-                    acc * radix(n, model, pose, p) + digitOf(n, model, pose, cube, p), 0ii))
+                Ok(
+                    parts(n, model, pose) |>
+                        List.foldLeft(
+                            (acc, p) ->
+                                acc * radix(n, model, pose, p) + digitOf(n, model, pose, cube, p),
+                            0ii
+                        )
+                )
         }
 
     // ----------------------------------------------------------------- unranking
@@ -262,12 +335,16 @@ pub mod Orbit64.V2.State {
     /// The digits of `value`, one per part, as a map.
     def splitDigits(n: Int32, model: Model, pose: Pose, value: BigInt): Map[Part, BigInt] =
         let all = parts(n, model, pose);
-        let (_, out) = List.foldLeft((acc, p) -> {
-            let (v, m) = acc;
-            let r = radix(n, model, pose, p);
-            let q = v / r;
-            (q, Map.insert(p, v - q * r, m))
-        }, (value, Map.empty()), List.reverse(all));
+        let (_, out) = List.foldLeft(
+            (acc, p) -> {
+                let (v, m) = acc;
+                let r = radix(n, model, pose, p);
+                let q = v / r;
+                (q, Map.insert(p, v - q * r, m))
+            },
+            (value, Map.empty()),
+            List.reverse(all)
+        );
         out
 
     /// Re-insert the left-out DBL corner (slot 6) and undo the piece renumbering.
@@ -289,25 +366,54 @@ pub mod Orbit64.V2.State {
         let cornerPieces = if (dropsCorner(n, pose)) restoreDbl(pieces, 6, true) else pieces;
         let cornerTwists = if (dropsCorner(n, pose)) restoreDbl(twists, 0, false) else twists;
         let c = parityOf(cornerPieces);
-        let wings = Vector.range(0, wingOrbits(n)) |> Vector.map(i ->
-            Orbit64.Rank.permUnrank(d(Part.Wing(i + 1)), 24));
-        let partial = { cornerPieces = cornerPieces, cornerTwists = cornerTwists,
-                        midgePieces = Vector.empty(), midgeFlips = Vector.empty(), wings = wings,
-                        centers = Vector.empty(), rotations = Vector.empty(), frame = 0 };
+        let wings =
+            Vector.range(0, wingOrbits(n)) |>
+                Vector.map(i -> Orbit64.Rank.permUnrank(d(Part.Wing(i + 1)), 24));
+        let partial = {
+            cornerPieces = cornerPieces,
+            cornerTwists = cornerTwists,
+            midgePieces = Vector.empty(),
+            midgeFlips = Vector.empty(),
+            wings = wings,
+            centers = Vector.empty(),
+            rotations = Vector.empty(),
+            frame = 0
+        };
         let wing = k -> wingParity(n, partial, k);
-        let centers = Vector.range(0, List.length(centerOrbits(n))) |> Vector.map(i ->
-            if (model == Model.Color) Orbit64.Rank.multisetUnrank(d(Part.Center(i + 1)), 24, 4, 6)
-            else Orbit64.Rank.permUnrankWithParity(d(Part.Center(i + 1)), 24,
-                     requiredCenterParity(n, c, wing, i + 1)));
-        let rotations = if (odd and model == Model.Picture) unrankRotations(d(Part.FixedRot), c)
-                        else Vector.empty();
-        { cornerPieces = cornerPieces, cornerTwists = cornerTwists,
-          midgePieces = if (odd) Orbit64.Rank.permUnrankWithParity(d(Part.MidgePerm), 12, c)
-                        else Vector.empty(),
-          midgeFlips = if (odd) orientationUnrank(d(Part.MidgeFlip), 11, 2) else Vector.empty(),
-          wings = wings, centers = centers, rotations = rotations,
-          frame = if (odd and pose == Pose.Framed) d(Part.FrameDigit) |> BigInt.tryToInt32
-                      |> Option.getWithDefault(0) else 0 }
+        let centers =
+            Vector.range(0, List.length(centerOrbits(n))) |>
+                Vector.map(
+                    i ->
+                        if (model == Model.Color)
+                            Orbit64.Rank.multisetUnrank(d(Part.Center(i + 1)), 24, 4, 6)
+                        else
+                            Orbit64.Rank.permUnrankWithParity(
+                                d(Part.Center(i + 1)),
+                                24,
+                                requiredCenterParity(n, c, wing, i + 1)
+                            )
+                );
+        let rotations =
+            if (odd and model == Model.Picture)
+                unrankRotations(d(Part.FixedRot), c)
+            else
+                Vector.empty();
+        {
+            cornerPieces = cornerPieces,
+            cornerTwists = cornerTwists,
+            midgePieces = if (odd)
+                Orbit64.Rank.permUnrankWithParity(d(Part.MidgePerm), 12, c)
+            else
+                Vector.empty(),
+            midgeFlips = if (odd) orientationUnrank(d(Part.MidgeFlip), 11, 2) else Vector.empty(),
+            wings = wings,
+            centers = centers,
+            rotations = rotations,
+            frame = if (odd and pose == Pose.Framed)
+                d(Part.FrameDigit) |> BigInt.tryToInt32 |> Option.getWithDefault(0)
+            else
+                0
+        }
 
     /// Split the rotation digit; the low bit of `r_B` follows from `R = C`.
     def unrankRotations(digit: BigInt, cornerParity: Int32): Vector[Int32] =
@@ -316,5 +422,4 @@ pub mod Orbit64.V2.State {
         let five = List.range(0, 5) |> List.map(part);
         let low = Int32.modulo(cornerParity - List.sum(five), 2);
         List.append(five, (2 * high + low) :: Nil) |> List.toVector
-
 }

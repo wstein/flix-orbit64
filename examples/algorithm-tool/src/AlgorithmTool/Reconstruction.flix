@@ -1,6 +1,5 @@
 /// Render a decoded Orbit64 algorithm DAG as canonical native source.
 pub mod AlgorithmTool.Reconstruction {
-
     use orbit64::Orbit64
 
     enum RenderContext {
@@ -13,29 +12,38 @@ pub mod AlgorithmTool.Reconstruction {
             let refCounts = referenceCounts(nodes);
             let anchors = anchoredReferences(nodes);
             let context = RenderContext.RenderContext(nodes, root, refCounts, anchors);
-            String.concat(definitions(context, nodes, 0),
-                "export ${nameOf(root)}\n")
+            String.concat(definitions(context, nodes, 0), "export ${nameOf(root)}\n")
     }
 
     /// A node is worth naming only when doing so pays for itself: either it is
     /// referenced from more than one place (so the name avoids duplicating its
     /// text), or its text is cheap regardless of reuse (a bare terminal, or an
     /// inverse of one). Anything else is inlined at its one use site instead.
-    def definitions(context: RenderContext, nodes: List[Orbit64.Algorithm.Node], index: Int32):
-            String = match (context, nodes) {
+    def definitions(
+        context: RenderContext,
+        nodes: List[Orbit64.Algorithm.Node],
+        index: Int32
+    ): String = match (context, nodes) {
         case (_, Nil) => ""
         case (RenderContext.RenderContext(all, root, refCounts, anchors), node :: rest) =>
             if (index != root and isInlinable(index, node, all, refCounts, anchors))
                 definitions(context, rest, index + 1)
-            else String.concat("def ${nameOf(index)} = ${expression(node, all, refCounts)}\n",
-                definitions(context, rest, index + 1))
+            else
+                String.concat(
+                    "def ${nameOf(index)} = ${expression(node, all, refCounts)}\n",
+                    definitions(context, rest, index + 1)
+                )
     }
 
-    def isInlinable(index: Int32, node: Orbit64.Algorithm.Node,
-                    all: List[Orbit64.Algorithm.Node], refCounts: List[Int32],
-                    anchors: Set[Int32]): Bool =
-        not Set.memberOf(index, anchors)
-            and (isAlwaysInlinable(node, all) or countAt(index, refCounts) == 1)
+    def isInlinable(
+        index: Int32,
+        node: Orbit64.Algorithm.Node,
+        all: List[Orbit64.Algorithm.Node],
+        refCounts: List[Int32],
+        anchors: Set[Int32]
+    ): Bool =
+        not Set.memberOf(index, anchors) and
+            (isAlwaysInlinable(node, all) or countAt(index, refCounts) == 1)
 
     /// Cheap regardless of how often it recurs: a bare terminal, or an inverse
     /// chain that bottoms out in one.
@@ -49,8 +57,11 @@ pub mod AlgorithmTool.Reconstruction {
             case _ => false
         }
 
-    def expression(node: Orbit64.Algorithm.Node, all: List[Orbit64.Algorithm.Node],
-                   refCounts: List[Int32]): String = match node {
+    def expression(
+        node: Orbit64.Algorithm.Node,
+        all: List[Orbit64.Algorithm.Node],
+        refCounts: List[Int32]
+    ): String = match node {
         case Orbit64.Algorithm.Node.Terminal(move) => moveText(move)
         case Orbit64.Algorithm.Node.Concat(children) => references(children, all, refCounts)
         case Orbit64.Algorithm.Node.Repeat(child, count) =>
@@ -64,14 +75,19 @@ pub mod AlgorithmTool.Reconstruction {
             "${nameOf(sequence)}[${start}:${end}]"
     }
 
-    def references(values: List[Int32], all: List[Orbit64.Algorithm.Node],
-                   refCounts: List[Int32]): String =
-        values |> List.map(index -> renderChild(index, all, refCounts)) |> List.join(" ")
+    def references(
+        values: List[Int32],
+        all: List[Orbit64.Algorithm.Node],
+        refCounts: List[Int32]
+    ): String = values |> List.map(index -> renderChild(index, all, refCounts)) |> List.join(" ")
 
     /// The text for a reference: inlined in place when the target is never
     /// named (see `isInlinable`), otherwise just its name.
-    def renderChild(index: Int32, all: List[Orbit64.Algorithm.Node],
-                    refCounts: List[Int32]): String =
+    def renderChild(
+        index: Int32,
+        all: List[Orbit64.Algorithm.Node],
+        refCounts: List[Int32]
+    ): String =
         match nodeAt(index, all) {
             case Some(node) if isInlinable(index, node, all, refCounts, Set.empty()) =>
                 expression(node, all, refCounts)
@@ -81,8 +97,11 @@ pub mod AlgorithmTool.Reconstruction {
     /// `U'` needs no parens; anything else inlined or named still does, so a
     /// nested inverse (however unlikely) never leaves a dangling reference to
     /// a node `definitions` decided not to name.
-    def invertedText(child: Int32, all: List[Orbit64.Algorithm.Node],
-                     refCounts: List[Int32]): String =
+    def invertedText(
+        child: Int32,
+        all: List[Orbit64.Algorithm.Node],
+        refCounts: List[Int32]
+    ): String =
         match nodeAt(child, all) {
             case Some(Orbit64.Algorithm.Node.Terminal(move)) => "${moveText(move)}'"
             case Some(node) if isInlinable(child, node, all, refCounts, Set.empty()) =>
@@ -90,26 +109,42 @@ pub mod AlgorithmTool.Reconstruction {
             case _ => "(${nameOf(child)})'"
         }
 
-    def packedReferences(alphabet: List[Int32], symbols: List[Int32],
-                         all: List[Orbit64.Algorithm.Node], refCounts: List[Int32]): String =
-        match symbols {
-            case Nil => ""
-            case symbol :: rest => String.concat(referenceAt(alphabet, symbol, all, refCounts),
-                packedTail(alphabet, rest, all, refCounts))
-        }
-
-    def packedTail(alphabet: List[Int32], symbols: List[Int32],
-                   all: List[Orbit64.Algorithm.Node], refCounts: List[Int32]): String =
+    def packedReferences(
+        alphabet: List[Int32],
+        symbols: List[Int32],
+        all: List[Orbit64.Algorithm.Node],
+        refCounts: List[Int32]
+    ): String =
         match symbols {
             case Nil => ""
             case symbol :: rest =>
-                String.concat(" ${referenceAt(alphabet, symbol, all, refCounts)}",
-                    packedTail(alphabet, rest, all, refCounts))
+                String.concat(
+                    referenceAt(alphabet, symbol, all, refCounts),
+                    packedTail(alphabet, rest, all, refCounts)
+                )
         }
 
-    def referenceAt(alphabet: List[Int32], symbol: Int32, all: List[Orbit64.Algorithm.Node],
-                    refCounts: List[Int32]): String =
-        renderChild(alphabetAt(alphabet, symbol, 0), all, refCounts)
+    def packedTail(
+        alphabet: List[Int32],
+        symbols: List[Int32],
+        all: List[Orbit64.Algorithm.Node],
+        refCounts: List[Int32]
+    ): String =
+        match symbols {
+            case Nil => ""
+            case symbol :: rest =>
+                String.concat(
+                    " ${referenceAt(alphabet, symbol, all, refCounts)}",
+                    packedTail(alphabet, rest, all, refCounts)
+                )
+        }
+
+    def referenceAt(
+        alphabet: List[Int32],
+        symbol: Int32,
+        all: List[Orbit64.Algorithm.Node],
+        refCounts: List[Int32]
+    ): String = renderChild(alphabetAt(alphabet, symbol, 0), all, refCounts)
 
     def alphabetAt(alphabet: List[Int32], wanted: Int32, index: Int32): Int32 = match alphabet {
         case value :: _ if wanted == index => value
@@ -127,11 +162,17 @@ pub mod AlgorithmTool.Reconstruction {
     /// Their source must therefore remain named even if it has one ordinary
     /// reference and would otherwise be inlined.
     def anchoredReferences(nodes: List[Orbit64.Algorithm.Node]): Set[Int32] =
-        nodes |> List.foldLeft((anchors, node) -> match node {
-            case Orbit64.Algorithm.Node.Partition(sequence, _) => Set.insert(sequence, anchors)
-            case Orbit64.Algorithm.Node.SliceParts(sequence, _, _) => Set.insert(sequence, anchors)
-            case _ => anchors
-        }, Set.empty())
+        nodes |>
+            List.foldLeft(
+                (anchors, node) -> match node {
+                    case Orbit64.Algorithm.Node.Partition(sequence, _) =>
+                        Set.insert(sequence, anchors)
+                    case Orbit64.Algorithm.Node.SliceParts(sequence, _, _) =>
+                        Set.insert(sequence, anchors)
+                    case _ => anchors
+                },
+                Set.empty()
+            )
 
     def tallyNode(node: Orbit64.Algorithm.Node, counts: List[Int32]): List[Int32] = match node {
         case Orbit64.Algorithm.Node.Terminal(_) => counts
@@ -140,8 +181,11 @@ pub mod AlgorithmTool.Reconstruction {
         case Orbit64.Algorithm.Node.Inverse(child) => incrementAt(child, counts)
         case Orbit64.Algorithm.Node.Block(children) => tallyRefs(children, counts)
         case Orbit64.Algorithm.Node.PackedBlock(alphabet, symbols) =>
-            symbols |> List.foldLeft((acc, symbol) ->
-                incrementAt(alphabetAt(alphabet, symbol, 0), acc), counts)
+            symbols |>
+                List.foldLeft(
+                    (acc, symbol) -> incrementAt(alphabetAt(alphabet, symbol, 0), acc),
+                    counts
+                )
         case Orbit64.Algorithm.Node.Partition(sequence, _) => incrementAt(sequence, counts)
         case Orbit64.Algorithm.Node.SliceParts(sequence, _, _) => incrementAt(sequence, counts)
     }
@@ -194,5 +238,4 @@ pub mod AlgorithmTool.Reconstruction {
         case Orbit64.Move.Amount.Half => "2"
         case Orbit64.Move.Amount.CounterClockwise => "'"
     }
-
 }

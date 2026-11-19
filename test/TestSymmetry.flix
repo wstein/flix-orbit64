@@ -8,8 +8,7 @@ def symmetrySolved(n: Int32): Vector[Int32] =
     Vector.range(0, 6 * n * n) |> Vector.map(i -> i / (n * n))
 
 def symmetryStickers(n: Int32, token: String): Vector[Int32] =
-    match Orbit64.State.decode(n, token)
-            |> Result.flatMap(s -> Orbit64.Net.toFacelets(n, s)) {
+    match Orbit64.State.decode(n, token) |> Result.flatMap(s -> Orbit64.Net.toFacelets(n, s)) {
         case Ok(fs) => fs
         case Err(_) => Vector.empty()
     }
@@ -22,23 +21,28 @@ def symmetryLeast(n: Int32, fs: Vector[Int32]): Vector[Int32] =
 
 @Test
 def everySymmetryIsAPermutationAtEverySize(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n ->
-        List.range(0, Symmetry.count()) |> List.forEach(g -> {
-            let sorted = Symmetry.destinations(n, g) |> Vector.toList |> List.sort;
-            Assert.assertEq(expected = List.range(0, 6 * n * n), sorted)
-        }))
+    List.range(2, 8) |>
+        List.forEach(
+            n ->
+                List.range(0, Symmetry.count()) |>
+                    List.forEach(g -> {
+                        let sorted = Symmetry.destinations(n, g) |> Vector.toList |> List.sort;
+                        Assert.assertEq(expected = List.range(0, 6 * n * n), sorted)
+                    })
+        )
 
 @Test
 def symmetryZeroIsTheIdentity(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n ->
-        Assert.assertEq(expected = Vector.range(0, 6 * n * n), Symmetry.destinations(n, 0)))
+    List.range(2, 8) |>
+        List.forEach(
+            n -> Assert.assertEq(expected = Vector.range(0, 6 * n * n), Symmetry.destinations(n, 0))
+        )
 
 @Test
 def theMirrorSwapsTheRightAndLeftFaces(): Unit \ Assert =
     let mirror = Symmetry.mirrorAcrossRL();
     let mirrored = symmetryImage(3, mirror, symmetrySolved(3));
-    let face = f ->
-        Vector.range(f * 9, f * 9 + 9) |> Vector.map(i -> Vector.get(i, mirrored));
+    let face = f -> Vector.range(f * 9, f * 9 + 9) |> Vector.map(i -> Vector.get(i, mirrored));
     Assert.assertEq(expected = Vector.repeat(9, 0), face(0));
     Assert.assertEq(expected = Vector.repeat(9, 4), face(1));
     Assert.assertEq(expected = Vector.repeat(9, 1), face(4));
@@ -47,10 +51,11 @@ def theMirrorSwapsTheRightAndLeftFaces(): Unit \ Assert =
 @Test
 def theMirrorIsItsOwnInverse(): Unit \ Assert =
     let g = Symmetry.mirrorAcrossRL();
-    roundTrippable() |> List.forEach(match (n, token) -> {
-        let fs = symmetryStickers(n, token);
-        Assert.assertEq(expected = fs, symmetryImage(n, g, symmetryImage(n, g, fs)))
-    })
+    roundTrippable() |>
+        List.forEach(match (n, token) -> {
+            let fs = symmetryStickers(n, token);
+            Assert.assertEq(expected = fs, symmetryImage(n, g, symmetryImage(n, g, fs)))
+        })
 
 @Test
 def imageRejectsWhatIsNotACubeOrASymmetry(): Unit \ Assert =
@@ -62,34 +67,43 @@ def imageRejectsWhatIsNotACubeOrASymmetry(): Unit \ Assert =
 
 @Test
 def relabelNamesColorsInOrderOfFirstAppearance(): Unit \ Assert =
-    Assert.assertEq(expected = Vector#{0, 1, 0, 2, 1, 3},
-                    Symmetry.relabel(Vector#{4, 2, 4, 0, 2, 5}))
+    Assert.assertEq(
+        expected = Vector#{0, 1, 0, 2, 1, 3},
+        Symmetry.relabel(Vector#{4, 2, 4, 0, 2, 5})
+    )
 
 @Test
 def leastImageIgnoresTurnsMirrorsAndColors(): Unit \ Assert =
     let fs = symmetryStickers(3, "AP7AYhnwDQbA");
     let least = symmetryLeast(3, fs);
-    List.range(0, Symmetry.count()) |> List.forEach(g -> {
-        let moved = symmetryImage(3, g, fs);
-        let renamed = Vector.map(c -> Int32.modulo(c + 2, 6), moved);
-        Assert.assertEq(expected = least, symmetryLeast(3, moved));
-        Assert.assertEq(expected = least, symmetryLeast(3, renamed))
-    });
+    List.range(0, Symmetry.count()) |>
+        List.forEach(g -> {
+            let moved = symmetryImage(3, g, fs);
+            let renamed = Vector.map(c -> Int32.modulo(c + 2, 6), moved);
+            Assert.assertEq(expected = least, symmetryLeast(3, moved));
+            Assert.assertEq(expected = least, symmetryLeast(3, renamed))
+        });
     Assert.assertEq(expected = least, symmetryLeast(3, least))
 
 @Test
 def theFirstCornerIsUrf(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n ->
-        Assert.assertEq(expected = Some(Vector#{n * n - 1, n * n, 2 * n * n + n - 1}),
-                        Symmetry.cornerStickers(n) |> List.head))
+    List.range(2, 8) |>
+        List.forEach(
+            n ->
+                Assert.assertEq(
+                    expected = Some(Vector#{n * n - 1, n * n, 2 * n * n + n - 1}),
+                    Symmetry.cornerStickers(n) |> List.head
+                )
+        )
 
 @Test
 def eightCornersWithThreeDistinctStickersEach(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n -> {
-        let all = Symmetry.cornerStickers(n) |> List.flatMap(Vector.toList);
-        Assert.assertEq(expected = 24, List.length(all));
-        Assert.assertEq(expected = 24, Set.size(List.toSet(all)))
-    })
+    List.range(2, 8) |>
+        List.forEach(n -> {
+            let all = Symmetry.cornerStickers(n) |> List.flatMap(Vector.toList);
+            Assert.assertEq(expected = 24, List.length(all));
+            Assert.assertEq(expected = 24, Set.size(List.toSet(all)))
+        })
 
 @Test
 def onlyOddCubesHaveCenterFacelets(): Unit \ Assert =

@@ -22,7 +22,10 @@ def layoutOf4x4(): Unit \ Assert =
 
 @Test
 def layoutOf5x5(): Unit \ Assert =
-    Assert.assertEq(expected = List#{Corners, Midges, Wings, Centers, Centers}, Orbit64.Orbit.layout(5))
+    Assert.assertEq(
+        expected = List#{Corners, Midges, Wings, Centers, Centers},
+        Orbit64.Orbit.layout(5)
+    )
 
 @Test
 def layoutOf7x7HasTwoWingAndSixCenterOrbits(): Unit \ Assert =
@@ -88,68 +91,102 @@ def widthsAreDistinct(): Unit \ Assert =
 @Test
 def noSizeBelowTwoBorrowsARealWidth(): Unit \ Assert =
     let real = List.range(2, 8) |> List.map(Orbit64.State.width) |> List.toSet;
-    List.range(-1, 2) |> List.forEach(n ->
-        Assert.assertFalseWithMsg(Set.memberOf(Orbit64.State.width(n), real),
-            "a ${n}x${n}x${n} takes the same width as a real cube"))
+    List.range(-1, 2) |>
+        List.forEach(
+            n ->
+                Assert.assertFalseWithMsg(
+                    Set.memberOf(Orbit64.State.width(n), real),
+                    "a ${n}x${n}x${n} takes the same width as a real cube"
+                )
+        )
 
 @Test
 def nothingBelowTheSmallestCubeHasAnOrbit(): Unit \ Assert =
-    List.range(-1, 2) |> List.forEach(n ->
-        Assert.assertEqWithMsg(expected = (Nil: List[Orbit64.Orbit.Orbit]),
-            Orbit64.Orbit.layout(n), "a ${n}x${n}x${n} claims an orbit"))
+    List.range(-1, 2) |>
+        List.forEach(
+            n ->
+                Assert.assertEqWithMsg(
+                    expected = (Nil: List[Orbit64.Orbit.Orbit]),
+                    Orbit64.Orbit.layout(n),
+                    "a ${n}x${n}x${n} claims an orbit"
+                )
+        )
 
 ///
 /// A width must actually address every state, and never be wider than needed.
 ///
 @Test
 def widthIsMinimal(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n -> {
-        let w = Orbit64.State.width(n);
-        let total = Orbit64.State.stateCount(n);
-        Assert.assertTrue(16ii * BigInt.pow(base = 64ii, w - 1) >= total);
-        Assert.assertTrue(16ii * BigInt.pow(base = 64ii, w - 2) < total)
-    })
+    List.range(2, 8) |>
+        List.forEach(n -> {
+            let w = Orbit64.State.width(n);
+            let total = Orbit64.State.stateCount(n);
+            Assert.assertTrue(16ii * BigInt.pow(base = 64ii, w - 1) >= total);
+            Assert.assertTrue(16ii * BigInt.pow(base = 64ii, w - 2) < total)
+        })
 
 // ---------- solved ----------
 
 @Test
 def solvedIsAllPaddingCharacters(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n ->
-        Assert.assertEq(
-            expected = Ok(String.repeat(Orbit64.State.width(n), "A")),
-            Orbit64.State.encode(n, Orbit64.State.solved(n))))
+    List.range(2, 8) |>
+        List.forEach(
+            n ->
+                Assert.assertEq(
+                    expected = Ok(String.repeat(Orbit64.State.width(n), "A")),
+                    Orbit64.State.encode(n, Orbit64.State.solved(n))
+                )
+        )
 
 @Test
 def solvedCornersAreIdentity(): Unit \ Assert =
     Assert.assertEq(
         expected = CornerCoord(Vector.range(0, 8), Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
-        Orbit64.Coord.unrank(Corners, 0ii))
+        Orbit64.Coord.unrank(Corners, 0ii)
+    )
 
 // ---------- round-trips ----------
 
 @Test
 def encodeDecodeRoundTripsForEverySize(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n -> {
-        let orbits = Orbit64.Orbit.layout(n)
-            |> List.map(o -> Orbit64.Coord.unrank(o, BigInt.modulo(pseudo(n, o), Orbit64.Orbit.radix(o))));
-        let state = legalState(n, orbits);
-        match Orbit64.State.encode(n, state) {
-            case Err(e)    => Assert.assert(false, RichString.fromString("encode failed: ${e}"))
-            case Ok(token) => Assert.assertEq(expected = Ok(state), Orbit64.State.decode(n, token))
-        }
-    })
+    List.range(2, 8) |>
+        List.forEach(n -> {
+            let orbits =
+                Orbit64.Orbit.layout(n) |>
+                    List.map(
+                        o ->
+                            Orbit64.Coord.unrank(
+                                o,
+                                BigInt.modulo(pseudo(n, o), Orbit64.Orbit.radix(o))
+                            )
+                    );
+            let state = legalState(n, orbits);
+            match Orbit64.State.encode(n, state) {
+                case Err(e) => Assert.assert(false, RichString.fromString("encode failed: ${e}"))
+                case Ok(token) =>
+                    Assert.assertEq(expected = Ok(state), Orbit64.State.decode(n, token))
+            }
+        })
 
 /// Give odd cubes a midge permutation in the corner permutation's parity class.
 def legalState(n: Int32, orbits: List[Orbit64.Coord.Coord]): Orbit64.State.FramedState =
-    if (not Orbit64.State.carriesFrame(n)) Orbit64.State.canonical(orbits)
-    else match orbits {
-        case CornerCoord(corners, twists) :: MidgeCoord(midges, flips) :: tail =>
-            let midgeRank = Orbit64.Rank.permRank(midges) / 2ii;
-            let matching = Orbit64.Rank.permUnrankWithParity(midgeRank, 12,
-                Orbit64.Rank.permParity(corners));
-            Orbit64.State.canonical(CornerCoord(corners, twists) :: MidgeCoord(matching, flips) :: tail)
-        case _ => Orbit64.State.canonical(orbits)
-    }
+    if (not Orbit64.State.carriesFrame(n))
+        Orbit64.State.canonical(orbits)
+    else
+        match orbits {
+            case CornerCoord(corners, twists) :: MidgeCoord(midges, flips) :: tail =>
+                let midgeRank = Orbit64.Rank.permRank(midges) / 2ii;
+                let matching =
+                    Orbit64.Rank.permUnrankWithParity(
+                        midgeRank,
+                        12,
+                        Orbit64.Rank.permParity(corners)
+                    );
+                Orbit64.State.canonical(
+                    CornerCoord(corners, twists) :: MidgeCoord(matching, flips) :: tail
+                )
+            case _ => Orbit64.State.canonical(orbits)
+        }
 
 ///
 /// A deterministic spread of coordinates, so the round-trip test exercises
@@ -161,16 +198,29 @@ def pseudo(n: Int32, o: Orbit64.Orbit.Orbit): BigInt =
 
 @Test
 def coordRankUnrankAreInverse(): Unit \ Assert =
-    List#{Corners, Midges, Wings, Centers} |> List.forEach(o ->
-        List#{0ii, 1ii, 1000003ii} |> List.forEach(v -> {
-            let x = BigInt.modulo(v, Orbit64.Orbit.radix(o));
-            Assert.assertEq(expected = x, Orbit64.Coord.unrank(o, x) |> Orbit64.Coord.rank)
-        }))
+    List#{Corners, Midges, Wings, Centers} |>
+        List.forEach(
+            o ->
+                List#{0ii, 1ii, 1000003ii} |>
+                    List.forEach(v -> {
+                        let x = BigInt.modulo(v, Orbit64.Orbit.radix(o));
+                        Assert.assertEq(
+                            expected = x,
+                            Orbit64.Coord.unrank(o, x) |> Orbit64.Coord.rank
+                        )
+                    })
+        )
 
 @Test
 def unrankedCoordsAreValid(): Unit \ Assert =
-    List#{Corners, Midges, Wings, Centers} |> List.forEach(o ->
-        Assert.assertTrue(Orbit64.Coord.unrank(o, BigInt.modulo(987654321ii, Orbit64.Orbit.radix(o))) |> Orbit64.Coord.isValid))
+    List#{Corners, Midges, Wings, Centers} |>
+        List.forEach(
+            o ->
+                Assert.assertTrue(
+                    Orbit64.Coord.unrank(o, BigInt.modulo(987654321ii, Orbit64.Orbit.radix(o))) |>
+                        Orbit64.Coord.isValid
+                )
+        )
 
 // ---------- rank primitives ----------
 
@@ -191,9 +241,14 @@ def binomialValues(): Unit \ Assert =
 def binomialIsSymmetricAndSurvivesTheLongSide(): Unit \ Assert = {
     Assert.assertEq(expected = 100, Orbit64.Rank.binomial(100, 99));
     Assert.assertEq(expected = 1, Orbit64.Rank.binomial(100, 100));
-    List#{(24, 4), (30, 7), (52, 5)} |> List.forEach(match (n, k) ->
-        Assert.assertEqWithMsg(expected = Orbit64.Rank.binomial(n, k), Orbit64.Rank.binomial(n, n - k),
-            "C(${n}, ${k}) and C(${n}, ${n - k}) disagree"))
+    List#{(24, 4), (30, 7), (52, 5)} |>
+        List.forEach(
+            match (n, k) -> Assert.assertEqWithMsg(
+                expected = Orbit64.Rank.binomial(n, k),
+                Orbit64.Rank.binomial(n, n - k),
+                "C(${n}, ${k}) and C(${n}, ${n - k}) disagree"
+            )
+        )
 }
 
 ///
@@ -205,9 +260,13 @@ def binomialIsSymmetricAndSurvivesTheLongSide(): Unit \ Assert = {
 @Test
 def binomialSaturatesRatherThanWrapping(): Unit \ Assert = {
     Assert.assertEq(expected = Int32.maxValue(), Orbit64.Rank.binomial(1000, 500));
-    List#{(1000, 500), (200, 60), (60, 30)} |> List.forEach(match (n, k) ->
-        Assert.assertTrueWithMsg(Orbit64.Rank.binomial(n, k) > 0,
-            "C(${n}, ${k}) came back negative"))
+    List#{(1000, 500), (200, 60), (60, 30)} |>
+        List.forEach(
+            match (n, k) -> Assert.assertTrueWithMsg(
+                Orbit64.Rank.binomial(n, k) > 0,
+                "C(${n}, ${k}) came back negative"
+            )
+        )
 }
 
 ///
@@ -233,23 +292,30 @@ def permRankIsMaximalWhenReversed(): Unit \ Assert =
 
 @Test
 def permRankUnrankRoundTrip(): Unit \ Assert =
-    List#{0ii, 1ii, 40319ii, 123456789ii} |> List.forEach(r -> {
-        let p = Orbit64.Rank.permUnrank(r, 12);
-        Assert.assertEq(expected = r, Orbit64.Rank.permRank(p))
-    })
+    List#{0ii, 1ii, 40319ii, 123456789ii} |>
+        List.forEach(r -> {
+            let p = Orbit64.Rank.permUnrank(r, 12);
+            Assert.assertEq(expected = r, Orbit64.Rank.permRank(p))
+        })
 
 ///
 /// Each parity class is compactly ranked without spending a redundant bit.
 ///
 @Test
 def parityRestrictedPermutationRanksRoundTrip(): Unit \ Assert =
-    List#{0, 1} |> List.forEach(parity ->
-        List.range(0, 12) |> List.forEach(rank -> {
-            let p = Orbit64.Rank.permUnrankWithParity(Int32.toBigInt(rank), 4, parity);
-            Assert.assertEq(expected = parity, Orbit64.Rank.permParity(p));
-            Assert.assertEq(expected = Int32.toBigInt(rank),
-                Orbit64.Rank.permRankWithParity(p, parity))
-        }))
+    List#{0, 1} |>
+        List.forEach(
+            parity ->
+                List.range(0, 12) |>
+                    List.forEach(rank -> {
+                        let p = Orbit64.Rank.permUnrankWithParity(Int32.toBigInt(rank), 4, parity);
+                        Assert.assertEq(expected = parity, Orbit64.Rank.permParity(p));
+                        Assert.assertEq(
+                            expected = Int32.toBigInt(rank),
+                            Orbit64.Rank.permRankWithParity(p, parity)
+                        )
+                    })
+        )
 
 ///
 /// An odd cube carries its fixed-center frame while retaining only legal
@@ -257,8 +323,11 @@ def parityRestrictedPermutationRanksRoundTrip(): Unit \ Assert =
 ///
 @Test
 def framedOddStatesRoundTripWithoutGrowingTheThreeByThreeWidth(): Unit \ Assert =
-    let state = Orbit64.State.FramedState.FramedState(
-        Orbit64.Frame.unrank(17), Orbit64.State.solved(3) |> Orbit64.State.orbits);
+    let state =
+        Orbit64.State.FramedState.FramedState(
+            Orbit64.Frame.unrank(17),
+            Orbit64.State.solved(3) |> Orbit64.State.orbits
+        );
     Assert.assertEq(expected = 12, Orbit64.State.width(3));
     Assert.assertEq(expected = 1038048078587756544000ii, Orbit64.State.stateCount(3));
     match Orbit64.State.encode(3, state) {
@@ -269,23 +338,34 @@ def framedOddStatesRoundTripWithoutGrowingTheThreeByThreeWidth(): Unit \ Assert 
 /// Even cubes keep frame in their movable center coordinates rather than duplicating it.
 @Test
 def framedEvenStatesRequireTheCanonicalFrame(): Unit \ Assert =
-    let state = Orbit64.State.FramedState.FramedState(
-        Orbit64.Frame.unrank(1), Orbit64.State.solved(4) |> Orbit64.State.orbits);
+    let state =
+        Orbit64.State.FramedState.FramedState(
+            Orbit64.Frame.unrank(1),
+            Orbit64.State.solved(4) |> Orbit64.State.orbits
+        );
     Assert.assertTrue(Orbit64.State.encode(4, state) |> Result.isErr)
 
 @Test
 def combRankUnrankRoundTrip(): Unit \ Assert =
-    List.range(0, 10626) |> List.forEach(r ->
-        if (Int32.modulo(r, 997) == 0)
-            Assert.assertEq(expected = r, Orbit64.Rank.combUnrank(r, 4) |> Orbit64.Rank.combRank)
-        else ())
+    List.range(0, 10626) |>
+        List.forEach(
+            r ->
+                if (Int32.modulo(r, 997) == 0)
+                    Assert.assertEq(
+                        expected = r,
+                        Orbit64.Rank.combUnrank(r, 4) |> Orbit64.Rank.combRank
+                    )
+                else
+                    ()
+        )
 
 @Test
 def multisetRankUnrankRoundTrip(): Unit \ Assert =
-    List#{0ii, 1ii, 3246670537109999ii} |> List.forEach(v -> {
-        let labels = Orbit64.Rank.multisetUnrank(v, 24, 4, 6);
-        Assert.assertEq(expected = v, Orbit64.Rank.multisetRank(labels, 4, 6))
-    })
+    List#{0ii, 1ii, 3246670537109999ii} |>
+        List.forEach(v -> {
+            let labels = Orbit64.Rank.multisetUnrank(v, 24, 4, 6);
+            Assert.assertEq(expected = v, Orbit64.Rank.multisetRank(labels, 4, 6))
+        })
 
 // ---------- error handling ----------
 
@@ -303,8 +383,13 @@ def decodeRejectsOutOfRangeTokens(): Unit \ Assert =
 
 @Test
 def encodeRejectsOrbitsThatDoNotMatchTheLayout(): Unit \ Assert =
-    Assert.assertTrue(Orbit64.State.encode(3,
-        Orbit64.State.canonical(List#{Orbit64.Coord.unrank(Corners, 0ii)})) |> Result.isErr)
+    Assert.assertTrue(
+        Orbit64.State.encode(
+            3,
+            Orbit64.State.canonical(List#{Orbit64.Coord.unrank(Corners, 0ii)})
+        ) |>
+            Result.isErr
+    )
 
 ///
 /// A permutation with a repeat is not a cube, and ranks *inside* the
@@ -317,8 +402,12 @@ def encodeRejectsAPermutationWithARepeat(): Unit \ Assert = {
     let bogus = CornerCoord(Vector#{0, 0, 2, 3, 4, 5, 6, 7}, Vector.repeat(8, 0));
     Assert.assertFalse(Orbit64.Coord.isValid(bogus));
     Assert.assertTrue(
-        Orbit64.State.encode(3,
-            Orbit64.State.canonical(List#{bogus, Orbit64.Coord.unrank(Midges, 0ii)})) |> Result.isErr)
+        Orbit64.State.encode(
+            3,
+            Orbit64.State.canonical(List#{bogus, Orbit64.Coord.unrank(Midges, 0ii)})
+        ) |>
+            Result.isErr
+    )
 }
 
 ///
@@ -330,14 +419,21 @@ def encodeRejectsAPermutationWithARepeat(): Unit \ Assert = {
 def encodeRejectsCentersInTheWrongMultiplicities(): Unit \ Assert = {
     // Twenty-four slots exactly, but five 0s and three 1s. The 0s sit high so
     // the surplus combination term is large.
-    let cols = Vector#{2,2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5,5, 1,1,1, 0,0,0,0,0};
+    let cols = Vector#{2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 1, 1, 1, 0, 0, 0, 0, 0};
     Assert.assertEq(expected = 24, Vector.length(cols));
     let skewed = CenterCoord(cols);
     Assert.assertTrue(Orbit64.Coord.rank(skewed) >= Orbit64.Orbit.radix(Centers));
-    Assert.assertTrue(Orbit64.State.encode(4, Orbit64.State.canonical(List#{
-        Orbit64.Coord.unrank(Corners, 0ii),
-        Orbit64.Coord.unrank(Wings, 0ii),
-        skewed})) |> Result.isErr)
+    Assert.assertTrue(
+        Orbit64.State.encode(
+            4,
+            Orbit64.State.canonical(List#{
+                Orbit64.Coord.unrank(Corners, 0ii),
+                Orbit64.Coord.unrank(Wings, 0ii),
+                skewed
+            })
+        ) |>
+            Result.isErr
+    )
 }
 
 ///
@@ -346,9 +442,16 @@ def encodeRejectsCentersInTheWrongMultiplicities(): Unit \ Assert = {
 ///
 @Test
 def encodeRejectsAShortOrientationVectorRatherThanThrowing(): Unit \ Assert =
-    Assert.assertTrue(Orbit64.State.encode(3, Orbit64.State.canonical(List#{
-        CornerCoord(Vector.range(0, 8), Vector#{0, 0, 0}),
-        Orbit64.Coord.unrank(Midges, 0ii)})) |> Result.isErr)
+    Assert.assertTrue(
+        Orbit64.State.encode(
+            3,
+            Orbit64.State.canonical(List#{
+                CornerCoord(Vector.range(0, 8), Vector#{0, 0, 0}),
+                Orbit64.Coord.unrank(Midges, 0ii)
+            })
+        ) |>
+            Result.isErr
+    )
 
 ///
 /// Refusing says which rule was broken, so a caller building coordinates from
@@ -358,12 +461,14 @@ def encodeRejectsAShortOrientationVectorRatherThanThrowing(): Unit \ Assert =
 def refusingNamesTheRuleThatWasBroken(): Unit \ Assert = {
     let twisted = CornerCoord(Vector.range(0, 8), Vector#{1, 0, 0, 0, 0, 0, 0, 0});
     match Orbit64.Coord.faultOf(twisted) {
-        case None      => Assert.assert(false, RichString.fromString("accepted a bad twist sum"))
+        case None => Assert.assert(false, RichString.fromString("accepted a bad twist sum"))
         case Some(why) => Assert.assertTrue(String.contains(substr = "sum to 0 mod 3", why))
     };
-    match Orbit64.State.encode(3,
-            Orbit64.State.canonical(List#{twisted, Orbit64.Coord.unrank(Midges, 0ii)})) {
-        case Ok(_)  => Assert.assert(false, RichString.fromString("encoded a bad twist sum"))
+    match Orbit64.State.encode(
+        3,
+        Orbit64.State.canonical(List#{twisted, Orbit64.Coord.unrank(Midges, 0ii)})
+    ) {
+        case Ok(_) => Assert.assert(false, RichString.fromString("encoded a bad twist sum"))
         case Err(e) => Assert.assertTrue(String.contains(substr = "Corners", e))
     }
 }
@@ -374,15 +479,33 @@ def refusingNamesTheRuleThatWasBroken(): Unit \ Assert = {
 ///
 @Test
 def everyDecodedStateStillEncodes(): Unit \ Assert =
-    List.range(2, 8) |> List.forEach(n ->
-        List#{0ii, 1ii, 987654321ii} |> List.forEach(seed -> {
-            let orbits = Orbit64.Orbit.layout(n)
-                |> List.map(o -> Orbit64.Coord.unrank(o,
-                    BigInt.modulo(seed, Orbit64.Orbit.radix(o))));
-            List.forEach(c -> Assert.assertTrueWithMsg(Orbit64.Coord.isValid(c),
-                "unrank produced a coordinate encode would now refuse"), orbits);
-            Assert.assertTrue(Orbit64.State.encode(n, Orbit64.State.canonical(orbits)) |> Result.isOk)
-        }))
+    List.range(2, 8) |>
+        List.forEach(
+            n ->
+                List#{0ii, 1ii, 987654321ii} |>
+                    List.forEach(seed -> {
+                        let orbits =
+                            Orbit64.Orbit.layout(n) |>
+                                List.map(
+                                    o ->
+                                        Orbit64.Coord.unrank(
+                                            o,
+                                            BigInt.modulo(seed, Orbit64.Orbit.radix(o))
+                                        )
+                                );
+                        List.forEach(
+                            c ->
+                                Assert.assertTrueWithMsg(
+                                    Orbit64.Coord.isValid(c),
+                                    "unrank produced a coordinate encode would now refuse"
+                                ),
+                            orbits
+                        );
+                        Assert.assertTrue(
+                            Orbit64.State.encode(n, Orbit64.State.canonical(orbits)) |> Result.isOk
+                        )
+                    })
+        )
 
 ///
 /// The facelet tables are indexed by the piece in a slot, so a permutation
@@ -392,9 +515,15 @@ def everyDecodedStateStillEncodes(): Unit \ Assert =
 @Test
 def netDeclinesAStateThatIsNotACube(): Unit \ Assert = {
     let outOfRange = CornerCoord(Vector#{9, 1, 2, 3, 4, 5, 6, 7}, Vector.repeat(8, 0));
-    Assert.assertEq(expected = true, Result.isErr(Orbit64.Net.draw(2, Orbit64.State.canonical(List#{outOfRange}), false)));
+    Assert.assertEq(
+        expected = true,
+        Result.isErr(Orbit64.Net.draw(2, Orbit64.State.canonical(List#{outOfRange}), false))
+    );
     let repeated = CornerCoord(Vector#{0, 0, 2, 3, 4, 5, 6, 7}, Vector.repeat(8, 0));
-    Assert.assertEq(expected = true, Result.isErr(Orbit64.Net.draw(2, Orbit64.State.canonical(List#{repeated}), false)))
+    Assert.assertEq(
+        expected = true,
+        Result.isErr(Orbit64.Net.draw(2, Orbit64.State.canonical(List#{repeated}), false))
+    )
 }
 
 ///
@@ -403,15 +532,28 @@ def netDeclinesAStateThatIsNotACube(): Unit \ Assert = {
 ///
 @Test
 def netStillDrawsEveryDecodableSmallCube(): Unit \ Assert =
-    List#{2, 3} |> List.forEach(n ->
-        List#{0ii, 1ii, 987654321ii} |> List.forEach(seed -> {
-            let orbits = Orbit64.Orbit.layout(n)
-                |> List.map(o -> Orbit64.Coord.unrank(o,
-                    BigInt.modulo(seed, Orbit64.Orbit.radix(o))));
-            Assert.assertTrueWithMsg(
-                Result.isOk(Orbit64.Net.draw(n, Orbit64.State.canonical(orbits), false)),
-                "declined to draw a ${n}x${n} state it decoded")
-        }))
+    List#{2, 3} |>
+        List.forEach(
+            n ->
+                List#{0ii, 1ii, 987654321ii} |>
+                    List.forEach(seed -> {
+                        let orbits =
+                            Orbit64.Orbit.layout(n) |>
+                                List.map(
+                                    o ->
+                                        Orbit64.Coord.unrank(
+                                            o,
+                                            BigInt.modulo(seed, Orbit64.Orbit.radix(o))
+                                        )
+                                );
+                        Assert.assertTrueWithMsg(
+                            Result.isOk(
+                                Orbit64.Net.draw(n, Orbit64.State.canonical(orbits), false)
+                            ),
+                            "declined to draw a ${n}x${n} state it decoded"
+                        )
+                    })
+        )
 
 @Test
 def alphabetIsSixtyFourDistinctUrlSafeCharacters(): Unit \ Assert =
@@ -430,34 +572,44 @@ def alphabetIsSixtyFourDistinctUrlSafeCharacters(): Unit \ Assert =
 
 @Test
 def solvedCubeDrawsSixSolidFaces(): Unit \ Assert =
-    let expected = "             U  U  U \n             U  U  U \n             U  U  U \n\n L  L  L     F  F  F     R  R  R     B  B  B \n L  L  L     F  F  F     R  R  R     B  B  B \n L  L  L     F  F  F     R  R  R     B  B  B \n\n             D  D  D \n             D  D  D \n             D  D  D ";
+    let expected =
+        "             U  U  U \n             U  U  U \n             U  U  U \n\n L  L  L     F  F  F     R  R  R     B  B  B \n L  L  L     F  F  F     R  R  R     B  B  B \n L  L  L     F  F  F     R  R  R     B  B  B \n\n             D  D  D \n             D  D  D \n             D  D  D ";
     Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(3, Orbit64.State.solved(3), false))
 
 @Test
 def superflipDrawsSolvedCornersAndFlippedEdges(): Unit \ Assert =
-    let expected = "             U  B  U \n             L  U  R \n             U  F  U \n\n L  U  L     F  U  F     R  U  R     B  U  B \n B  L  F     L  F  R     F  R  B     R  B  L \n L  D  L     F  D  F     R  D  R     B  D  B \n\n             D  F  D \n             L  D  R \n             D  B  D ";
+    let expected =
+        "             U  B  U \n             L  U  R \n             U  F  U \n\n L  U  L     F  U  F     R  U  R     B  U  B \n B  L  F     L  F  R     F  R  B     R  B  L \n L  D  L     F  D  F     R  D  R     B  D  B \n\n             D  F  D \n             L  D  R \n             D  B  D ";
     let orbits = List#{
         CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
         MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
     };
-    Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(3, Orbit64.State.canonical(orbits), false))
+    Assert.assertEq(
+        expected = Ok(expected),
+        Orbit64.Net.draw(3, Orbit64.State.canonical(orbits), false)
+    )
 
 @Test
 def solved2x2DrawsFourStickersPerFace(): Unit \ Assert =
-    let expected = "          U  U \n          U  U \n\n L  L     F  F     R  R     B  B \n L  L     F  F     R  R     B  B \n\n          D  D \n          D  D ";
+    let expected =
+        "          U  U \n          U  U \n\n L  L     F  F     R  R     B  B \n L  L     F  F     R  R     B  B \n\n          D  D \n          D  D ";
     Assert.assertEq(expected = Ok(expected), Orbit64.Net.draw(2, Orbit64.State.solved(2), false))
 
 @Test
 def sizesWithoutAConventionAreNotDrawn(): Unit \ Assert =
-    List#{1, 8} |> List.forEach(n -> {
-        Assert.assertEq(expected = false, Orbit64.Net.canDraw(n));
-        Assert.assertEq(expected = true, Result.isErr(Orbit64.Net.draw(n, Orbit64.State.solved(n), false)))
-    })
+    List#{1, 8} |>
+        List.forEach(n -> {
+            Assert.assertEq(expected = false, Orbit64.Net.canDraw(n));
+            Assert.assertEq(
+                expected = true,
+                Result.isErr(Orbit64.Net.draw(n, Orbit64.State.solved(n), false))
+            )
+        })
 
 @Test
 def colorWrapsEveryStickerAndResetsIt(): Unit \ Assert =
     match Orbit64.Net.draw(3, Orbit64.State.solved(3), true) {
-        case Err(e)  => Assert.assertEq(expected = "a net", e)
+        case Err(e) => Assert.assertEq(expected = "a net", e)
         case Ok(net) =>
             // 54 stickers, each opened with a background and closed with a reset.
             Assert.assertEq(expected = 54, String.countSubstring(substr = "[48;5;", net));

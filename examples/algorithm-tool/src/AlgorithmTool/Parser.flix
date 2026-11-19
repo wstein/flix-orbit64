@@ -1,6 +1,5 @@
 /// Parser for the compact native Orbit64 algorithm source grammar.
 pub mod AlgorithmTool.Parser {
-
     use orbit64::Orbit64
     use AlgorithmTool.Ast.Program.{Program}
     use AlgorithmTool.Ast.Definition.{Definition}
@@ -30,10 +29,17 @@ pub mod AlgorithmTool.Parser {
 
     /// Parse a complete program with ordered definitions and one export.
     pub def parse(source: String): Result[String, AlgorithmTool.Ast.Program] =
-        lex(String.toList(source), Nil) |> Result.flatMap(tokens ->
-            parseDefinitions(tokens, Nil) |> Result.flatMap(match (definitions, export, rest) ->
-                if (List.isEmpty(rest)) Ok(Program(definitions, export))
-                else Err("unexpected token after export")))
+        lex(String.toList(source), Nil) |>
+            Result.flatMap(
+                tokens ->
+                    parseDefinitions(tokens, Nil) |>
+                        Result.flatMap(
+                            match (definitions, export, rest) -> if (List.isEmpty(rest))
+                                Ok(Program(definitions, export))
+                            else
+                                Err("unexpected token after export")
+                        )
+            )
 
     def lex(chars: List[Char], out: List[Token]): Result[String, List[Token]] = match chars {
         case Nil => finishLex(out)
@@ -60,7 +66,8 @@ pub mod AlgorithmTool.Parser {
         if (Char.isLetterOrDigit(c) or c == '_')
             let (word, afterWord) = takeWord(rest, c :: Nil);
             classify(word) |> Result.flatMap(token -> lex(afterWord, token :: out))
-        else Err("unexpected character '${Char.toString(c)}'")
+        else
+            Err("unexpected character '${Char.toString(c)}'")
 
     def punctuation(c: Char): Option[Token] = match c {
         case '=' => Some(Equals)
@@ -81,8 +88,7 @@ pub mod AlgorithmTool.Parser {
     }
 
     def takeWord(chars: List[Char], reversed: List[Char]): (String, List[Char]) = match chars {
-        case c :: rest if Char.isLetterOrDigit(c) or c == '_' =>
-            takeWord(rest, c :: reversed)
+        case c :: rest if Char.isLetterOrDigit(c) or c == '_' => takeWord(rest, c :: reversed)
         case _ => (charsToString(List.reverse(reversed)), chars)
     }
 
@@ -97,16 +103,14 @@ pub mod AlgorithmTool.Parser {
     }
 
     def keyword(word: String): Option[Token] =
-        if (word == "def") Some(Def)
-        else if (word == "export") Some(Export)
-        else None
+        if (word == "def") Some(Def) else if (word == "export") Some(Export) else None
 
     def classifyValue(word: String): Result[String, Token] = match moveOf(word) {
-            case Some(move) => Ok(Terminal(move))
-            case None => match BigInt.fromString(word) {
-                case Some(value) => Ok(Number(value))
-                case None => Ok(Name(word))
-            }
+        case Some(move) => Ok(Terminal(move))
+        case None => match BigInt.fromString(word) {
+            case Some(value) => Ok(Number(value))
+            case None => Ok(Name(word))
+        }
     }
 
     def moveOf(word: String): Option[Orbit64.Move.Move] = match word {
@@ -125,12 +129,18 @@ pub mod AlgorithmTool.Parser {
         case _ => None
     }
 
-    def parseDefinitions(tokens: List[Token], out: List[AlgorithmTool.Ast.Definition]):
-            Result[String, (List[AlgorithmTool.Ast.Definition], String,
-                List[Token])] = match tokens {
+    def parseDefinitions(tokens: List[Token], out: List[AlgorithmTool.Ast.Definition]): Result[
+        String,
+        (List[AlgorithmTool.Ast.Definition], String, List[Token])
+    ] = match tokens {
         case Def :: Name(name) :: Equals :: rest =>
-            parseExpr(rest) |> Result.flatMap(match (body, afterBody) ->
-                parseDefinitions(afterBody, Definition(name, body) :: out))
+            parseExpr(rest) |>
+                Result.flatMap(
+                    match (body, afterBody) -> parseDefinitions(
+                        afterBody,
+                        Definition(name, body) :: out
+                    )
+                )
         case Export :: Name(name) :: rest => Ok((List.reverse(out), name, rest))
         case Nil => Err("program has no export")
         case _ => Err("expected 'def' or 'export'")
@@ -139,8 +149,10 @@ pub mod AlgorithmTool.Parser {
     def parseExpr(tokens: List[Token]): Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
         parseTerms(tokens, Nil)
 
-    def parseTerms(tokens: List[Token], out: List[AlgorithmTool.Ast.Expr]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] = match tokens {
+    def parseTerms(tokens: List[Token], out: List[AlgorithmTool.Ast.Expr]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] = match tokens {
         case Nil => finishTerms(out, Nil)
         case Def :: _ => finishTerms(out, tokens)
         case Export :: _ => finishTerms(out, tokens)
@@ -148,12 +160,15 @@ pub mod AlgorithmTool.Parser {
         case RightBracket :: _ => finishTerms(out, tokens)
         case Colon :: _ => finishTerms(out, tokens)
         case Comma :: _ => finishTerms(out, tokens)
-        case _ => parsePostfix(tokens) |> Result.flatMap(match (term, rest) ->
-            parseTerms(rest, term :: out))
+        case _ =>
+            parsePostfix(tokens) |>
+                Result.flatMap(match (term, rest) -> parseTerms(rest, term :: out))
     }
 
-    def finishTerms(reversed: List[AlgorithmTool.Ast.Expr], rest: List[Token]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
+    def finishTerms(reversed: List[AlgorithmTool.Ast.Expr], rest: List[Token]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] =
         match List.reverse(reversed) {
             case Nil => Err("expected an expression")
             case expression :: Nil => Ok((expression, rest))
@@ -161,15 +176,19 @@ pub mod AlgorithmTool.Parser {
         }
 
     def parsePostfix(tokens: List[Token]): Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
-        parsePrimary(tokens) |> Result.flatMap(match (primary, rest) ->
-            parseSuffixes(primary, rest))
+        parsePrimary(tokens) |>
+            Result.flatMap(match (primary, rest) -> parseSuffixes(primary, rest))
 
-    def parseSuffixes(expression: AlgorithmTool.Ast.Expr, tokens: List[Token]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] = match tokens {
+    def parseSuffixes(expression: AlgorithmTool.Ast.Expr, tokens: List[Token]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] = match tokens {
         case Prime :: rest => parseSuffixes(Inverse(expression), rest)
         case Number(count) :: rest =>
-            if (count <= 0ii) Err("repeat count must be positive")
-            else parseSuffixes(Repeat(expression, count), rest)
+            if (count <= 0ii)
+                Err("repeat count must be positive")
+            else
+                parseSuffixes(Repeat(expression, count), rest)
         case _ => Ok((expression, tokens))
     }
 
@@ -183,42 +202,58 @@ pub mod AlgorithmTool.Parser {
             case _ => Err("expected a move, name, '(', or '['")
         }
 
-    def parseParenthesized(tokens: List[Token]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
-        parseExpr(tokens) |> Result.flatMap(match (body, afterBody) ->
-            closeParenthesis(body, afterBody))
+    def parseParenthesized(tokens: List[Token]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] =
+        parseExpr(tokens) |>
+            Result.flatMap(match (body, afterBody) -> closeParenthesis(body, afterBody))
 
-    def closeParenthesis(expression: AlgorithmTool.Ast.Expr, tokens: List[Token]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] = match tokens {
+    def closeParenthesis(expression: AlgorithmTool.Ast.Expr, tokens: List[Token]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] = match tokens {
         case RightParen :: rest => Ok((expression, rest))
         case _ => Err("expected ')'")
     }
 
     def parseBracket(tokens: List[Token]): Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
-        parseExpr(tokens) |> Result.flatMap(match (left, afterLeft) ->
-            parseBracketOperator(left, afterLeft))
+        parseExpr(tokens) |>
+            Result.flatMap(match (left, afterLeft) -> parseBracketOperator(left, afterLeft))
 
-    def parseBracketOperator(left: AlgorithmTool.Ast.Expr, tokens: List[Token]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] = match tokens {
+    def parseBracketOperator(left: AlgorithmTool.Ast.Expr, tokens: List[Token]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] = match tokens {
         case Colon :: rest => parseRightBracket(left, rest, true)
         case Comma :: rest => parseRightBracket(left, rest, false)
         case _ => Err("expected ':' or ',' in '[' expression")
     }
 
-    def parseRightBracket(left: AlgorithmTool.Ast.Expr, tokens: List[Token],
-                          conjugate: Bool): Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
-        parseExpr(tokens) |> Result.flatMap(match (right, afterRight) ->
-            let expression = if (conjugate) Conjugate(left, right) else Commutator(left, right);
-            closeBracket(expression, afterRight))
+    def parseRightBracket(
+        left: AlgorithmTool.Ast.Expr,
+        tokens: List[Token],
+        conjugate: Bool
+    ): Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
+        parseExpr(tokens) |>
+            Result.flatMap(
+                match (right, afterRight) -> let expression =
+                    if (conjugate) Conjugate(left, right) else Commutator(left, right);
+                closeBracket(expression, afterRight)
+            )
 
-    def closeBracket(expression: AlgorithmTool.Ast.Expr, tokens: List[Token]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] = match tokens {
+    def closeBracket(expression: AlgorithmTool.Ast.Expr, tokens: List[Token]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] = match tokens {
         case RightBracket :: rest => Ok((expression, rest))
         case _ => Err("expected ']'")
     }
 
-    def parseSlice(name: String, tokens: List[Token]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
+    def parseSlice(name: String, tokens: List[Token]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] =
         match tokens {
             case Number(start) :: Colon :: Number(end) :: RightBracket :: rest =>
                 sliceExpression(name, start, end, rest)
@@ -231,12 +266,13 @@ pub mod AlgorithmTool.Parser {
             case _ => Err("expected a zero-based slice range")
         }
 
-    def sliceExpression(name: String, start: BigInt, end: BigInt, rest: List[Token]):
-            Result[String, (AlgorithmTool.Ast.Expr, List[Token])] =
+    def sliceExpression(name: String, start: BigInt, end: BigInt, rest: List[Token]): Result[
+        String,
+        (AlgorithmTool.Ast.Expr, List[Token])
+    ] =
         match (BigInt.tryToInt32(start), BigInt.tryToInt32(end)) {
             case (Some(first), Some(last)) if first >= 0 and last >= first =>
                 Ok((Slice(name, first, last), rest))
             case _ => Err("slice bounds must be non-negative Int32 values")
         }
-
 }
