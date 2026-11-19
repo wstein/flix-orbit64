@@ -1,6 +1,8 @@
 /// Source-level, notation-aware algorithm syntax.
 pub mod AlgorithmTool.Ast {
 
+    use orbit64::Orbit64
+
     /// A program with ordered definitions and one exported name.
     pub enum Program with Eq, ToString {
         case Program(List[Definition], String)

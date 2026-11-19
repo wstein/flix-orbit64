@@ -1,6 +1,8 @@
 /// Render a decoded Orbit64 algorithm DAG as canonical native source.
 pub mod AlgorithmTool.Reconstruction {
 
+    use orbit64::Orbit64
+
     enum RenderContext {
         case RenderContext(List[Orbit64.Algorithm.Node], Int32, List[Int32], Set[Int32])
     }

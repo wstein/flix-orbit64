@@ -1,9 +1,9 @@
 use AlgorithmTool.Ast.Program.{Program}
 use AlgorithmTool.Ast.Definition.{Definition}
 use AlgorithmTool.Ast.Expr.{Move, Reference, Concat, Repeat, Inverse, Conjugate, Commutator, Slice}
-use Orbit64.Move.Move.{LayerTurn}
-use Orbit64.Move.Face.{U, R, D, L, B}
-use Orbit64.Move.Amount.{Clockwise}
+use orbit64::Orbit64.Move.Move.{LayerTurn}
+use orbit64::Orbit64.Move.Face.{U, R, D, L, B}
+use orbit64::Orbit64.Move.Amount.{Clockwise}
 
 @Test
 def parserUnderstandsTheNativeOperatorGrammar(): Unit \ Assert =

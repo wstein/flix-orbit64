@@ -1,11 +1,12 @@
 /// Lower native source expressions into the notation-independent Orbit64 DAG.
 pub mod AlgorithmTool.Lowering {
 
+    use orbit64::Orbit64
     use AlgorithmTool.Ast.Program.{Program}
     use AlgorithmTool.Ast.Definition.{Definition}
     use AlgorithmTool.Ast.Expr.{Move, Reference, Concat, Repeat, Inverse}
     use AlgorithmTool.Ast.Expr.{Conjugate, Commutator, Slice}
-    use Orbit64.Algorithm.Algorithm.{Algorithm}
+    use orbit64::Orbit64.Algorithm.Algorithm.{Algorithm}
 
     /// Lower an earlier-reference-only source program without expanding moves.
     pub def lower(program: AlgorithmTool.Ast.Program):

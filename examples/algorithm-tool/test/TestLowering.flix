@@ -1,6 +1,7 @@
-use Orbit64.Move.Move.{LayerTurn}
-use Orbit64.Move.Face.{U, R}
-use Orbit64.Move.Amount.{Clockwise, CounterClockwise}
+use orbit64::Orbit64
+use orbit64::Orbit64.Move.Move.{LayerTurn}
+use orbit64::Orbit64.Move.Face.{U, R}
+use orbit64::Orbit64.Move.Amount.{Clockwise, CounterClockwise}
 
 @Test
 def loweringPreservesNamedSharingAndAlgebraicOperators(): Unit \ Assert =

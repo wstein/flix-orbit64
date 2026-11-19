@@ -1,3 +1,5 @@
+use orbit64::Orbit64
+
 ///
 /// Prints the format's size table and demonstrates a round-trip.
 ///
