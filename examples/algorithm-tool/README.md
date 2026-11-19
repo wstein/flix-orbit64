@@ -5,18 +5,26 @@ This is a separate Flix package for the source frontend described in
 keeps source parsing, formatting, optimization, and legacy imports outside the
 notation-independent library DAG.
 
-Run its checks from this directory with the repository wrapper:
+Run its checks from the repository root with the repository wrapper. Release
+0.9.0 was built for Flix 0.75 and cannot be resolved by the pinned Flix 0.80,
+so `local` builds this checkout's library instead:
 
 ```console
-../../flixw check
-../../flixw test
+./flixw examples local check algorithm-tool
+./flixw examples local test algorithm-tool
 ```
 
+`local` runs in a scratch copy of `src/`, `test/` and `flix.toml`, so
+`devilsAlgorithmExpandsToTheDocumentedQuarterTurnCount`, which reads
+`2x2x2-devils-alg.orbit64` from the working directory, fails there with
+`program has no export`; the other eight tests pass.
+
 To convert native source to a class-`10` token and deterministic reconstructed
-source, use the example package's entry point:
+source, use the example package's entry point, with absolute paths for the
+same reason:
 
 ```console
-../../flixw run -- input.alg output.orbit64 reconstructed.alg
+./flixw examples local run algorithm-tool -- "$PWD/input.alg" "$PWD/output.orbit64" "$PWD/reconstructed.alg"
 ```
 
 `*.alg` is native algorithm notation, not Flix source code. The reconstructed
