@@ -24,13 +24,20 @@ the compiler pinned in `.flixw/lock.toml`:
 ./flixw build-pkg
 ```
 
+Formatting is done by Prettier with prettier-plugin-flix, pinned in
+`package-lock.json`, and checked in CI. With Node.js 22, check it with
+`npm ci` and `npm run format:check`, or rewrite the files with
+`./flixw task fmt` (`./flixw task fmt-check` checks, like the npm script).
+Do not use `./flixw format`, the compiler's own formatter.
+
 For state or facelet changes, add tests that check both directions of
 conversion and, where possible, a facelet reference derived independently of
 the codec. For wrapper or workflow changes, run `./flixw validate`.
 
 Before committing, run `./flixw metrics --format md` and address findings
 introduced by your change. [AGENTS.md](AGENTS.md) explains the one-time metrics
-plugin setup and its safety considerations. The wrapper files are generated;
+plugin setup and its safety considerations, and that metrics 0.6.0 does not
+support the pinned Flix 0.80.0. The wrapper files are generated;
 upgrade them through `./flixw wrapper --upgrade` rather than editing them.
 
 ## Pull requests

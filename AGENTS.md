@@ -2,7 +2,8 @@
 
 A Flix project that carries its own compiler. `./flixw` downloads the exact
 `flix.jar` pinned in `.flixw/lock.toml`, verifies it against a committed
-SHA-256, and runs it. Nothing needs installing but a JDK — 21 or newer.
+SHA-256, and runs it. Building and testing need nothing but a JDK — 21 or
+newer. The format check also needs Node.js 22 and `npm ci`.
 
 ## Commands
 
@@ -14,11 +15,16 @@ use `.\flixw.cmd` wherever these say `./flixw`.
 - `./flixw test` — run every `@Test` function under `test/`
 - `./flixw build` — compile to `build/class`
 - `./flixw build-pkg` — build the distributable `artifact/*.fpkg`
-- `./flixw format` — reformat sources in place; the pinned compiler has no
-  check-only mode, so CI does not gate on formatting
-- `./flixw doc` — write this project's API documentation to `build/doc/`.
-  Standard library pages are not generated, so links into it dangle locally;
-  the docs workflow rewrites them to <https://api.flix.dev>
+- `npm ci`, then `npm run format:check` (or `./flixw task fmt-check`) — check
+  the formatting of the Flix files under `src/`, `test/` and `examples/*/`.
+  Prettier with prettier-plugin-flix does the formatting, pinned in
+  `package-lock.json`; the Format workflow gates on it
+- `./flixw task fmt` — rewrite those files with Prettier. Not `./flixw format`:
+  that is the compiler's own formatter, which this project does not use
+- `./flixw doc` — write this project's API documentation to `build/doc/`,
+  for `src/` and `test/` alike. Standard library pages are not generated, so
+  links into it dangle locally; the docs workflow publishes only the `src/`
+  pages and rewrites those links to <https://api.flix.dev>
 - `./flixw metrics --format md` — code-smell report: over-long and crammed
   lines, complexity, nesting, coupling, doc coverage. **Run it before every
   commit and fix what it finds.** It needs the project to compile first, and
@@ -35,30 +41,43 @@ use `.\flixw.cmd` wherever these say `./flixw`.
   record, not part of the project. The install is per machine, not per
   repository, and it is third-party, unaffiliated code that runs as you; see
   [flixw-metrics' own Safety section](https://github.com/wstein/flixw-metrics#safety)
-  before installing anything
+  before installing anything. Metrics 0.6.0, the latest release, does not
+  support the pinned Flix 0.80.0: it prints "the pinned compiler has no
+  supported engine API" and exits without a report. Until a release does, say in the commit or pull
+  request that no metrics report could be produced instead of treating the
+  empty run as a clean result
 
 The demo command line is not here: a package with a top-level `main` cannot be
 depended on, so it lives in [`examples/cli-tool`](examples/cli-tool), a
 separate package that depends on this one exactly the way any other consumer
-would. It is sample source, not a project this wrapper drives — it has no
-`.flixw/lock.toml` of its own, and this repository's `flixw` looks for a
-project's lock relative to the caller's working directory, not relative to
-the project it's pointed at, so it cannot run something outside its own tree.
-Run the example with your own Flix install instead:
+would. `./flixw examples` runs an `examples/<name>` package with this
+project's pinned compiler, and `./flixw examples local` runs it against this
+checkout instead of the released dependency. Use `local` for now: release
+0.9.0 was built for Flix 0.75 and cannot be resolved by Flix 0.80.
 
-    cd examples/cli-tool
-    flix run                 # size table, round-trip
-    flix run -- <token>      # decode; length picks the cube size
+    ./flixw examples local run cli-tool               # size table, round-trip
+    ./flixw examples local run cli-tool -- <token>    # decode; length picks the cube size
+    ./flixw examples local test cli-tool
+
+`local` copies only `src/`, `test/` and `flix.toml` into a scratch directory,
+so the algorithm-tool test that reads `2x2x2-devils-alg.orbit64` from the
+working directory fails there; the other eight pass.
 
 The wrapper adds verbs of its own, ahead of the compiler's:
 
 - `./flixw validate` — the wrapper's own consistency checks, for CI
 - `./flixw doctor` — those checks plus the full picture, for bug reports
 - `./flixw pin <version>` — move to another compiler and rewrite the lock
+- `./flixw examples <verb> <name>` — run, check, build, or test a package in
+  `examples/<name>`; `./flixw examples local <verb> <name>` does so against
+  this checkout
+- `./flixw task <name>` — run a task from `.flixw/tasks.toml`: `fmt` and
+  `fmt-check`
 
 Releasing is a tag and nothing else. `flix.toml` states the version, a
 `v<version>` tag is pushed, and `release.yaml` builds the package from that tag
-and attaches it to a GitHub release. A `github:` dependency resolves through
+and attaches it to a GitHub release as `package.fpkg` and `flix.toml`, the
+names Flix 0.80 resolves. A `github:` dependency resolves through
 those release assets, so a tag without a release is a version nobody can depend
 on, and a tag whose name disagrees with `flix.toml` is refused before anything
 is published.
@@ -104,9 +123,15 @@ is published.
   test vectors on every push and fails when a committed copy is stale
 - `examples/cli-tool/` — the demo command line, a separate Flix package that
   depends on this one the same way any other consumer would
-- `flix.toml` — package metadata, dependencies, and the *lowest* Flix version
-  this project accepts. `name` sets the package name, but the `.fpkg` filename
-  comes from the *directory* name, so the two must agree
+- `flix.toml` — the package version, repository, dependencies, and the
+  *lowest* Flix version this project accepts. Flix 0.80 allows no other keys
+  in `[package]`: the description and authors are in `README.md`, the license
+  in `LICENSE`
+- `packages.lock` — written by every Flix 0.80 build; committed. It is an
+  empty `[lock]` table, since the library has no dependencies
+- `package.json`, `package-lock.json`, `.prettierrc.json`, `.prettierignore`
+  — the Prettier format check; `.flixw/tasks.toml` holds the `fmt` and
+  `fmt-check` tasks
 - `.flixw/lock.toml` — the exact compiler and its digest. `flix.toml` states a
   floor; this states the pin. Both are committed, and `validate` fails when
   they disagree
@@ -116,7 +141,8 @@ is published.
   `update-flix.yaml` weekly, `docs.yaml` for the API documentation, and
   `release.yaml` on a `v*.*.*` tag. All four drive the wrapper; none of them
   install Flix. Only `release.yaml` and `update-flix.yaml` ask for write
-  access, and only in the one job that needs it
+  access, and only in the one job that needs it. `format.yaml` runs the
+  Prettier check, and `format-v2.yaml` the Orbit64 token-format checks
 - `build/`, `artifact/`, `lib/` — generated; do not edit and do not commit
 
 `CLAUDE.md` and `.github/copilot-instructions.md` both point at this file
@@ -136,8 +162,11 @@ are easy to undo by accident:
 - **No top-level modules but `Orbit64`.** Everything nests under it. Names as
   common as `Coord` or `Rank` would otherwise collide with the consumer's.
 
-Note that `modules` in `flix.toml` does *not* enforce this -- a consumer can
-still reach `Orbit64.Rank`. It is documentation of intent, not a boundary.
+Flix 0.80 makes modules private by default, so every module here is declared
+`pub mod`, `Orbit64.Internal` included: the library's other modules and the
+tests reach it, which a private module would not allow. `Internal` marks what
+is not API by name only. A consumer reaches the package through the mount its
+`flix.toml` gives the dependency, e.g. `use orbit64::Orbit64.State`.
 
 ## Writing Flix
 
@@ -156,6 +185,9 @@ The mistakes that show up most often:
   nesting `run`
 - annotations are uppercase: `@Test`, `@Lazy`, `@Parallel`, `@MustUse`
 - Java types need a top-level `import`, and all Java interop carries `IO`
+- modules are private unless declared `pub mod`, and a module's parent must be
+  declared too (`src/Orbit64/V2.flix` declares `Orbit64.V2`)
+- a dependency is reached through its mount: `use orbit64::Orbit64`
 
 Prefer effects and handlers to callbacks or hand-written CPS, and standard
 library effects to Java interop.
