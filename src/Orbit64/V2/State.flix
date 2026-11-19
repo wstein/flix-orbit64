@@ -5,7 +5,7 @@
 /// Its rank is the mixed-radix combination of one digit per component. Parity
 /// coupled components are not stored: they are recomputed on decoding.
 ///
-mod Orbit64.V2.State {
+pub mod Orbit64.V2.State {
 
     use Orbit64.V2.Registry.{Model, Pose}
 

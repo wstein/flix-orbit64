@@ -5,4 +5,4 @@
 /// ranks cube states, `Orbit64.V2.Codec` writes and reads tokens, and
 /// `Orbit64.V2.Facelets` converts between cube states and facelet strings.
 ///
-mod Orbit64.V2 {}
+pub mod Orbit64.V2 {}

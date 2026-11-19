@@ -36,7 +36,7 @@
 /// of `FORMAT.md`, not through V1's `x`, `z`, `y` composition: frame `r` is
 /// the rotation that moves physical face `faces(r)[i]` into slot `i`.
 ///
-mod Orbit64.V2.Facelets {
+pub mod Orbit64.V2.Facelets {
 
     use Orbit64.V2.Registry.{Model, Pose}
     use Orbit64.V2.State.Cube

@@ -6,7 +6,7 @@
 /// three families, so the total size of a cube encoding is just the product of
 /// the ranges -- no bits are lost to alignment inside a coordinate.
 ///
-mod Orbit64.Rank {
+pub mod Orbit64.Rank {
 
     ///
     /// Binomial coefficient, saturating at `Int32.maxValue`. Returns `0` when

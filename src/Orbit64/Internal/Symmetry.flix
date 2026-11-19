@@ -16,7 +16,7 @@
 /// `1` otherwise, in column `axes(g / 8)[r]`. Symmetry 0 is the identity
 /// and symmetry 1 mirrors across the R/L plane.
 ///
-mod Orbit64.Internal.Symmetry {
+pub mod Orbit64.Internal.Symmetry {
 
     /// The number of symmetries: the 6 axis permutations times the 8 sign choices.
     pub def count(): Int32 = 48

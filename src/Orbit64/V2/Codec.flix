@@ -1,7 +1,7 @@
 ///
 /// Orbit64 V2 state tokens: a registry entry's rank written at its length.
 ///
-mod Orbit64.V2.Codec {
+pub mod Orbit64.V2.Codec {
 
     use Orbit64.V2.Registry.Entry
     use Orbit64.V2.State.Cube

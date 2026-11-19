@@ -54,7 +54,7 @@
 /// The 6x6x6 and 7x7x7 use the same geometric rules as the smaller cubes.
 ///
 ///
-mod Orbit64.Net {
+pub mod Orbit64.Net {
 
     use Orbit64.Coord.Coord
     use Orbit64.Coord.Coord.{CornerCoord, MidgeCoord, WingCoord, CenterCoord}

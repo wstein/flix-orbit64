@@ -43,7 +43,7 @@
 /// `Orbit64.State.encode` writes are unchanged, and the output here is one
 /// of them.
 ///
-mod Orbit64.Canonical {
+pub mod Orbit64.Canonical {
 
     use Orbit64.Internal.Symmetry
 

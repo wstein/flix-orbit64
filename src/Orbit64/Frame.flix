@@ -2,7 +2,7 @@
 ///
 /// A frame says which physical face occupies each Orbit64 reference slot. The
 /// ranks are Orbit64's wire order: `x` turns, then `z` turns, then `y` turns.
-mod Orbit64.Frame {
+pub mod Orbit64.Frame {
 
     use Orbit64.Move.Face
 
