@@ -96,7 +96,9 @@ jobs:
       # `flix.toml` goes up alongside the package because the resolver fetches
       # both: it reads the manifest to learn what the package needs before it
       # downloads the package itself. A release carrying only the `.fpkg` looks
-      # complete and still fails to resolve.
+      # complete and still fails to resolve. Since Flix 0.80 the resolver asks
+      # for both by fixed name, `package.fpkg` and `flix.toml`, which are also
+      # the names `build-pkg` writes them under.
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -106,5 +108,5 @@ jobs:
             --title "${GITHUB_REF_NAME#v}" \
             --verify-tag \
             --generate-notes \
-            artifact/flix-orbit64.fpkg \
+            artifact/package.fpkg \
             artifact/flix.toml
