@@ -5,7 +5,7 @@
 /// permute among themselves and never mix. The whole format follows from this
 /// decomposition: one coordinate per orbit, packed in a fixed order.
 ///
-mod Orbit64.Orbit {
+pub mod Orbit64.Orbit {
 
     use Orbit64.Rank
 

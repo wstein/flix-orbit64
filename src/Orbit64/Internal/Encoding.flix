@@ -5,7 +5,7 @@
 /// below `Internal` prevents transport details from becoming a second public
 /// codec API beside `Orbit64.State`, `Orbit64.Move`, and `Orbit64.Token`.
 ///
-mod Orbit64.Internal.Encoding {
+pub mod Orbit64.Internal.Encoding {
 
     ///
     /// The base64url alphabet, in index order.

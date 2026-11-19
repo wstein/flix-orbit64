@@ -6,4 +6,4 @@
 /// Keeping the root module free of codec functions makes the token family
 /// explicit at every call site.
 ///
-mod Orbit64 {}
+pub mod Orbit64 {}

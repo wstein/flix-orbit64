@@ -26,7 +26,7 @@
 /// Widths are distinct and grow as `n^2`, so a token's length identifies the
 /// puzzle it belongs to.
 ///
-mod Orbit64.State {
+pub mod Orbit64.State {
 
     use Orbit64.Coord.Coord
     use Orbit64.Coord.Coord.{CornerCoord, MidgeCoord}

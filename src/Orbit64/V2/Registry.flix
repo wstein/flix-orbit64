@@ -6,7 +6,7 @@
 /// after the entries already placed at that length. Appending an entry
 /// therefore never changes an earlier entry's length or offset.
 ///
-mod Orbit64.V2.Registry {
+pub mod Orbit64.V2.Registry {
 
     /// How much of a sticker is visible: colors only, or every sticker distinct.
     pub enum Model with Eq, Order, ToString {

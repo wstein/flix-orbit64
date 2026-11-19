@@ -5,7 +5,7 @@
 /// which piece sits in which slot, and how it is turned. `rank` collapses that
 /// into a single integer below `Orbit.radix`, and `unrank` recovers it exactly.
 ///
-mod Orbit64.Coord {
+pub mod Orbit64.Coord {
 
     use Orbit64.Rank
     use Orbit64.Orbit.Orbit

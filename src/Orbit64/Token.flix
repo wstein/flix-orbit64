@@ -1,7 +1,7 @@
 ///
 /// Tagged decoding across the Orbit64 token family.
 ///
-mod Orbit64.Token {
+pub mod Orbit64.Token {
 
     /// A decoded state, literal move sequence, structured algorithm, or extension.
     pub enum Token with Eq, ToString {

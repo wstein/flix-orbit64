@@ -5,7 +5,7 @@
 /// operation count, tagged operations, and a final `export` back-reference.
 /// References are backward distances, never internal table indices.
 ///
-mod Orbit64.Algorithm.Encoding {
+pub mod Orbit64.Algorithm.Encoding {
 
     /// Encode a valid algorithm DAG as an Orbit64 class-`10` token.
     pub def encode(n: Int32, algorithm: Orbit64.Algorithm.Algorithm):

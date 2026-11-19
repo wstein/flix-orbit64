@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /// A separate, lossless, canonical JSON envelope for finite algorithm DAGs.
 /// This additive review-draft API does not change V1 or the V2 state registry.
-mod Orbit64.Algorithm.Envelope {
+pub mod Orbit64.Algorithm.Envelope {
     use Orbit64.Algorithm.Algorithm.Algorithm
 
     /// Distinguish local policy, resource exhaustion, malformed wire and invalid graphs.

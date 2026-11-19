@@ -5,7 +5,7 @@
 /// `Block`, `PackedBlock`, and `Partition` retain stable part boundaries for
 /// `SliceParts`; ordinary `Concat` deliberately does not.
 ///
-mod Orbit64.Algorithm {
+pub mod Orbit64.Algorithm {
 
     /// A topologically ordered DAG and its exported root node.
     pub enum Algorithm with Eq, ToString {

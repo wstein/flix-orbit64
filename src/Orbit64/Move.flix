@@ -5,7 +5,7 @@
 /// non-identity turn amounts. It deliberately does not name rotations, slices,
 /// aliases, or notation constructs: those can expand to this vocabulary.
 ///
-mod Orbit64.Move {
+pub mod Orbit64.Move {
 
     /// A primitive layer turn.
     pub enum Move with Eq, ToString {
