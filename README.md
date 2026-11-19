@@ -482,3 +482,8 @@ subject nor the budget belongs here. It stays out of the codec and out of CI.
 
 See `AGENTS.md` for the toolchain, and
 <https://wstein.github.io/flix-orbit64/> for the generated API documentation.
+
+## License
+
+flix-orbit64 is written by Werner Stein and licensed under the
+[Apache License 2.0](LICENSE).

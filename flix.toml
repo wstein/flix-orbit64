@@ -1,9 +1,10 @@
 [package]
-name        = "orbit64"
-description = "Canonical URL-safe encoding for NxNxN cube states, moves, and algorithm DAGs"
-version     = "0.9.0"
-repository  = "github:wstein/flix-orbit64"
-modules     = ["Orbit64"]
-flix        = "0.75.2"
-license     = "Apache-2.0"
-authors     = ["Werner Stein"]
+version    = "0.9.0"
+repository = "github:wstein/flix-orbit64"
+# Exactly x.y.z, three integers. The compiler checks the shape; flixw enforces
+# it as the floor the lock satisfies.
+flix       = "0.80.0"
+# Flix 0.80 accepts only version, repository and flix in this table. The name,
+# description and authors are in README.md, the license is in LICENSE, and
+# `flix doc` documents only this project's own sources, so the old
+# `modules = ["Orbit64"]` filter has nothing left to do.
