@@ -12,3 +12,4 @@ crash_report_*.txt
 .DS_Store
 .remember/
 /flix.jar
+/node_modules/

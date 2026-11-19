@@ -1,0 +1,43 @@
+name: Format
+
+# Checks the layout of the Flix sources with Prettier and prettier-plugin-flix,
+# both pinned in package-lock.json. This is code formatting only; the Orbit64
+# token format is checked by format-v2.yaml.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  format:
+    name: Check Flix formatting
+    runs-on: ubuntu-latest
+    # A wedged runner is not a build failure, but without a cap it looks like
+    # one for six hours: GitHub's default. This job takes well under a minute.
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      # npm ci installs exactly what package-lock.json names, integrity
+      # included: Prettier 3.10.1 and the prettier-plugin-flix release tarball.
+      - name: Install pinned formatting tools
+        run: npm ci
+
+      - name: Check Flix formatting
+        run: npm run format:check
