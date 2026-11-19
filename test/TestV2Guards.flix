@@ -3,7 +3,10 @@ use Orbit64.V2.State.Cube
 def solved3Picture(): Cube = Orbit64.V2.State.solved(3, Orbit64.V2.Registry.Model.Picture)
 
 def swapFirstTwo(v: Vector[Int32]): Vector[Int32] =
-    Vector.mapWithIndex((i, x) -> if (i == 0) Vector.get(1, v) else if (i == 1) Vector.get(0, v) else x, v)
+    Vector.mapWithIndex(
+        (i, x) -> if (i == 0) Vector.get(1, v) else if (i == 1) Vector.get(0, v) else x,
+        v
+    )
 
 @Test
 def encodeRejectsAnUnknownEntry(): Unit \ Assert =
@@ -37,7 +40,12 @@ def encodeRejectsAFrameOnACanonicalEntry(): Unit \ Assert =
 
 @Test
 def encodeRejectsAMovedDblCornerOnACanonicalEvenCube(): Unit \ Assert =
-    let cube = { cornerTwists = Vector#{0, 0, 0, 0, 0, 0, 1, 2} | Orbit64.V2.State.solved(2, Orbit64.V2.Registry.Model.Color) };
+    let cube = {
+        cornerTwists = Vector#{0, 0, 0, 0, 0, 0, 1, 2} | Orbit64.V2.State.solved(
+            2,
+            Orbit64.V2.Registry.Model.Color
+        )
+    };
     Assert.assertTrue(Result.isErr(Orbit64.V2.Codec.encode(0, cube)));
     Assert.assertTrue(Result.isOk(Orbit64.V2.Codec.encode(1, cube)))
 
@@ -56,12 +64,18 @@ def encodeRejectsAPictureCenterBreakingTheParityRelation(): Unit \ Assert =
 
 @Test
 def encodeRejectsShortCornerVectorsWithoutCrashing(): Unit \ Assert =
-    let cube = { cornerPieces = Vector#{0, 1, 2}, cornerTwists = Vector#{0, 0, 0}
-                 | Orbit64.V2.State.solved(2, Orbit64.V2.Registry.Model.Color) };
+    let cube = {
+        cornerPieces = Vector#{0, 1, 2},
+        cornerTwists = Vector#{0, 0, 0} | Orbit64.V2.State.solved(
+            2,
+            Orbit64.V2.Registry.Model.Color
+        )
+    };
     Assert.assertTrue(Result.isErr(Orbit64.V2.Codec.encode(0, cube)))
 
 @Test
 def encodeRejectsMissingWingOrbitsWithoutCrashing(): Unit \ Assert =
-    let cube = { wings = Vector.empty()
-                 | Orbit64.V2.State.solved(4, Orbit64.V2.Registry.Model.Picture) };
+    let cube = {
+        wings = Vector.empty() | Orbit64.V2.State.solved(4, Orbit64.V2.Registry.Model.Picture)
+    };
     Assert.assertTrue(Result.isErr(Orbit64.V2.Codec.encode(8, cube)))

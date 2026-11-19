@@ -6,7 +6,6 @@
 /// decomposition: one coordinate per orbit, packed in a fixed order.
 ///
 pub mod Orbit64.Orbit {
-
     use Orbit64.Rank
 
     ///
@@ -45,11 +44,17 @@ pub mod Orbit64.Orbit {
     /// token's length says which puzzle it is.
     ///
     pub def layout(n: Int32): List[Orbit] =
-        if (n < 2) Nil else
-        let midges = if (Int32.modulo(n, 2) == 1 and n >= 3) Corners :: Midges :: Nil else Corners :: Nil;
-        let wings = List.repeat((n - 2) / 2, Wings);
-        let centers = List.repeat(((n - 2) * (n - 2)) / 4, Centers);
-        List.append(midges, List.append(wings, centers))
+        if (n < 2)
+            Nil
+        else
+            let midges =
+                if (Int32.modulo(n, 2) == 1 and n >= 3)
+                    Corners :: Midges :: Nil
+                else
+                    Corners :: Nil;
+            let wings = List.repeat((n - 2) / 2, Wings);
+            let centers = List.repeat(((n - 2) * (n - 2)) / 4, Centers);
+            List.append(midges, List.append(wings, centers))
 
     ///
     /// The number of distinct states of a single orbit of kind `o`.
@@ -62,13 +67,13 @@ pub mod Orbit64.Orbit {
         // 8! arrangements; the eighth twist is forced by the sum-mod-3 rule.
         case Corners => factorial(8) * BigInt.pow(base = 3ii, 7)
         // 12! arrangements; the twelfth flip is forced by parity.
-        case Midges  => factorial(12) * BigInt.pow(base = 2ii, 11)
+        case Midges => factorial(12) * BigInt.pow(base = 2ii, 11)
         // Wings carry no orientation, so this is a bare permutation.
-        case Wings   => factorial(24)
+        case Wings => factorial(24)
         // Four indistinguishable copies of each of six colors.
         case Centers =>
-            List.range(0, 5)
-                |> List.foldLeft((acc, t) -> acc * Int32.toBigInt(Rank.binomial(24 - 4 * t, 4)), 1ii)
+            List.range(0, 5) |>
+                List.foldLeft((acc, t) -> acc * Int32.toBigInt(Rank.binomial(24 - 4 * t, 4)), 1ii)
     }
 
     ///
@@ -76,8 +81,8 @@ pub mod Orbit64.Orbit {
     ///
     pub def size(o: Orbit): Int32 = match o {
         case Corners => 8
-        case Midges  => 12
-        case Wings   => 24
+        case Midges => 12
+        case Wings => 24
         case Centers => 24
     }
 
@@ -86,5 +91,4 @@ pub mod Orbit64.Orbit {
     ///
     def factorial(n: Int32): BigInt =
         List.range(1, n + 1) |> List.foldLeft((acc, i) -> acc * Int32.toBigInt(i), 1ii)
-
 }

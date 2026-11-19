@@ -44,7 +44,6 @@
 /// of them.
 ///
 pub mod Orbit64.Canonical {
-
     use Orbit64.Internal.Symmetry
 
     ///
@@ -58,39 +57,41 @@ pub mod Orbit64.Canonical {
         match checkFacelets(n, facelets) {
             case Some(why) => Err(why)
             case None =>
-                Symmetry.leastImage(n, facelets)
-                    |> Result.flatMap(least -> standardToken(n, least))
+                Symmetry.leastImage(n, facelets) |> Result.flatMap(least -> standardToken(n, least))
         }
 
     ///
     /// The canonical token of the cube a state token of size `n` describes.
     ///
     pub def fromToken(n: Int32, token: String): Result[String, String] =
-        Orbit64.State.decode(n, token)
-            |> Result.flatMap(state -> fromState(n, state))
+        Orbit64.State.decode(n, token) |> Result.flatMap(state -> fromState(n, state))
 
     ///
     /// The canonical token of a decoded state.
     ///
     pub def fromState(n: Int32, state: Orbit64.State.FramedState): Result[String, String] =
-        Orbit64.Net.toFacelets(n, state)
-            |> Result.flatMap(facelets -> fromFacelets(n, facelets))
+        Orbit64.Net.toFacelets(n, state) |> Result.flatMap(facelets -> fromFacelets(n, facelets))
 
     ///
     /// Why `facelets` cannot be a cube of size `n`, if it cannot.
     ///
     def checkFacelets(n: Int32, facelets: Vector[Int32]): Option[String] =
         if (not Orbit64.Net.canDraw(n))
-            Some("no slot convention for the ${n}x${n}x${n}: this module has one "
-                + "only up to the 7x7x7")
+            Some(
+                "no slot convention for the ${n}x${n}x${n}: this module has one " +
+                    "only up to the 7x7x7"
+            )
         else if (Vector.length(facelets) != 6 * n * n)
-            Some("expected ${6 * n * n} facelets for the ${n}x${n}x${n}, "
-                + "got ${Vector.length(facelets)}")
+            Some(
+                "expected ${6 * n * n} facelets for the ${n}x${n}x${n}, " +
+                    "got ${Vector.length(facelets)}"
+            )
         else if (not Vector.forAll(f -> f >= 0 and f < 6, facelets))
             Some("every facelet must name a face, 0 to 5")
         else if (List.exists(c -> countOf(c, facelets) != n * n, List.range(0, 6)))
             Some("every color must appear ${n * n} times")
-        else None
+        else
+            None
 
     def countOf(color: Int32, facelets: Vector[Int32]): Int32 =
         Vector.foldLeft((acc, c) -> if (c == color) acc + 1 else acc, 0, facelets)
@@ -100,11 +101,11 @@ pub mod Orbit64.Canonical {
     ///
     def standardToken(n: Int32, colors: Vector[Int32]): Result[String, String] =
         match standardNames(n, colors) {
-            case Err(why)   => Err(why)
-            case Ok(names)  =>
+            case Err(why) => Err(why)
+            case Ok(names) =>
                 let renamed = Vector.map(c -> Map.getWithDefault(c, 0, names), colors);
-                Orbit64.Net.fromFacelets(n, renamed)
-                    |> Result.flatMap(state -> Orbit64.State.encode(n, state))
+                Orbit64.Net.fromFacelets(n, renamed) |>
+                    Result.flatMap(state -> Orbit64.State.encode(n, state))
         }
 
     ///
@@ -115,9 +116,13 @@ pub mod Orbit64.Canonical {
         if (Int32.modulo(n, 2) == 1) namesByCenters(n, colors) else namesByCorner(n, colors)
 
     def namesByCenters(n: Int32, colors: Vector[Int32]): Result[String, Map[Int32, Int32]] =
-        let pairs = List.range(0, 6) |> List.filterMap(face ->
-            Symmetry.centerFacelet(n, face)
-                |> Option.map(at -> (Vector.get(at, colors), face)));
+        let pairs =
+            List.range(0, 6) |>
+                List.filterMap(
+                    face ->
+                        Symmetry.centerFacelet(n, face) |>
+                            Option.map(at -> (Vector.get(at, colors), face))
+                );
         nameMap(pairs, "the fixed centers of an odd cube must show six different colors")
 
     ///
@@ -125,27 +130,42 @@ pub mod Orbit64.Canonical {
     /// corner with them, found as the opposites, become `D L B`.
     ///
     def namesByCorner(n: Int32, colors: Vector[Int32]): Result[String, Map[Int32, Int32]] =
-        let corners = Symmetry.cornerStickers(n)
-            |> List.map(slot -> Vector.map(i -> Vector.get(i, colors), slot));
-        let shared = corners |> List.foldLeft((acc, corner) ->
-            Vector.foldLeft((set, a) ->
-                Vector.foldLeft((inner, b) -> Set.insert((a, b), inner), set, corner),
-                acc, corner), Set.empty());
+        let corners =
+            Symmetry.cornerStickers(n) |>
+                List.map(slot -> Vector.map(i -> Vector.get(i, colors), slot));
+        let shared =
+            corners |>
+                List.foldLeft(
+                    (acc, corner) ->
+                        Vector.foldLeft(
+                            (set, a) ->
+                                Vector.foldLeft(
+                                    (inner, b) -> Set.insert((a, b), inner),
+                                    set,
+                                    corner
+                                ),
+                            acc,
+                            corner
+                        ),
+                    Set.empty()
+                );
         let opposite = c -> List.filter(o -> not Set.memberOf((c, o), shared), List.range(0, 6));
         match List.head(corners) {
-            case None         => Err("the cube has no corners")
-            case Some(urf)    =>
+            case None => Err("the cube has no corners")
+            case Some(urf) =>
                 let top = Vector.toList(urf);
-                let pairs = List.append(
-                    List.mapWithIndex(i -> c -> (c, i), top),
-                    List.mapWithIndex(i -> c -> (oppositeOf(opposite(c)), i + 3), top));
+                let pairs =
+                    List.append(
+                        List.mapWithIndex(i -> c -> (c, i), top),
+                        List.mapWithIndex(i -> c -> (oppositeOf(opposite(c)), i + 3), top)
+                    );
                 nameMap(pairs, "the corner colors of an even cube are not three pairs of opposites")
         }
 
     /// The single opposite color in `candidates`, or -1 when there is not exactly one.
     def oppositeOf(candidates: List[Int32]): Int32 = match candidates {
         case o :: Nil => o
-        case _        => -1
+        case _ => -1
     }
 
     ///
@@ -154,7 +174,8 @@ pub mod Orbit64.Canonical {
     ///
     def nameMap(pairs: List[(Int32, Int32)], why: String): Result[String, Map[Int32, Int32]] =
         let names = List.toMap(pairs);
-        if (Map.size(names) == 6 and List.forAll(match (c, _) -> c >= 0, pairs)) Ok(names)
-        else Err(why)
-
+        if (Map.size(names) == 6 and List.forAll(match (c, _) -> c >= 0, pairs))
+            Ok(names)
+        else
+            Err(why)
 }

@@ -1,6 +1,5 @@
 /// Source-level, notation-aware algorithm syntax.
 pub mod AlgorithmTool.Ast {
-
     use orbit64::Orbit64
 
     /// A program with ordered definitions and one exported name.
@@ -24,5 +23,4 @@ pub mod AlgorithmTool.Ast {
         case Commutator(Expr, Expr)
         case Slice(String, Int32, Int32)
     }
-
 }

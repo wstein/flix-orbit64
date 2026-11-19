@@ -20,7 +20,7 @@ def faceIndex(value: Char): Int32 = match value {
     case 'F' => 2
     case 'D' => 3
     case 'L' => 4
-    case _   => 5
+    case _ => 5
 }
 
 def faceletValues(text: String): Vector[Int32] =
@@ -29,15 +29,23 @@ def faceletValues(text: String): Vector[Int32] =
 def spacedFacelets(values: Vector[Int32], n: Int32): String =
     spacedFaceletsLoop(Vector.toList(values) |> List.map(faceText), n * n, n * n, "")
 
-def spacedFaceletsLoop(values: List[String], fieldWidth: Int32,
-                       remaining: Int32, out: String): String =
+def spacedFaceletsLoop(
+    values: List[String],
+    fieldWidth: Int32,
+    remaining: Int32,
+    out: String
+): String =
     match values {
         case Nil => out
         case value :: rest =>
             let separator = if (remaining == fieldWidth) if (out == "") "" else " " else "";
             let nextRemaining = if (remaining == 1) fieldWidth else remaining - 1;
-            spacedFaceletsLoop(rest, fieldWidth, nextRemaining,
-                String.concat(out, String.concat(separator, value)))
+            spacedFaceletsLoop(
+                rest,
+                fieldWidth,
+                nextRemaining,
+                String.concat(out, String.concat(separator, value))
+            )
     }
 
 /// The two larger solved vectors also pin their published token widths.
@@ -45,20 +53,31 @@ def spacedFaceletsLoop(values: List[String], fieldWidth: Int32,
 def documentedLargeSolvedFaceletVectors(): Unit \ Assert =
     List#{
         (6, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-        (7, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
-            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    } |> List.forEach(match (n, token) -> {
-        let reference = List#{"U", "R", "F", "D", "L", "B"}
-            |> List.map(face -> String.repeat(n * n, face))
-            |> List.join(" ");
-        let facelets = Orbit64.State.decode(n, token)
-            |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, state));
-        Assert.assertEq(expected = Ok(reference),
-            facelets |> Result.map(fs -> spacedFacelets(fs, n)));
-        Assert.assertEq(expected = Ok(token),
-            facelets |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
-                |> Result.flatMap(state -> Orbit64.State.encode(n, state)))
-    })
+        (
+            7,
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        )
+    } |>
+        List.forEach(match (n, token) -> {
+            let reference =
+                List#{"U", "R", "F", "D", "L", "B"} |>
+                    List.map(face -> String.repeat(n * n, face)) |>
+                    List.join(" ");
+            let facelets =
+                Orbit64.State.decode(n, token) |>
+                    Result.flatMap(state -> Orbit64.Net.toFacelets(n, state));
+            Assert.assertEq(
+                expected = Ok(reference),
+                facelets |> Result.map(fs -> spacedFacelets(fs, n))
+            );
+            Assert.assertEq(
+                expected = Ok(token),
+                facelets |>
+                    Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)) |>
+                    Result.flatMap(state -> Orbit64.State.encode(n, state))
+            )
+        })
 
 ///
 /// Every published state token renders to its published spaced facelets.
@@ -67,22 +86,30 @@ def documentedLargeSolvedFaceletVectors(): Unit \ Assert =
 def documentedStateFaceletVectors(): Unit \ Assert =
     let vectors = List#{
         (2, "EJ6kr", "LFLD BLRD BLBU RFRR UUDU DFFB"),
-        (3, "AAAAAAAACC-Y",
-            "UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB"),
-        (4, "BJStkD4cayBhsWj6eHgDZLTP1th",
+        (3, "AAAAAAAACC-Y", "UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB"),
+        (
+            4,
+            "BJStkD4cayBhsWj6eHgDZLTP1th",
             "DLLDLLDLBFLFLRBR DRDLFBRLUURUUDDU FUUFLDFDRBUFURRL " +
-                "LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU"),
-        (5, "AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w",
+                "LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU"
+        ),
+        (
+            5,
+            "AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w",
             "DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD " +
                 "LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL " +
-                "LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU")
+                "LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU"
+        )
     };
-    vectors |> List.forEach(match (n, token, reference) ->
-        let actual = Orbit64.State.decode(n, token)
-            |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, state))
-            |> Result.map(facelets -> spacedFacelets(facelets, n))
-            |> Result.getWithDefault("invalid");
-        Assert.assertEq(expected = reference, actual))
+    vectors |>
+        List.forEach(
+            match (n, token, reference) -> let actual =
+                Orbit64.State.decode(n, token) |>
+                    Result.flatMap(state -> Orbit64.Net.toFacelets(n, state)) |>
+                    Result.map(facelets -> spacedFacelets(facelets, n)) |>
+                    Result.getWithDefault("invalid");
+            Assert.assertEq(expected = reference, actual)
+        )
 
 /// The published facelets encode back to their documented framed-state token.
 @Test
@@ -90,15 +117,25 @@ def documentedFaceletVectorsEncodeToFramedStates(): Unit \ Assert =
     let vectors = List#{
         (2, "EJ6kr", "LFLD BLRD BLBU RFRR UUDU DFFB"),
         (3, "AAAAAAAACC-Y", "UUUUURUUU RURBRLRDR FFFLFRFFF DDDLDRDDD LLLFLFLDL BBBBBRBBB"),
-        (4, "BJStkD4cayBhsWj6eHgDZLTP1th",
+        (
+            4,
+            "BJStkD4cayBhsWj6eHgDZLTP1th",
             "DLLDLLDLBFLFLRBR DRDLFBRLUURUUDDU FUUFLDFDRBUFURRL " +
-                "LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU"),
-        (5, "AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w",
+                "LBDFFFDFFFBRFBFR RDDDBLUUBURBRULB BFBBUDRURBLLBRDU"
+        ),
+        (
+            5,
+            "AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w",
             "DBRFRFUBLDDBUFFURBDDFUUDL BLDBFULULLLRRUURRDFDRLLFD " +
                 "LFLRURFURRFFFFBUBLUFRLUBU BDBRFDFRUULRDFDULLDDRBRFL " +
-                "LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU")
+                "LDBFUUFDUFRLLURBRDDBBRFRD DLDUFBBBBLFRBDUBDLBLBLBRU"
+        )
     };
-    vectors |> List.forEach(match (n, token, facelets) ->
-        Assert.assertEq(expected = Ok(token),
-            Orbit64.Net.fromFacelets(n, faceletValues(facelets))
-                |> Result.flatMap(state -> Orbit64.State.encode(n, state))))
+    vectors |>
+        List.forEach(
+            match (n, token, facelets) -> Assert.assertEq(
+                expected = Ok(token),
+                Orbit64.Net.fromFacelets(n, faceletValues(facelets)) |>
+                    Result.flatMap(state -> Orbit64.State.encode(n, state))
+            )
+        )

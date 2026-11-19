@@ -2,7 +2,6 @@
 /// Orbit64 V2 state tokens: a registry entry's rank written at its length.
 ///
 pub mod Orbit64.V2.Codec {
-
     use Orbit64.V2.Registry.Entry
     use Orbit64.V2.State.Cube
 
@@ -11,8 +10,10 @@ pub mod Orbit64.V2.Codec {
         match Orbit64.V2.Registry.entry(id) {
             case None => Err("unknown registry entry ${id}")
             case Some(e) =>
-                Result.map(r -> Orbit64.Internal.Encoding.toBase64(e#offset + r, e#length),
-                           Orbit64.V2.State.rank(e#n, e#model, e#pose, cube))
+                Result.map(
+                    r -> Orbit64.Internal.Encoding.toBase64(e#offset + r, e#length),
+                    Orbit64.V2.State.rank(e#n, e#model, e#pose, cube)
+                )
         }
 
     /// Decode a token to its registry entry and state.
@@ -22,9 +23,7 @@ pub mod Orbit64.V2.Codec {
             case Some(value) =>
                 match Orbit64.V2.Registry.lookup(String.length(token), value) {
                     case None => Err("not a known V2 state token")
-                    case Some((e, r)) =>
-                        Ok((e, Orbit64.V2.State.unrank(e#n, e#model, e#pose, r)))
+                    case Some((e, r)) => Ok((e, Orbit64.V2.State.unrank(e#n, e#model, e#pose, r)))
                 }
         }
-
 }

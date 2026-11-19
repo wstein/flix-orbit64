@@ -33,8 +33,9 @@ def asString(r: Result[String, Vector[Int32]]): Result[String, String] =
 ///
 def asFacelets(s: String): Vector[Int32] =
     let table = String.toList(faceSymbols() |> Vector.join(""));
-    String.toList(s) |> List.map(c -> List.indexOf(c, table) |> Option.getWithDefault(-1))
-        |> List.toVector
+    String.toList(s) |>
+        List.map(c -> List.indexOf(c, table) |> Option.getWithDefault(-1)) |>
+        List.toVector
 
 ///
 /// Both directions of one fixture.
@@ -45,92 +46,756 @@ def asFacelets(s: String): Vector[Int32] =
 /// got wrong would still pass only the first.
 ///
 def bothWays(n: Int32, orbits: List[Coord], drawn: String): Unit \ Assert =
-    Assert.assertEq(expected = Ok(drawn), asString(Orbit64.Net.toFacelets(n, Orbit64.State.canonical(orbits))));
-    Assert.assertEq(expected = Ok(Orbit64.State.canonical(orbits)), Orbit64.Net.fromFacelets(n, asFacelets(drawn)))
+    Assert.assertEq(
+        expected = Ok(drawn),
+        asString(Orbit64.Net.toFacelets(n, Orbit64.State.canonical(orbits)))
+    );
+    Assert.assertEq(
+        expected = Ok(Orbit64.State.canonical(orbits)),
+        Orbit64.Net.fromFacelets(n, asFacelets(drawn))
+    )
 
 @Test
 def faceletsOfFourByFourSolved(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), WingCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}),
-                       CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})};
-    bothWays(4, orbits, "UUUUUUUUUUUUUUUURRRRRRRRRRRRRRRRFFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDLLLLLLLLLLLLLLLLBBBBBBBBBBBBBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
+        WingCoord(Vector#{
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
+    };
+    bothWays(
+        4,
+        orbits,
+        "UUUUUUUUUUUUUUUURRRRRRRRRRRRRRRRFFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDLLLLLLLLLLLLLLLLBBBBBBBBBBBBBBBB"
+    )
 
 @Test
 def faceletsOfFourByFourU(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), WingCoord(Vector#{2, 0, 3, 1, 20, 5, 6, 7, 4, 9, 10, 11, 12, 13, 14, 15, 8, 17, 18, 19, 16, 21, 22, 23}),
-                       CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})};
-    bothWays(4, orbits, "UUUUUUUUUUUUUUUUBBBBRRRRRRRRRRRRRRRRFFFFFFFFFFFFDDDDDDDDDDDDDDDDFFFFLLLLLLLLLLLLLLLLBBBBBBBBBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
+        WingCoord(Vector#{
+            2,
+            0,
+            3,
+            1,
+            20,
+            5,
+            6,
+            7,
+            4,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            8,
+            17,
+            18,
+            19,
+            16,
+            21,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
+    };
+    bothWays(
+        4,
+        orbits,
+        "UUUUUUUUUUUUUUUUBBBBRRRRRRRRRRRRRRRRFFFFFFFFFFFFDDDDDDDDDDDDDDDDFFFFLLLLLLLLLLLLLLLLBBBBBBBBBBBB"
+    )
 
 @Test
 def faceletsOfFourByFourR(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{4, 1, 2, 0, 7, 5, 6, 3}, Vector#{2, 0, 0, 1, 1, 0, 0, 2}), WingCoord(Vector#{0, 9, 2, 3, 6, 4, 7, 5, 8, 13, 10, 11, 12, 22, 14, 15, 16, 17, 18, 19, 20, 21, 1, 23}),
-                       CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})};
-    bothWays(4, orbits, "UUUFUUUFUUUFUUUFRRRRRRRRRRRRRRRRFFFDFFFDFFFDFFFDDDDBDDDBDDDBDDDBLLLLLLLLLLLLLLLLUBBBUBBBUBBBUBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{4, 1, 2, 0, 7, 5, 6, 3}, Vector#{2, 0, 0, 1, 1, 0, 0, 2}),
+        WingCoord(Vector#{
+            0,
+            9,
+            2,
+            3,
+            6,
+            4,
+            7,
+            5,
+            8,
+            13,
+            10,
+            11,
+            12,
+            22,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            1,
+            23
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
+    };
+    bothWays(
+        4,
+        orbits,
+        "UUUFUUUFUUUFUUUFRRRRRRRRRRRRRRRRFFFDFFFDFFFDFFFDDDDBDDDBDDDBDDDBLLLLLLLLLLLLLLLLUBBBUBBBUBBBUBBB"
+    )
 
 @Test
 def faceletsOfFourByFourF(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{1, 5, 2, 3, 0, 4, 6, 7}, Vector#{1, 2, 0, 0, 2, 1, 0, 0}), WingCoord(Vector#{0, 1, 2, 17, 4, 5, 3, 7, 10, 8, 11, 9, 6, 13, 14, 15, 16, 12, 18, 19, 20, 21, 22, 23}),
-                       CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})};
-    bothWays(4, orbits, "UUUUUUUUUUUULLLLURRRURRRURRRURRRFFFFFFFFFFFFFFFFRRRRDDDDDDDDDDDDLLLDLLLDLLLDLLLDBBBBBBBBBBBBBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{1, 5, 2, 3, 0, 4, 6, 7}, Vector#{1, 2, 0, 0, 2, 1, 0, 0}),
+        WingCoord(Vector#{
+            0,
+            1,
+            2,
+            17,
+            4,
+            5,
+            3,
+            7,
+            10,
+            8,
+            11,
+            9,
+            6,
+            13,
+            14,
+            15,
+            16,
+            12,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
+    };
+    bothWays(
+        4,
+        orbits,
+        "UUUUUUUUUUUULLLLURRRURRRURRRURRRFFFFFFFFFFFFFFFFRRRRDDDDDDDDDDDDLLLDLLLDLLLDLLLDBBBBBBBBBBBBBBBB"
+    )
 
 @Test
 def faceletsOfFourByFourUw(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), WingCoord(Vector#{2, 0, 3, 1, 20, 21, 6, 7, 4, 5, 10, 11, 12, 13, 14, 15, 8, 9, 18, 19, 16, 17, 22, 23}),
-                       CenterCoord(Vector#{0, 0, 0, 0, 5, 5, 1, 1, 1, 1, 2, 2, 3, 3, 3, 3, 2, 2, 4, 4, 4, 4, 5, 5})};
-    bothWays(4, orbits, "UUUUUUUUUUUUUUUUBBBBBBBBRRRRRRRRRRRRRRRRFFFFFFFFDDDDDDDDDDDDDDDDFFFFFFFFLLLLLLLLLLLLLLLLBBBBBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
+        WingCoord(Vector#{
+            2,
+            0,
+            3,
+            1,
+            20,
+            21,
+            6,
+            7,
+            4,
+            5,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            8,
+            9,
+            18,
+            19,
+            16,
+            17,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 5, 5, 1, 1, 1, 1, 2, 2, 3, 3, 3, 3, 2, 2, 4, 4, 4, 4, 5, 5})
+    };
+    bothWays(
+        4,
+        orbits,
+        "UUUUUUUUUUUUUUUUBBBBBBBBRRRRRRRRRRRRRRRRFFFFFFFFDDDDDDDDDDDDDDDDFFFFFFFFLLLLLLLLLLLLLLLLBBBBBBBB"
+    )
 
 @Test
 def faceletsOfFourByFourRw(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{4, 1, 2, 0, 7, 5, 6, 3}, Vector#{2, 0, 0, 1, 1, 0, 0, 2}), WingCoord(Vector#{0, 9, 2, 11, 6, 4, 7, 5, 8, 13, 10, 15, 12, 22, 14, 20, 16, 17, 18, 19, 3, 21, 1, 23}),
-                       CenterCoord(Vector#{0, 2, 0, 2, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5})};
-    bothWays(4, orbits, "UUFFUUFFUUFFUUFFRRRRRRRRRRRRRRRRFFDDFFDDFFDDFFDDDDBBDDBBDDBBDDBBLLLLLLLLLLLLLLLLUUBBUUBBUUBBUUBB")
+    let orbits = List#{
+        CornerCoord(Vector#{4, 1, 2, 0, 7, 5, 6, 3}, Vector#{2, 0, 0, 1, 1, 0, 0, 2}),
+        WingCoord(Vector#{
+            0,
+            9,
+            2,
+            11,
+            6,
+            4,
+            7,
+            5,
+            8,
+            13,
+            10,
+            15,
+            12,
+            22,
+            14,
+            20,
+            16,
+            17,
+            18,
+            19,
+            3,
+            21,
+            1,
+            23
+        }),
+        CenterCoord(Vector#{0, 2, 0, 2, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5})
+    };
+    bothWays(
+        4,
+        orbits,
+        "UUFFUUFFUUFFUUFFRRRRRRRRRRRRRRRRFFDDFFDDFFDDFFDDDDBBDDBBDDBBDDBBLLLLLLLLLLLLLLLLUUBBUUBBUUBBUUBB"
+    )
 
 @Test
 def faceletsOfFourByFour2R(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), WingCoord(Vector#{0, 1, 2, 11, 4, 5, 6, 7, 8, 9, 10, 15, 12, 13, 14, 20, 16, 17, 18, 19, 3, 21, 22, 23}),
-                       CenterCoord(Vector#{0, 2, 0, 2, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5})};
-    bothWays(4, orbits, "UUFUUUFUUUFUUUFURRRRRRRRRRRRRRRRFFDFFFDFFFDFFFDFDDBDDDBDDDBDDDBDLLLLLLLLLLLLLLLLBUBBBUBBBUBBBUBB")
+    let orbits = List#{
+        CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
+        WingCoord(Vector#{
+            0,
+            1,
+            2,
+            11,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            15,
+            12,
+            13,
+            14,
+            20,
+            16,
+            17,
+            18,
+            19,
+            3,
+            21,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{0, 2, 0, 2, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5})
+    };
+    bothWays(
+        4,
+        orbits,
+        "UUFUUUFUUUFUUUFURRRRRRRRRRRRRRRRFFDFFFDFFFDFFFDFDDBDDDBDDDBDDDBDLLLLLLLLLLLLLLLLBUBBBUBBBUBBBUBB"
+    )
 
 @Test
 def faceletsOfFiveByFiveSolved(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), MidgeCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
-                       WingCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}), CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}), CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})};
-    bothWays(5, orbits, "UUUUUUUUUUUUUUUUUUUUUUUUURRRRRRRRRRRRRRRRRRRRRRRRRFFFFFFFFFFFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDDDDDDDDDDLLLLLLLLLLLLLLLLLLLLLLLLLBBBBBBBBBBBBBBBBBBBBBBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
+        MidgeCoord(
+            Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
+            Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        ),
+        WingCoord(Vector#{
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
+    };
+    bothWays(
+        5,
+        orbits,
+        "UUUUUUUUUUUUUUUUUUUUUUUUURRRRRRRRRRRRRRRRRRRRRRRRRFFFFFFFFFFFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDDDDDDDDDDLLLLLLLLLLLLLLLLLLLLLLLLLBBBBBBBBBBBBBBBBBBBBBBBBB"
+    )
 
 @Test
 def faceletsOfFiveByFiveU(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), MidgeCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
-                       WingCoord(Vector#{2, 0, 3, 1, 20, 5, 6, 7, 4, 9, 10, 11, 12, 13, 14, 15, 8, 17, 18, 19, 16, 21, 22, 23}), CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}), CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})};
-    bothWays(5, orbits, "UUUUUUUUUUUUUUUUUUUUUUUUUBBBBBRRRRRRRRRRRRRRRRRRRRRRRRRFFFFFFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDDDDDDDDDDFFFFFLLLLLLLLLLLLLLLLLLLLLLLLLBBBBBBBBBBBBBBBBBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
+        MidgeCoord(
+            Vector#{3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11},
+            Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        ),
+        WingCoord(Vector#{
+            2,
+            0,
+            3,
+            1,
+            20,
+            5,
+            6,
+            7,
+            4,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            8,
+            17,
+            18,
+            19,
+            16,
+            21,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
+    };
+    bothWays(
+        5,
+        orbits,
+        "UUUUUUUUUUUUUUUUUUUUUUUUUBBBBBRRRRRRRRRRRRRRRRRRRRRRRRRFFFFFFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDDDDDDDDDDFFFFFLLLLLLLLLLLLLLLLLLLLLLLLLBBBBBBBBBBBBBBBBBBBB"
+    )
 
 @Test
 def faceletsOfFiveByFiveR(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{4, 1, 2, 0, 7, 5, 6, 3}, Vector#{2, 0, 0, 1, 1, 0, 0, 2}), MidgeCoord(Vector#{8, 1, 2, 3, 11, 5, 6, 7, 4, 9, 10, 0}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
-                       WingCoord(Vector#{0, 9, 2, 3, 6, 4, 7, 5, 8, 13, 10, 11, 12, 22, 14, 15, 16, 17, 18, 19, 20, 21, 1, 23}), CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}), CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})};
-    bothWays(5, orbits, "UUUUFUUUUFUUUUFUUUUFUUUUFRRRRRRRRRRRRRRRRRRRRRRRRRFFFFDFFFFDFFFFDFFFFDFFFFDDDDDBDDDDBDDDDBDDDDBDDDDBLLLLLLLLLLLLLLLLLLLLLLLLLUBBBBUBBBBUBBBBUBBBBUBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{4, 1, 2, 0, 7, 5, 6, 3}, Vector#{2, 0, 0, 1, 1, 0, 0, 2}),
+        MidgeCoord(
+            Vector#{8, 1, 2, 3, 11, 5, 6, 7, 4, 9, 10, 0},
+            Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        ),
+        WingCoord(Vector#{
+            0,
+            9,
+            2,
+            3,
+            6,
+            4,
+            7,
+            5,
+            8,
+            13,
+            10,
+            11,
+            12,
+            22,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            1,
+            23
+        }),
+        CenterCoord(Vector#{
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
+    };
+    bothWays(
+        5,
+        orbits,
+        "UUUUFUUUUFUUUUFUUUUFUUUUFRRRRRRRRRRRRRRRRRRRRRRRRRFFFFDFFFFDFFFFDFFFFDFFFFDDDDDBDDDDBDDDDBDDDDBDDDDBLLLLLLLLLLLLLLLLLLLLLLLLLUBBBBUBBBBUBBBBUBBBBUBBBB"
+    )
 
 @Test
 def faceletsOfFiveByFiveF(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{1, 5, 2, 3, 0, 4, 6, 7}, Vector#{1, 2, 0, 0, 2, 1, 0, 0}), MidgeCoord(Vector#{0, 9, 2, 3, 4, 8, 6, 7, 1, 5, 10, 11}, Vector#{0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0}),
-                       WingCoord(Vector#{0, 1, 2, 17, 4, 5, 3, 7, 10, 8, 11, 9, 6, 13, 14, 15, 16, 12, 18, 19, 20, 21, 22, 23}), CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}), CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})};
-    bothWays(5, orbits, "UUUUUUUUUUUUUUUUUUUULLLLLURRRRURRRRURRRRURRRRURRRRFFFFFFFFFFFFFFFFFFFFFFFFFRRRRRDDDDDDDDDDDDDDDDDDDDLLLLDLLLLDLLLLDLLLLDLLLLDBBBBBBBBBBBBBBBBBBBBBBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{1, 5, 2, 3, 0, 4, 6, 7}, Vector#{1, 2, 0, 0, 2, 1, 0, 0}),
+        MidgeCoord(
+            Vector#{0, 9, 2, 3, 4, 8, 6, 7, 1, 5, 10, 11},
+            Vector#{0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0}
+        ),
+        WingCoord(Vector#{
+            0,
+            1,
+            2,
+            17,
+            4,
+            5,
+            3,
+            7,
+            10,
+            8,
+            11,
+            9,
+            6,
+            13,
+            14,
+            15,
+            16,
+            12,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5,
+            5,
+            5
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5})
+    };
+    bothWays(
+        5,
+        orbits,
+        "UUUUUUUUUUUUUUUUUUUULLLLLURRRRURRRRURRRRURRRRURRRRFFFFFFFFFFFFFFFFFFFFFFFFFRRRRRDDDDDDDDDDDDDDDDDDDDLLLLDLLLLDLLLLDLLLLDLLLLDBBBBBBBBBBBBBBBBBBBBBBBBB"
+    )
 
 @Test
 def faceletsOfFiveByFiveUw(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), MidgeCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
-                       WingCoord(Vector#{2, 0, 3, 1, 20, 21, 6, 7, 4, 5, 10, 11, 12, 13, 14, 15, 8, 9, 18, 19, 16, 17, 22, 23}), CenterCoord(Vector#{0, 0, 0, 0, 5, 5, 1, 1, 1, 1, 2, 2, 3, 3, 3, 3, 2, 2, 4, 4, 4, 4, 5, 5}), CenterCoord(Vector#{0, 0, 0, 0, 5, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 2, 4, 4, 4, 4, 5, 5, 5})};
-    bothWays(5, orbits, "UUUUUUUUUUUUUUUUUUUUUUUUUBBBBBBBBBBRRRRRRRRRRRRRRRRRRRRRRRRRFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDDDDDDDDDDFFFFFFFFFFLLLLLLLLLLLLLLLLLLLLLLLLLBBBBBBBBBBBBBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{3, 0, 1, 2, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
+        MidgeCoord(
+            Vector#{3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11},
+            Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        ),
+        WingCoord(Vector#{
+            2,
+            0,
+            3,
+            1,
+            20,
+            21,
+            6,
+            7,
+            4,
+            5,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            8,
+            9,
+            18,
+            19,
+            16,
+            17,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{
+            0,
+            0,
+            0,
+            0,
+            5,
+            5,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            3,
+            3,
+            3,
+            3,
+            2,
+            2,
+            4,
+            4,
+            4,
+            4,
+            5,
+            5
+        }),
+        CenterCoord(Vector#{0, 0, 0, 0, 5, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 2, 4, 4, 4, 4, 5, 5, 5})
+    };
+    bothWays(
+        5,
+        orbits,
+        "UUUUUUUUUUUUUUUUUUUUUUUUUBBBBBBBBBBRRRRRRRRRRRRRRRRRRRRRRRRRFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDDDDDDDDDDFFFFFFFFFFLLLLLLLLLLLLLLLLLLLLLLLLLBBBBBBBBBBBBBBB"
+    )
 
 @Test
 def faceletsOfFiveByFiveRw(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{4, 1, 2, 0, 7, 5, 6, 3}, Vector#{2, 0, 0, 1, 1, 0, 0, 2}), MidgeCoord(Vector#{8, 1, 2, 3, 11, 5, 6, 7, 4, 9, 10, 0}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
-                       WingCoord(Vector#{0, 9, 2, 11, 6, 4, 7, 5, 8, 13, 10, 15, 12, 22, 14, 20, 16, 17, 18, 19, 3, 21, 1, 23}), CenterCoord(Vector#{0, 2, 0, 2, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5}), CenterCoord(Vector#{0, 0, 2, 0, 1, 1, 1, 1, 2, 2, 3, 2, 3, 3, 5, 3, 4, 4, 4, 4, 5, 0, 5, 5})};
-    bothWays(5, orbits, "UUUFFUUUFFUUUFFUUUFFUUUFFRRRRRRRRRRRRRRRRRRRRRRRRRFFFDDFFFDDFFFDDFFFDDFFFDDDDDBBDDDBBDDDBBDDDBBDDDBBLLLLLLLLLLLLLLLLLLLLLLLLLUUBBBUUBBBUUBBBUUBBBUUBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{4, 1, 2, 0, 7, 5, 6, 3}, Vector#{2, 0, 0, 1, 1, 0, 0, 2}),
+        MidgeCoord(
+            Vector#{8, 1, 2, 3, 11, 5, 6, 7, 4, 9, 10, 0},
+            Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        ),
+        WingCoord(Vector#{
+            0,
+            9,
+            2,
+            11,
+            6,
+            4,
+            7,
+            5,
+            8,
+            13,
+            10,
+            15,
+            12,
+            22,
+            14,
+            20,
+            16,
+            17,
+            18,
+            19,
+            3,
+            21,
+            1,
+            23
+        }),
+        CenterCoord(Vector#{
+            0,
+            2,
+            0,
+            2,
+            1,
+            1,
+            1,
+            1,
+            2,
+            3,
+            2,
+            3,
+            3,
+            5,
+            3,
+            5,
+            4,
+            4,
+            4,
+            4,
+            0,
+            5,
+            0,
+            5
+        }),
+        CenterCoord(Vector#{0, 0, 2, 0, 1, 1, 1, 1, 2, 2, 3, 2, 3, 3, 5, 3, 4, 4, 4, 4, 5, 0, 5, 5})
+    };
+    bothWays(
+        5,
+        orbits,
+        "UUUFFUUUFFUUUFFUUUFFUUUFFRRRRRRRRRRRRRRRRRRRRRRRRRFFFDDFFFDDFFFDDFFFDDFFFDDDDDBBDDDBBDDDBBDDDBBDDDBBLLLLLLLLLLLLLLLLLLLLLLLLLUUBBBUUBBBUUBBBUUBBBUUBBB"
+    )
 
 @Test
 def faceletsOfFiveByFive2R(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}), MidgeCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
-                       WingCoord(Vector#{0, 1, 2, 11, 4, 5, 6, 7, 8, 9, 10, 15, 12, 13, 14, 20, 16, 17, 18, 19, 3, 21, 22, 23}), CenterCoord(Vector#{0, 2, 0, 2, 1, 1, 1, 1, 2, 3, 2, 3, 3, 5, 3, 5, 4, 4, 4, 4, 0, 5, 0, 5}), CenterCoord(Vector#{0, 0, 2, 0, 1, 1, 1, 1, 2, 2, 3, 2, 3, 3, 5, 3, 4, 4, 4, 4, 5, 0, 5, 5})};
-    bothWays(5, orbits, "UUUFUUUUFUUUUFUUUUFUUUUFURRRRRRRRRRRRRRRRRRRRRRRRRFFFDFFFFDFFFFDFFFFDFFFFDFDDDBDDDDBDDDDBDDDDBDDDDBDLLLLLLLLLLLLLLLLLLLLLLLLLBUBBBBUBBBBUBBBBUBBBBUBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{0, 1, 2, 3, 4, 5, 6, 7}, Vector#{0, 0, 0, 0, 0, 0, 0, 0}),
+        MidgeCoord(
+            Vector#{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
+            Vector#{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        ),
+        WingCoord(Vector#{
+            0,
+            1,
+            2,
+            11,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            15,
+            12,
+            13,
+            14,
+            20,
+            16,
+            17,
+            18,
+            19,
+            3,
+            21,
+            22,
+            23
+        }),
+        CenterCoord(Vector#{
+            0,
+            2,
+            0,
+            2,
+            1,
+            1,
+            1,
+            1,
+            2,
+            3,
+            2,
+            3,
+            3,
+            5,
+            3,
+            5,
+            4,
+            4,
+            4,
+            4,
+            0,
+            5,
+            0,
+            5
+        }),
+        CenterCoord(Vector#{0, 0, 2, 0, 1, 1, 1, 1, 2, 2, 3, 2, 3, 3, 5, 3, 4, 4, 4, 4, 5, 0, 5, 5})
+    };
+    bothWays(
+        5,
+        orbits,
+        "UUUFUUUUFUUUUFUUUUFUUUUFURRRRRRRRRRRRRRRRRRRRRRRRRFFFDFFFFDFFFFDFFFFDFFFFDFDDDBDDDDBDDDDBDDDDBDDDDBDLLLLLLLLLLLLLLLLLLLLLLLLLBUBBBBUBBBBUBBBBUBBBBUBBB"
+    )
 
 ///
 /// One sequence rather than one turn: `R U Rw Uw 2R F`, an outer turn, a wide
@@ -152,6 +817,68 @@ def faceletsOfFiveByFive2R(): Unit \ Assert =
 ///
 @Test
 def faceletsOfFiveByFiveOuterWideAndSlice(): Unit \ Assert =
-    let orbits = List#{CornerCoord(Vector#{7, 5, 4, 1, 0, 3, 6, 2}, Vector#{1, 2, 2, 0, 1, 1, 0, 2}), MidgeCoord(Vector#{2, 9, 8, 1, 0, 11, 6, 7, 4, 5, 10, 3}, Vector#{0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0}),
-                       WingCoord(Vector#{3, 2, 11, 22, 9, 21, 15, 4, 10, 7, 16, 20, 5, 1, 14, 8, 6, 12, 18, 19, 13, 17, 0, 23}), CenterCoord(Vector#{0, 1, 2, 3, 0, 5, 1, 1, 2, 1, 5, 5, 3, 0, 3, 4, 2, 3, 4, 4, 2, 4, 0, 5}), CenterCoord(Vector#{0, 0, 3, 2, 5, 1, 1, 1, 2, 2, 1, 5, 3, 3, 0, 3, 2, 4, 4, 4, 4, 0, 5, 5})};
-    bothWays(5, orbits, "FUURUFUURUFUUDUFFFDRLLLBBDFLLLDUBBBDRRRBDRRRBRRRRBFFFRRFFFRRFFFRRLBBBBBBBBURRRUFDDDUUDDDUUDDDLUDDDFLRRRDDFFFDDLLLLDLLLLULLLLUFDFFDLFLLLUUBBBUUBBBUUBBB")
+    let orbits = List#{
+        CornerCoord(Vector#{7, 5, 4, 1, 0, 3, 6, 2}, Vector#{1, 2, 2, 0, 1, 1, 0, 2}),
+        MidgeCoord(
+            Vector#{2, 9, 8, 1, 0, 11, 6, 7, 4, 5, 10, 3},
+            Vector#{0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0}
+        ),
+        WingCoord(Vector#{
+            3,
+            2,
+            11,
+            22,
+            9,
+            21,
+            15,
+            4,
+            10,
+            7,
+            16,
+            20,
+            5,
+            1,
+            14,
+            8,
+            6,
+            12,
+            18,
+            19,
+            13,
+            17,
+            0,
+            23
+        }),
+        CenterCoord(Vector#{
+            0,
+            1,
+            2,
+            3,
+            0,
+            5,
+            1,
+            1,
+            2,
+            1,
+            5,
+            5,
+            3,
+            0,
+            3,
+            4,
+            2,
+            3,
+            4,
+            4,
+            2,
+            4,
+            0,
+            5
+        }),
+        CenterCoord(Vector#{0, 0, 3, 2, 5, 1, 1, 1, 2, 2, 1, 5, 3, 3, 0, 3, 2, 4, 4, 4, 4, 0, 5, 5})
+    };
+    bothWays(
+        5,
+        orbits,
+        "FUURUFUURUFUUDUFFFDRLLLBBDFLLLDUBBBDRRRBDRRRBRRRRBFFFRRFFFRRFFFRRLBBBBBBBBURRRUFDDDUUDDDUUDDDLUDDDFLRRRDDFFFDDLLLLDLLLLULLLLUFDFFDLFLLLUUBBBUUBBBUUBBB"
+    )
