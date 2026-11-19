@@ -1,8 +1,8 @@
 name: Docs
 
-# `./flixw doc` renders this project and the standard library it was built
-# against, so the output matches the pinned compiler exactly rather than
-# whatever api.flix.dev currently serves.
+# `./flixw doc` renders this project with the compiler it pins, so the output
+# matches the pinned compiler exactly rather than whatever api.flix.dev
+# currently serves.
 #
 # The documentation is built on every push to the default branch, which also
 # keeps `doc` itself from breaking unnoticed. Publishing is separate and
@@ -61,35 +61,37 @@ jobs:
       - name: Generate
         run: ./flixw doc
 
-      # `flix doc` renders the whole standard library alongside this project --
-      # 300-odd pages whose index.html is the stdlib's own Prelude -- and has no
-      # option to narrow that down: --Xlib decides what is *compiled*, and
-      # without the library nothing compiles at all. So the narrowing happens
-      # here, and only this project's pages are published.
+      # `flix doc` documents the sources the project supplies itself, not the
+      # standard library -- but that is everything under test/ as well as
+      # src/, and index.html is the root namespace, which here holds nothing
+      # but test definitions. It has no option to narrow that down, so the
+      # narrowing happens here, and only the library's pages are published.
       - name: Assemble the site
         run: |
           set -euo pipefail
 
           # Which pages are this project's is not guessed from a module name
-          # that a copy of this template will rename. Every definition gets a
-          # "Source" link, and for this project's definitions that link carries
-          # the absolute path of the file inside this workspace; a standard
-          # library page never does.
-          matched=$(grep -lF "$PWD/src/" build/doc/*.html | xargs -n1 basename | sort)
+          # that a copy of this template will rename. flix doc renders every
+          # documented file as a page of its own, named after its path with
+          # the slashes turned into dots -- src/Orbit64/State.flix becomes
+          # src.Orbit64.State.src.html -- and links every definition to it.
+          # A page whose definitions link into src. pages is the library's;
+          # one that links into test. pages is not.
+          sources=$(cd build/doc && ls src.*.src.html 2>/dev/null | sort || true)
+          matched=$(grep -lE "href='src\.[^']*\.src\.html" build/doc/*.html | xargs -n1 basename |
+            grep -vE '^src\..*\.src\.html$' | sort || true)
 
-          # index.html always matches, and is never wanted: it is the standard
-          # library's Prelude page, and `main` is folded into it because Flix
-          # requires the entry point at the root namespace. Publishing 26
-          # library definitions in order to document one `main` is not a trade
-          # worth making, and the landing page generated below takes that
-          # filename anyway.
+          # index.html is never wanted: it is the root namespace page, and
+          # `main` and the tests' top-level definitions are folded into it. The
+          # landing page generated below takes that filename anyway.
           pages=$(printf '%s\n' "$matched" | grep -vx 'index.html' || true)
 
           # Namespace pages such as Orbit64.html have no definitions and hence
-          # no project Source link. Include every generated parent of a matched
-          # page so its navigation links stay local, without naming a module.
+          # no source link. Include every generated parent of a matched page so
+          # its navigation links stay local, without naming a module.
           parents=""
           while IFS= read -r p; do
+            [ -n "$p" ] || continue
             stem=${p%.html}
             while [[ "$stem" == *.* ]]; do
               stem=${stem%.*}
@@ -101,36 +103,22 @@ jobs:
               parents="$parents$parent"$'\n'
             done
           done <<<"$pages"
-          pages=$(printf '%s\n%s' "$pages" "$parents" | sed '/^$/d' | sort -u)
+          pages=$(printf '%s\n%s\n%s' "$pages" "$parents" "$sources" | sed '/^$/d' | sort -u)
 
-          # Fail closed. If the source-link format ever changes upstream this
+          # Fail closed. If the source-page format ever changes upstream this
           # finds nothing, and publishing an empty site quietly would be far
           # worse than stopping here.
-          if [ -z "$pages" ]; then
-            echo "::error::no project pages found in build/doc -- the flix doc source-link format may have changed"
+          if [ -z "$matched" ] || [ -z "$sources" ]; then
+            echo "::error::no project pages found in build/doc -- the flix doc source-page format may have changed"
             exit 1
           fi
           echo "publishing: $(echo "$pages" | tr '\n' ' ')"
 
           rm -rf site && mkdir site
-          cp build/doc/styles.css build/doc/index.js build/doc/favicon.png site/
+          for asset in styles.css index.js favicon.png highlight.css highlight.js; do
+            cp "build/doc/$asset" site/
+          done
           while IFS= read -r p; do cp "build/doc/$p" "site/$p"; done <<<"$pages"
-
-          # Every definition gets a "Source" link, and flix doc builds it by
-          # appending the documented file's path to the standard library's own
-          # base URL on flix/flix. For a library file that is right; for this
-          # project's files it produces a 404 against flix/flix with the build
-          # machine's absolute path embedded in it. Rewrite those into
-          # permalinks at the commit being published.
-          #
-          # The workspace path goes into a regex, so its metacharacters are
-          # escaped -- a dot matching any character would be a silent near-miss.
-          escaped=$(printf '%s' "$PWD" | sed 's|[.[\*^$/]|\\&|g')
-          from="https://github.com/flix/flix/blob/master/main/src/library/$escaped/"
-          to="https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/"
-          while IFS= read -r p; do
-            sed "s|$from|$to|g" "site/$p" > "site/$p.tmp" && mv "site/$p.tmp" "site/$p"
-          done <<<"$pages"
 
           # Fail closed: nothing published may still carry a filesystem path.
           if grep -lF "$PWD" site/*.html; then
@@ -168,7 +156,7 @@ jobs:
           HEAD
             while IFS= read -r p; do
               printf '<li><a href="%s">%s</a></li>\n' "$p" "${p%.html}"
-            done <<<"$pages"
+            done < <(grep -vE '^src\..*\.src\.html$' <<<"$pages")
             cat <<TAIL
           </ul>
           <footer><a href="https://github.com/$GITHUB_REPOSITORY">Source on GitHub</a></footer>
