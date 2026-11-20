@@ -7,10 +7,7 @@
 
 def namedExamples(): List[(Int32, String)] = List#{
     // Named patterns.
-    (
-        3,
-        "AAAAAAAAAAAA"
-    ),
+    (3, "AAAAAAAAAAAA"),
     (3, "AAAABeBQZgAA"),
     (3, "KJZ7jorgHRfo"),
     (3, "KCvKi0WENEAA"),
