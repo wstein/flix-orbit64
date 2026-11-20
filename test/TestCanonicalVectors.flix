@@ -68,8 +68,8 @@ def canonicalFaceletVectors(): List[(Int32, List[String], String)] =
         faceletVectors7a(),
         faceletVectors7b(),
         faceletVectors7c()
-    } |>
-        List.flatten
+    }
+        |> List.flatten
 
 def faceletVectors2a(): List[(Int32, List[String], String)] = List#{
     (2, List#{"RFDF", "LDBU", "BUBR", "RDFB", "FLLU", "RULD"}, "AhKO_"),

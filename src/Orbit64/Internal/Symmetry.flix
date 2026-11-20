@@ -28,8 +28,8 @@ pub mod Orbit64.Internal.Symmetry {
     /// to index `Vector.get(i, destinations(n, g))`.
     ///
     pub def destinations(n: Int32, g: Int32): Vector[Int32] =
-        Vector.range(0, 6 * n * n) |>
-            Vector.map(i -> {
+        Vector.range(0, 6 * n * n)
+            |> Vector.map(i -> {
                 let (position, normal) = locate(n, i);
                 indexOf(n, apply(g, position), apply(g, normal))
             })
@@ -41,13 +41,13 @@ pub mod Orbit64.Internal.Symmetry {
     pub def image(n: Int32, g: Int32, stickers: Vector[Int32]): Result[String, Vector[Int32]] =
         match fault(n, g, stickers) {
             case Some(why) => Err(why)
-            case None => Ok(moved(n, g, stickers))
+            case None      => Ok(moved(n, g, stickers))
         }
 
     def fault(n: Int32, g: Int32, stickers: Vector[Int32]): Option[String] =
-        List#{sizeFault(n), symmetryFault(g), lengthFault(n, stickers)} |>
-            List.filterMap(x -> x) |>
-            List.head
+        List#{sizeFault(n), symmetryFault(g), lengthFault(n, stickers)}
+            |> List.filterMap(x -> x)
+            |> List.head
 
     def sizeFault(n: Int32): Option[String] =
         if (n >= 2 and n <= 7) None else Some("no symmetries for the ${n}x${n}x${n}")
@@ -71,8 +71,10 @@ pub mod Orbit64.Internal.Symmetry {
         let target = destinations(n, g);
         region rc {
             let out = Array.repeat(rc, Vector.length(stickers), 0);
-            Vector.range(0, Vector.length(stickers)) |>
-                Vector.forEach(i -> Array.put(Vector.get(i, stickers), Vector.get(i, target), out));
+            Vector.range(0, Vector.length(stickers))
+                |> Vector.forEach(
+                    i -> Array.put(Vector.get(i, stickers), Vector.get(i, target), out)
+                );
             Array.toVector(out)
         }
 
@@ -86,7 +88,7 @@ pub mod Orbit64.Internal.Symmetry {
                 let (seen, out) = acc;
                 match Map.get(c, seen) {
                     case Some(name) => (seen, name :: out)
-                    case None => (Map.insert(c, Map.size(seen), seen), Map.size(seen) :: out)
+                    case None       => (Map.insert(c, Map.size(seen), seen), Map.size(seen) :: out)
                 }
             },
             (Map.empty(), Nil),
@@ -104,13 +106,13 @@ pub mod Orbit64.Internal.Symmetry {
     pub def leastImage(n: Int32, stickers: Vector[Int32]): Result[String, Vector[Int32]] =
         match fault(n, 0, stickers) {
             case Some(why) => Err(why)
-            case None =>
+            case None      =>
                 let keyed = g -> {
                     let candidate = relabel(moved(n, g, stickers));
                     (key(candidate), candidate)
                 };
-                let (_, least) = List.range(1, count()) |>
-                    List.foldLeft(
+                let (_, least) = List.range(1, count())
+                    |> List.foldLeft(
                         (best, g) -> {
                             let (k, v) = keyed(g);
                             let (bestKey, _) = best;
@@ -128,14 +130,14 @@ pub mod Orbit64.Internal.Symmetry {
     ///
     pub def cornerStickers(n: Int32): List[Vector[Int32]] =
         let m = n - 1;
-        List#{1, -1} |>
-            List.flatMap(
+        List#{1, -1}
+            |> List.flatMap(
                 y ->
-                    List#{1, -1} |>
-                        List.flatMap(
+                    List#{1, -1}
+                        |> List.flatMap(
                             x ->
-                                List#{1, -1} |>
-                                    List.map(z -> {
+                                List#{1, -1}
+                                    |> List.map(z -> {
                                         let at = (x * m, y * m, z * m);
                                         Vector#{
                                             indexOf(n, at, (0, y, 0)),
@@ -217,11 +219,11 @@ pub mod Orbit64.Internal.Symmetry {
     ) =
         let (x, y, z) = position;
         match normal {
-            case (0, 1, 0) => (0, x, z)
-            case (1, 0, 0) => (1, -z, -y)
-            case (0, 0, 1) => (2, x, -y)
+            case (0, 1, 0)  => (0, x, z)
+            case (1, 0, 0)  => (1, -z, -y)
+            case (0, 0, 1)  => (2, x, -y)
             case (0, -1, 0) => (3, x, -z)
             case (-1, 0, 0) => (4, z, -y)
-            case _ => (5, -x, -y)
+            case _          => (5, -x, -y)
         }
 }

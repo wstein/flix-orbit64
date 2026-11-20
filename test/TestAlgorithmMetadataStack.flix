@@ -13,11 +13,11 @@ mod TestAlgorithmMetadataStack {
     def largePackedSymbolListsKeepAllPartsInOrder(): Unit \ Assert =
         let symbols = List.append(0 :: 1 :: Nil, List.repeat(65534, 0));
         let nodes =
-            terminal() ::
-                Node.Repeat(0, 2ii) ::
-                Node.PackedBlock(0 :: 1 :: Nil, symbols) ::
-                Node.SliceParts(2, 1, 2) ::
-                Nil;
+            terminal()
+                :: Node.Repeat(0, 2ii)
+                :: Node.PackedBlock(0 :: 1 :: Nil, symbols)
+                :: Node.SliceParts(2, 1, 2)
+                :: Nil;
         Assert.assertEq(
             expected = Ok(65537ii),
             Orbit64.Algorithm.expandedCount(3, Algorithm(nodes, 2))
@@ -32,11 +32,11 @@ mod TestAlgorithmMetadataStack {
     def largeReferenceListsKeepAllParts(): Unit \ Assert =
         let refs = List.append(0 :: 1 :: Nil, List.repeat(65534, 0));
         let nodes =
-            terminal() ::
-                Node.Repeat(0, 2ii) ::
-                Node.Block(refs) ::
-                Node.SliceParts(2, 1, 2) ::
-                Nil;
+            terminal()
+                :: Node.Repeat(0, 2ii)
+                :: Node.Block(refs)
+                :: Node.SliceParts(2, 1, 2)
+                :: Nil;
         Assert.assertEq(
             expected = Ok(65537ii),
             Orbit64.Algorithm.expandedCount(3, Algorithm(nodes, 2))
@@ -57,11 +57,11 @@ mod TestAlgorithmMetadataStack {
     def largePartitionBoundaryListsRetainEmptyParts(): Unit \ Assert =
         let boundaries = List.append(List.repeat(65535, 0), 1 :: Nil);
         let nodes =
-            terminal() ::
-                Node.Block(0 :: Nil) ::
-                Node.Partition(1, boundaries) ::
-                Node.SliceParts(2, 0, 1) ::
-                Nil;
+            terminal()
+                :: Node.Block(0 :: Nil)
+                :: Node.Partition(1, boundaries)
+                :: Node.SliceParts(2, 0, 1)
+                :: Nil;
         Assert.assertEq(
             expected = Ok(1ii),
             Orbit64.Algorithm.expandedCount(3, Algorithm(nodes, 2))
@@ -101,11 +101,11 @@ mod TestAlgorithmMetadataStack {
         let boundaries = List.append(List.repeat(65535, 0), 1 :: Nil);
         let graph =
             Algorithm(
-                terminal() ::
-                    Node.Block(0 :: Nil) ::
-                    Node.Partition(1, boundaries) ::
-                    Node.Inverse(2) ::
-                    Nil,
+                terminal()
+                    :: Node.Block(0 :: Nil)
+                    :: Node.Partition(1, boundaries)
+                    :: Node.Inverse(2)
+                    :: Nil,
                 3
             );
         Assert.assertEq(
@@ -117,17 +117,17 @@ mod TestAlgorithmMetadataStack {
     def partitionAndInverseStreamsKeepAsymmetricOrder(): Unit \ Assert =
         let graph =
             Algorithm(
-                terminal() ::
-                    Node.Terminal(LayerTurn(R, 0, Clockwise)) ::
-                    Node.Block(0 :: 1 :: Nil) ::
-                    Node.Partition(2, 0 :: 1 :: 1 :: 2 :: Nil) ::
-                    Node.Inverse(3) ::
-                    Nil,
+                terminal()
+                    :: Node.Terminal(LayerTurn(R, 0, Clockwise))
+                    :: Node.Block(0 :: 1 :: Nil)
+                    :: Node.Partition(2, 0 :: 1 :: 1 :: 2 :: Nil)
+                    :: Node.Inverse(3)
+                    :: Nil,
                 4
             );
         let actual =
-            Orbit64.Algorithm.foldTerminals(3, graph, Nil, (out, move) -> move :: out) |>
-                Result.map(List.reverse);
+            Orbit64.Algorithm.foldTerminals(3, graph, Nil, (out, move) -> move :: out)
+                |> Result.map(List.reverse);
         Assert.assertEq(
             expected = Ok(
                 LayerTurn(R, 0, CounterClockwise) :: LayerTurn(U, 0, CounterClockwise) :: Nil
@@ -138,15 +138,15 @@ mod TestAlgorithmMetadataStack {
     @Test
     def inverseStablePartSizesKeepZeroAndUnequalChildren(): Unit \ Assert =
         let nodes =
-            terminal() ::
-                Node.Repeat(0, 2ii) ::
-                Node.Concat(Nil) ::
-                Node.Block(0 :: 1 :: 2 :: Nil) ::
-                Node.Inverse(3) ::
-                Nil;
+            terminal()
+                :: Node.Repeat(0, 2ii)
+                :: Node.Concat(Nil)
+                :: Node.Block(0 :: 1 :: 2 :: Nil)
+                :: Node.Inverse(3)
+                :: Nil;
         let counts =
-            List.range(0, 3) |>
-                List.map(
+            List.range(0, 3)
+                |> List.map(
                     i ->
                         Orbit64.Algorithm.expandedCount(
                             3,

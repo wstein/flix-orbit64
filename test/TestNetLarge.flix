@@ -23,11 +23,11 @@ def upperSlice(n: Int32, depth: Int32): Vector[Int32] =
 /// Each reachable inner U slice can be read, ranked, and drawn unchanged.
 @Test
 def largeCubeInnerSlicesArePhysicalStates(): Unit \ Assert =
-    List#{6, 7} |>
-        List.forEach(
+    List#{6, 7}
+        |> List.forEach(
             n ->
-                List#{1, 2} |>
-                    List.forEach(depth -> {
+                List#{1, 2}
+                    |> List.forEach(depth -> {
                         let facelets = upperSlice(n, depth);
                         let state = Orbit64.Net.fromFacelets(n, facelets);
                         Assert.assertTrueWithMsg(
@@ -48,8 +48,8 @@ def largeCubeInnerSlicesArePhysicalStates(): Unit \ Assert =
 /// The fixed center on the 7x7x7 identifies every whole-cube frame.
 @Test
 def sevenBySevenFramesReadBack(): Unit \ Assert =
-    List.range(0, Orbit64.Frame.count()) |>
-        List.forEach(rank -> {
+    List.range(0, Orbit64.Frame.count())
+        |> List.forEach(rank -> {
             let state =
                 Orbit64.State.FramedState.FramedState(
                     Orbit64.Frame.unrank(rank),
@@ -57,7 +57,7 @@ def sevenBySevenFramesReadBack(): Unit \ Assert =
                 );
             Assert.assertEq(
                 expected = Ok(state),
-                Orbit64.Net.toFacelets(7, state) |>
-                    Result.flatMap(fs -> Orbit64.Net.fromFacelets(7, fs))
+                Orbit64.Net.toFacelets(7, state)
+                    |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(7, fs))
             )
         })

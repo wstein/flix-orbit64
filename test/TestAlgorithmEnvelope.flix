@@ -12,17 +12,17 @@ mod TestAlgorithmEnvelope {
 
     def example(): Orbit64.Algorithm.Algorithm =
         Algorithm(
-            Node.Terminal(LayerTurn(U, 0, Clockwise)) ::
-                Node.Terminal(LayerTurn(R, 0, Half)) ::
-                Node.Concat(0 :: 1 :: Nil) ::
-                Node.Repeat(2, 1000000000000000000000000000000ii) ::
-                Node.Inverse(2) ::
-                Node.Block(0 :: 1 :: 2 :: Nil) ::
-                Node.PackedBlock(0 :: 2 :: Nil, 1 :: 0 :: 1 :: Nil) ::
-                Node.Partition(6, 0 :: 2 :: 3 :: Nil) ::
-                Node.SliceParts(7, 0, 1) ::
-                Node.Concat(8 :: 4 :: Nil) ::
-                Nil,
+            Node.Terminal(LayerTurn(U, 0, Clockwise))
+                :: Node.Terminal(LayerTurn(R, 0, Half))
+                :: Node.Concat(0 :: 1 :: Nil)
+                :: Node.Repeat(2, 1000000000000000000000000000000ii)
+                :: Node.Inverse(2)
+                :: Node.Block(0 :: 1 :: 2 :: Nil)
+                :: Node.PackedBlock(0 :: 2 :: Nil, 1 :: 0 :: 1 :: Nil)
+                :: Node.Partition(6, 0 :: 2 :: 3 :: Nil)
+                :: Node.SliceParts(7, 0, 1)
+                :: Node.Concat(8 :: 4 :: Nil)
+                :: Nil,
             9
         )
 
@@ -44,25 +44,25 @@ mod TestAlgorithmEnvelope {
     def partitionAndSlicePreserveTheExactTerminalStream(): Unit \ Assert =
         let recovered = Envelope.encode(3, example()) |> Result.flatMap(Envelope.decode);
         let actual =
-            recovered |>
-                Result.flatMap(
+            recovered
+                |> Result.flatMap(
                     match (n, graph) -> Orbit64.Algorithm.foldTerminals(
                         n,
                         graph,
                         Nil,
                         (out, move) -> move :: out
-                    ) |>
-                        Result.mapErr(Envelope.Fault.InvalidGraph)
+                    )
+                        |> Result.mapErr(Envelope.Fault.InvalidGraph)
                 );
         Assert.assertEq(
             expected = Ok(
                 List.reverse(
-                    LayerTurn(U, 0, Clockwise) ::
-                        LayerTurn(R, 0, Half) ::
-                        LayerTurn(U, 0, Clockwise) ::
-                        LayerTurn(R, 0, Half) ::
-                        LayerTurn(U, 0, CounterClockwise) ::
-                        Nil
+                    LayerTurn(U, 0, Clockwise)
+                        :: LayerTurn(R, 0, Half)
+                        :: LayerTurn(U, 0, Clockwise)
+                        :: LayerTurn(R, 0, Half)
+                        :: LayerTurn(U, 0, CounterClockwise)
+                        :: Nil
                 )
             ),
             actual
@@ -73,11 +73,11 @@ mod TestAlgorithmEnvelope {
         let Algorithm(nodes, _) = example();
         let graph = Algorithm(nodes, 3);
         let actual =
-            Envelope.encode(3, graph) |>
-                Result.flatMap(Envelope.decode) |>
-                Result.flatMap(
-                    match (n, decoded) -> Orbit64.Algorithm.expandedCount(n, decoded) |>
-                        Result.mapErr(Envelope.Fault.InvalidGraph)
+            Envelope.encode(3, graph)
+                |> Result.flatMap(Envelope.decode)
+                |> Result.flatMap(
+                    match (n, decoded) -> Orbit64.Algorithm.expandedCount(n, decoded)
+                        |> Result.mapErr(Envelope.Fault.InvalidGraph)
                 );
         Assert.assertEq(expected = Ok(2000000000000000000000000000000ii), actual)
 
@@ -96,14 +96,14 @@ mod TestAlgorithmEnvelope {
     def decodingRejectsAmbiguityUnknownFieldsAndNoncanonicalNumbers(): Unit \ Assert =
         let text = Envelope.encode(3, example()) |> Result.getWithDefault("");
         let variants =
-            (" " + text) ::
-                replace("\"n\":3", "\"n\":3.0", text) ::
-                replace("\"format\":", "\"extra\":0,\"format\":", text) ::
-                replace("\"n\":3", "\"n\":3,\"n\":3", text) ::
-                replace("cube-algorithm-dag@1", "cube-algorithm-dag@2", text) ::
-                replace("cube-layer-turns@1", "other", text) ::
-                replace("\"root\":9", "\"root\":99", text) ::
-                Nil;
+            (" " + text)
+                :: replace("\"n\":3", "\"n\":3.0", text)
+                :: replace("\"format\":", "\"extra\":0,\"format\":", text)
+                :: replace("\"n\":3", "\"n\":3,\"n\":3", text)
+                :: replace("cube-algorithm-dag@1", "cube-algorithm-dag@2", text)
+                :: replace("cube-layer-turns@1", "other", text)
+                :: replace("\"root\":9", "\"root\":99", text)
+                :: Nil;
         List.forEach(s -> Assert.assertTrue(Result.isErr(Envelope.decode(s))), variants)
 
     @Test
@@ -119,9 +119,9 @@ mod TestAlgorithmEnvelope {
                 Envelope.encode(
                     3,
                     Algorithm(
-                        Node.Terminal(LayerTurn(U, 0, Clockwise)) ::
-                            Node.PackedBlock(0 :: Nil, 1 :: Nil) ::
-                            Nil,
+                        Node.Terminal(LayerTurn(U, 0, Clockwise))
+                            :: Node.PackedBlock(0 :: Nil, 1 :: Nil)
+                            :: Nil,
                         1
                     )
                 )
@@ -133,15 +133,15 @@ mod TestAlgorithmEnvelope {
         let limits = Envelope.defaultLimits();
         let text = Envelope.encode(3, example()) |> Result.getWithDefault("");
         let restricted =
-            { maxInputChars = 1 | limits } ::
-                { maxNodes = 1 | limits } ::
-                { maxReferences = 1 | limits } ::
-                { maxSymbols = 1 | limits } ::
-                { maxCountDigits = 1 | limits } ::
-                { maxDepth = 1 | limits } ::
-                { maxJsonDepth = 1 | limits } ::
-                { maxMetadataWork = 1 | limits } ::
-                Nil;
+            { maxInputChars = 1 | limits }
+                :: { maxNodes = 1 | limits }
+                :: { maxReferences = 1 | limits }
+                :: { maxSymbols = 1 | limits }
+                :: { maxCountDigits = 1 | limits }
+                :: { maxDepth = 1 | limits }
+                :: { maxJsonDepth = 1 | limits }
+                :: { maxMetadataWork = 1 | limits }
+                :: Nil;
         List.forEach(
             bound -> {
                 Assert.assertTrue(Result.isErr(Envelope.encodeWith(bound, 3, example())));
@@ -166,11 +166,11 @@ mod TestAlgorithmEnvelope {
     def labelsEscapesAndNumericSpellingsCannotSelectAnotherContract(): Unit \ Assert =
         let text = Envelope.encode(3, example()) |> Result.getWithDefault("");
         let variants =
-            replace("cube-algorithm-dag@1", "cube-algorithm-dag@\\u0031", text) ::
-                replace("\"n\":3", "\"n\":2147483648", text) ::
-                replace("\"n\":3", "\"n\":1e999999999", text) ::
-                replace("cube-layer-turns@1", "cübé", text) ::
-                Nil;
+            replace("cube-algorithm-dag@1", "cube-algorithm-dag@\\u0031", text)
+                :: replace("\"n\":3", "\"n\":2147483648", text)
+                :: replace("\"n\":3", "\"n\":1e999999999", text)
+                :: replace("cube-layer-turns@1", "cübé", text)
+                :: Nil;
         List.forEach(value -> Assert.assertTrue(Result.isErr(Envelope.decode(value))), variants);
         Assert.assertEq(
             expected = Err(Envelope.Fault.Malformed("only ASCII input is accepted")),
@@ -188,10 +188,10 @@ mod TestAlgorithmEnvelope {
             Envelope.Fault.InvalidLimits("limits must be positive and within reference ceilings");
         Assert.assertEq(expected = Err(expected), Envelope.decodeWith(bounds, "[]"));
         let high =
-            { maxSymbols = 65537 | Envelope.defaultLimits() } ::
-                { maxReferences = 65537 | Envelope.defaultLimits() } ::
-                { maxNodes = 4097 | Envelope.defaultLimits() } ::
-                Nil;
+            { maxSymbols = 65537 | Envelope.defaultLimits() }
+                :: { maxReferences = 65537 | Envelope.defaultLimits() }
+                :: { maxNodes = 4097 | Envelope.defaultLimits() }
+                :: Nil;
         List.forEach(
             value -> Assert.assertEq(expected = Err(expected), Envelope.decodeWith(value, "[]")),
             high
@@ -215,18 +215,18 @@ mod TestAlgorithmEnvelope {
     @Test
     def emptyPartsDuplicateAlphabetsAndEarlyRootsRemainLossless(): Unit \ Assert =
         let nodes =
-            Node.Concat(Nil) ::
-                Node.Block(Nil) ::
-                Node.PackedBlock(Nil, Nil) ::
-                Node.Partition(1, 0 :: Nil) ::
-                Node.Partition(1, 0 :: 0 :: Nil) ::
-                Node.SliceParts(4, 0, 0) ::
-                Node.Inverse(4) ::
-                Node.Terminal(LayerTurn(U, 0, Half)) ::
-                Node.PackedBlock(7 :: 7 :: 0 :: Nil, 1 :: 1 :: Nil) ::
-                Node.Partition(8, 0 :: 0 :: 2 :: Nil) ::
-                Node.SliceParts(9, 0, 1) ::
-                Nil;
+            Node.Concat(Nil)
+                :: Node.Block(Nil)
+                :: Node.PackedBlock(Nil, Nil)
+                :: Node.Partition(1, 0 :: Nil)
+                :: Node.Partition(1, 0 :: 0 :: Nil)
+                :: Node.SliceParts(4, 0, 0)
+                :: Node.Inverse(4)
+                :: Node.Terminal(LayerTurn(U, 0, Half))
+                :: Node.PackedBlock(7 :: 7 :: 0 :: Nil, 1 :: 1 :: Nil)
+                :: Node.Partition(8, 0 :: 0 :: 2 :: Nil)
+                :: Node.SliceParts(9, 0, 1)
+                :: Nil;
         List.forEach(
             root -> {
                 let graph = Algorithm(nodes, root);
@@ -241,9 +241,9 @@ mod TestAlgorithmEnvelope {
     @Test
     def metadataCopiesAndRepeatedPartitionScansAreBoundedBeforeValidation(): Unit \ Assert =
         let base =
-            Node.Terminal(LayerTurn(U, 0, Clockwise)) ::
-                Node.PackedBlock(0 :: Nil, List.repeat(100, 0)) ::
-                Nil;
+            Node.Terminal(LayerTurn(U, 0, Clockwise))
+                :: Node.PackedBlock(0 :: Nil, List.repeat(100, 0))
+                :: Nil;
         let limits = { maxMetadataWork = 1000 | Envelope.defaultLimits() };
         let copies = Algorithm(List.append(base, List.repeat(12, Node.Inverse(1))), 2);
         let scans =
@@ -267,10 +267,10 @@ mod TestAlgorithmEnvelope {
     def repeatDigitBudgetAggregatesAcrossStoredNodes(): Unit \ Assert =
         let graph =
             Algorithm(
-                Node.Terminal(LayerTurn(U, 0, Half)) ::
-                    Node.Repeat(0, 1000000000000000000000000000000ii) ::
-                    Node.Repeat(1, 1000000000000000000000000000000ii) ::
-                    Nil,
+                Node.Terminal(LayerTurn(U, 0, Half))
+                    :: Node.Repeat(0, 1000000000000000000000000000000ii)
+                    :: Node.Repeat(1, 1000000000000000000000000000000ii)
+                    :: Nil,
                 2
             );
         let limits = { maxCountDigits = 50 | Envelope.defaultLimits() };
@@ -283,9 +283,9 @@ mod TestAlgorithmEnvelope {
     def largeStoredPackedWordsRoundTripWithoutExpandingRepeats(): Unit \ Assert =
         let graph =
             Algorithm(
-                Node.Terminal(LayerTurn(U, 0, Clockwise)) ::
-                    Node.PackedBlock(0 :: Nil, List.repeat(65536, 0)) ::
-                    Nil,
+                Node.Terminal(LayerTurn(U, 0, Clockwise))
+                    :: Node.PackedBlock(0 :: Nil, List.repeat(65536, 0))
+                    :: Nil,
                 1
             );
         Assert.assertEq(
@@ -297,9 +297,9 @@ mod TestAlgorithmEnvelope {
     def oversizedStoredListsFailBeforeRecursiveMetadata(): Unit \ Assert =
         let graph =
             Algorithm(
-                Node.Terminal(LayerTurn(U, 0, Clockwise)) ::
-                    Node.PackedBlock(0 :: Nil, List.repeat(65537, 0)) ::
-                    Nil,
+                Node.Terminal(LayerTurn(U, 0, Clockwise))
+                    :: Node.PackedBlock(0 :: Nil, List.repeat(65537, 0))
+                    :: Nil,
                 1
             );
         Assert.assertEq(

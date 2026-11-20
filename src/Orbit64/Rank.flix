@@ -29,8 +29,8 @@ pub mod Orbit64.Rank {
         else
             let j = Int32.min(k, n - k);
             let v =
-                Vector.range(0, j) |>
-                    Vector.foldLeft(
+                Vector.range(0, j)
+                    |> Vector.foldLeft(
                         (acc, i) ->
                             if (acc >= saturation())
                                 saturation()
@@ -55,8 +55,8 @@ pub mod Orbit64.Rank {
     ///
     pub def permRank(p: Vector[Int32]): BigInt =
         let n = Vector.length(p);
-        Vector.range(0, n) |>
-            Vector.foldLeft(
+        Vector.range(0, n)
+            |> Vector.foldLeft(
                 (acc, i) -> {
                     let pi = Vector.get(i, p);
                     let smaller =
@@ -82,7 +82,7 @@ pub mod Orbit64.Rank {
             let (pre, post) = List.splitAt(d, avail);
             match post {
                 case y :: rest => (List.append(pre, rest), y :: out)
-                case Nil => (avail, out)
+                case Nil       => (avail, out)
             }
         };
         let (_, rev) = List.foldLeft(step, (List.range(0, n), Nil), digits);
@@ -99,12 +99,12 @@ pub mod Orbit64.Rank {
     pub def permParity(p: Vector[Int32]): Int32 = Int32.modulo(inversionCount(p), 2)
 
     def inversionCount(p: Vector[Int32]): Int32 =
-        Vector.range(0, Vector.length(p)) |>
-            Vector.foldLeft((acc, i) -> acc + inversionsAfter(p, i), 0)
+        Vector.range(0, Vector.length(p))
+            |> Vector.foldLeft((acc, i) -> acc + inversionsAfter(p, i), 0)
 
     def inversionsAfter(p: Vector[Int32], i: Int32): Int32 =
-        Vector.range(i + 1, Vector.length(p)) |>
-            Vector.count(j -> Vector.get(i, p) > Vector.get(j, p))
+        Vector.range(i + 1, Vector.length(p))
+            |> Vector.count(j -> Vector.get(i, p) > Vector.get(j, p))
 
     ///
     /// Rank a permutation known to have `parity` into the contiguous range
@@ -117,12 +117,12 @@ pub mod Orbit64.Rank {
     ///
     pub def permRankWithParity(p: Vector[Int32], parity: Int32): BigInt =
         let n = Vector.length(p);
-        let rank = Vector.range(0, n - 2) |>
-            Vector.foldLeft(
+        let rank = Vector.range(0, n - 2)
+            |> Vector.foldLeft(
                 (acc, i) ->
                     let smaller =
-                        Vector.range(i + 1, n) |>
-                            Vector.count(j -> Vector.get(j, p) < Vector.get(i, p));
+                        Vector.range(i + 1, n)
+                            |> Vector.count(j -> Vector.get(j, p) < Vector.get(i, p));
                     acc * Int32.toBigInt(n - i) + Int32.toBigInt(smaller),
                 0ii
             );
@@ -158,14 +158,14 @@ pub mod Orbit64.Rank {
             let remaining = List.length(available);
             let divisor = factorial(remaining - 1) / 2ii;
             let digit =
-                BigInt.modulo(rank / divisor, Int32.toBigInt(remaining)) |>
-                    BigInt.tryToInt32 |>
-                    Option.getWithDefault(0);
+                BigInt.modulo(rank / divisor, Int32.toBigInt(remaining))
+                    |> BigInt.tryToInt32
+                    |> Option.getWithDefault(0);
             let (before, after) = List.splitAt(digit, available);
             match after {
                 case value :: rest =>
                     permUnrankParityLoop(rank, List.append(before, rest), value :: picked, parity)
-                case Nil => Vector.empty()
+                case Nil           => Vector.empty()
             }
 
     ///
@@ -191,9 +191,9 @@ pub mod Orbit64.Rank {
     /// sorted elements. This is Kociemba's `UDSlice` coordinate generalized.
     ///
     pub def combRank(subset: Vector[Int32]): Int32 =
-        Vector.sortBy(x -> x, subset) |>
-            Vector.mapWithIndex((i, c) -> binomial(c, i + 1)) |>
-            Vector.sum
+        Vector.sortBy(x -> x, subset)
+            |> Vector.mapWithIndex((i, c) -> binomial(c, i + 1))
+            |> Vector.sum
 
     ///
     /// The inverse of `combRank`.
@@ -242,15 +242,15 @@ pub mod Orbit64.Rank {
         let step = (acc, t) -> {
             let (rem, value) = acc;
             let hits =
-                rem |>
-                    List.zipWithIndex |>
-                    List.filter(match (_, s) -> Vector.get(s, labels) == t) |>
-                    List.map(match (i, _) -> i);
+                rem
+                    |> List.zipWithIndex
+                    |> List.filter(match (_, s) -> Vector.get(s, labels) == t)
+                    |> List.map(match (i, _) -> i);
             let rest =
-                rem |>
-                    List.zipWithIndex |>
-                    List.filter(match (i, _) -> not List.memberOf(i, hits)) |>
-                    List.map(match (_, s) -> s);
+                rem
+                    |> List.zipWithIndex
+                    |> List.filter(match (i, _) -> not List.memberOf(i, hits))
+                    |> List.map(match (_, s) -> s);
             let radix = binomial(List.length(rem), k) |> Int32.toBigInt;
             let rank = combRank(List.toVector(hits)) |> Int32.toBigInt;
             (rest, value * radix + rank)

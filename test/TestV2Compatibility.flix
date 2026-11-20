@@ -16,13 +16,13 @@ def v1Tokens(): List[(Int32, String)] = List#{
 
 @Test
 def v1StateTokensReadAsV2ColorFramedStates(): Unit \ Assert =
-    v1Tokens() |>
-        List.forEach(match (id, token) -> match Orbit64.V2.Codec.decode(token) {
+    v1Tokens()
+        |> List.forEach(match (id, token) -> match Orbit64.V2.Codec.decode(token) {
             case Ok((e, cube)) =>
                 Assert.assertEq(expected = id, e#id);
                 Assert.assertEq(expected = Ok(token), Orbit64.V2.Codec.encode(id, cube));
                 assertSameCorners(e#n, token, cube)
-            case Err(why) => Assert.fail("${token}: ${why}")
+            case Err(why)      => Assert.fail("${token}: ${why}")
         })
 
 @Test
@@ -32,8 +32,8 @@ def v1FiveByFiveTokensAreRejected(): Unit \ Assert =
 
 @Test
 def v1AndV2AgreeOnTheFramedColorStateCount(): Unit \ Assert =
-    List#{2, 3, 4, 6, 7} |>
-        List.forEach(
+    List#{2, 3, 4, 6, 7}
+        |> List.forEach(
             n ->
                 Assert.assertEq(
                     expected = Orbit64.State.stateCount(n),
@@ -50,5 +50,5 @@ def assertSameCorners(n: Int32, token: String, cube: Orbit64.V2.State.Cube): Uni
                 Assert.assertEq(expected = twists, cube#cornerTwists)
             case _ => Assert.fail("${token}: V1 state has no corner coordinate")
         }
-        case Err(why) => Assert.fail("${token}: ${why}")
+        case Err(why)  => Assert.fail("${token}: ${why}")
     }

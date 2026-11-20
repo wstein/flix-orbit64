@@ -12,8 +12,8 @@ def theSuperflipDecodesBackIdentically(): Unit \ Assert =
 def theNetOfTheSuperflipShowsItsUFace(): Unit \ Assert =
     Assert.assertEq(
         expected = Ok(true),
-        Orbit64.Net.draw(3, superflip(), false) |>
-            Result.map(net -> String.contains(substr = " U  B  U ", net))
+        Orbit64.Net.draw(3, superflip(), false)
+            |> Result.map(net -> String.contains(substr = " U  B  U ", net))
     )
 
 @Test

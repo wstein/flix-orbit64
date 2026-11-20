@@ -140,9 +140,9 @@ def examples(): List[(Int32, String)] =
 def publishedStateExamplesAreCanonicalAndRoundTrip(): Unit \ Assert =
     let corpus = examples();
     Assert.assertEq(expected = 100, List.length(corpus));
-    corpus |>
-        List.forEach(match (n, token) -> match Orbit64.State.decode(n, token) {
-            case Err(e) =>
+    corpus
+        |> List.forEach(match (n, token) -> match Orbit64.State.decode(n, token) {
+            case Err(e)    =>
                 Assert.assert(
                     false,
                     RichString.fromString("published example ${token} did not decode: ${e}")
@@ -150,7 +150,7 @@ def publishedStateExamplesAreCanonicalAndRoundTrip(): Unit \ Assert =
             case Ok(state) => {
                 Assert.assertEq(expected = Ok(token), Orbit64.State.encode(n, state));
                 match Orbit64.Net.toFacelets(n, state) {
-                    case Err(e) =>
+                    case Err(e)       =>
                         Assert.assert(
                             false,
                             RichString.fromString("published example ${token} did not render: ${e}")

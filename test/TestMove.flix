@@ -31,14 +31,14 @@ def moveFaultRejectsAnUnreachableDepth(): Unit \ Assert =
 
 @Test
 def everyMoveRankRoundTripsAtRepresentativeSizes(): Unit \ Assert =
-    List#{2, 3, 4, 5, 6, 7, 18} |>
-        List.forEach(
+    List#{2, 3, 4, 5, 6, 7, 18}
+        |> List.forEach(
             n ->
                 List.range(
                     0,
                     Orbit64.Move.alphabetSize(n) |> BigInt.tryToInt32 |> Option.getWithDefault(0)
-                ) |>
-                    List.forEach(
+                )
+                    |> List.forEach(
                         rank ->
                             Assert.assertEq(
                                 expected = Int32.toBigInt(rank),
@@ -76,14 +76,14 @@ def allSixBySixAndSevenBySevenLayersRoundTrip(): Unit \ Assert =
         LayerTurn(R, 1, Half),
         LayerTurn(B, 2, CounterClockwise)
     };
-    let tokens = List#{6, 7} |>
-        List.map(n ->
+    let tokens = List#{6, 7}
+        |> List.map(n ->
             match Orbit64.Move.encode(n, moves) {
                 case Err(e) => {
                     Assert.assertTrueWithMsg(false, "encode failed: ${e}");
                     ""
                 }
-                case Ok(t) => {
+                case Ok(t)  => {
                     Assert.assertEq(expected = Ok((LayerClass(3), moves)), Orbit64.Move.decode(t));
                     t
                 }

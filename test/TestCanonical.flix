@@ -15,7 +15,7 @@ def canonFace(letter: Char): Int32 = match letter {
     case 'F' => 2
     case 'D' => 3
     case 'L' => 4
-    case _ => 5
+    case _   => 5
 }
 
 def canonStickers(faces: List[String]): Vector[Int32] =
@@ -29,7 +29,7 @@ def canonFaceletsOf(n: Int32, token: String): Vector[Int32] =
 
 def canonOf(n: Int32, token: String): String =
     match Orbit64.Canonical.fromToken(n, token) {
-        case Ok(t) => t
+        case Ok(t)  => t
         case Err(e) => "error: ${e}"
     }
 
@@ -39,15 +39,15 @@ def canonRenamings(): List[Vector[Int32]] =
 
 @Test
 def tokenVectorsMatchTheReference(): Unit \ Assert =
-    canonicalTokenVectors() |>
-        List.forEach(
+    canonicalTokenVectors()
+        |> List.forEach(
             match (n, token, expected) -> Assert.assertEq(expected = expected, canonOf(n, token))
         )
 
 @Test
 def faceletVectorsMatchTheReference(): Unit \ Assert =
-    canonicalFaceletVectors() |>
-        List.forEach(
+    canonicalFaceletVectors()
+        |> List.forEach(
             match (n, faces, expected) -> Assert.assertEq(
                 expected = Ok(expected),
                 Orbit64.Canonical.fromFacelets(n, canonStickers(faces))
@@ -56,20 +56,20 @@ def faceletVectorsMatchTheReference(): Unit \ Assert =
 
 @Test
 def theSolvedCubeIsTheTokenOfAllA(): Unit \ Assert =
-    List.range(2, 8) |>
-        List.forEach(n -> {
+    List.range(2, 8)
+        |> List.forEach(n -> {
             let expected = String.repeat(Orbit64.State.width(n), "A");
             Assert.assertEq(
                 expected = Ok(expected),
-                Orbit64.State.encode(n, Orbit64.State.solved(n)) |>
-                    Result.flatMap(t -> Orbit64.Canonical.fromToken(n, t))
+                Orbit64.State.encode(n, Orbit64.State.solved(n))
+                    |> Result.flatMap(t -> Orbit64.Canonical.fromToken(n, t))
             )
         })
 
 @Test
 def aCanonicalTokenIsItsOwnCanonicalForm(): Unit \ Assert =
-    roundTrippable() |>
-        List.forEach(match (n, token) -> {
+    roundTrippable()
+        |> List.forEach(match (n, token) -> {
             let canonical = canonOf(n, token);
             Assert.assertEq(expected = canonical, canonOf(n, canonical))
         })
@@ -80,15 +80,15 @@ def aCanonicalTokenIsItsOwnCanonicalForm(): Unit \ Assert =
 ///
 @Test
 def aCanonicalTokenRoundTripsThroughFacelets(): Unit \ Assert =
-    roundTrippable() |>
-        List.forEach(match (n, token) -> {
+    roundTrippable()
+        |> List.forEach(match (n, token) -> {
             let canonical = canonOf(n, token);
             let state = Orbit64.State.decode(n, canonical);
             let back =
-                state |>
-                    Result.flatMap(s -> Orbit64.Net.toFacelets(n, s)) |>
-                    Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)) |>
-                    Result.flatMap(s -> Orbit64.State.encode(n, s));
+                state
+                    |> Result.flatMap(s -> Orbit64.Net.toFacelets(n, s))
+                    |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
+                    |> Result.flatMap(s -> Orbit64.State.encode(n, s));
             Assert.assertEq(expected = Ok(canonical), back);
             Assert.assertEq(
                 expected = Ok(canonical),
@@ -103,35 +103,35 @@ def aCanonicalTokenRoundTripsThroughFacelets(): Unit \ Assert =
 ///
 @Test
 def aCanonicalTokenIsInTheStandardScheme(): Unit \ Assert =
-    roundTrippable() |>
-        List.forEach(match (n, token) -> {
+    roundTrippable()
+        |> List.forEach(match (n, token) -> {
             let fs = canonFaceletsOf(n, canonOf(n, token));
             let anchors =
                 if (Int32.modulo(n, 2) == 1)
                     List.range(0, 6) |> List.filterMap(f -> Symmetry.centerFacelet(n, f))
                 else
-                    Symmetry.cornerStickers(n) |>
-                        List.head |>
-                        Option.map(Vector.toList) |>
-                        Option.getWithDefault(Nil);
+                    Symmetry.cornerStickers(n)
+                        |> List.head
+                        |> Option.map(Vector.toList)
+                        |> Option.getWithDefault(Nil);
             let expected = if (Int32.modulo(n, 2) == 1) List.range(0, 6) else List#{0, 1, 2};
             Assert.assertEq(expected = expected, List.map(i -> Vector.get(i, fs), anchors))
         })
 
 @Test
 def allFortyEightSymmetriesAndRenamingsGiveOneToken(): Unit \ Assert =
-    roundTrippable() |>
-        List.forEach(match (n, token) -> {
+    roundTrippable()
+        |> List.forEach(match (n, token) -> {
             let canonical = canonOf(n, token);
             let fs = canonFaceletsOf(n, token);
-            List.range(0, Symmetry.count()) |>
-                List.forEach(
+            List.range(0, Symmetry.count())
+                |> List.forEach(
                     g ->
-                        canonRenamings() |>
-                            List.forEach(names -> {
+                        canonRenamings()
+                            |> List.forEach(names -> {
                                 let moved =
-                                    symmetryImage(n, g, fs) |>
-                                        Vector.map(c -> Vector.get(c, names));
+                                    symmetryImage(n, g, fs)
+                                        |> Vector.map(c -> Vector.get(c, names));
                                 Assert.assertEq(
                                     expected = Ok(canonical),
                                     Orbit64.Canonical.fromFacelets(n, moved)
@@ -146,15 +146,15 @@ def allFortyEightSymmetriesAndRenamingsGiveOneToken(): Unit \ Assert =
 ///
 @Test
 def everyFrameOfAnOddCubeHasTheSameToken(): Unit \ Assert =
-    roundTrippable() |>
-        List.filter(match (n, _) -> Int32.modulo(n, 2) == 1) |>
-        List.forEach(match (n, token) -> {
+    roundTrippable()
+        |> List.filter(match (n, _) -> Int32.modulo(n, 2) == 1)
+        |> List.forEach(match (n, token) -> {
             let canonical = canonOf(n, token);
             match Orbit64.State.decode(n, token) {
-                case Err(e) => Assert.assertTrueWithMsg(false, e)
+                case Err(e)    => Assert.assertTrueWithMsg(false, e)
                 case Ok(state) =>
-                    List.range(0, Orbit64.Frame.count()) |>
-                        List.forEach(rank -> {
+                    List.range(0, Orbit64.Frame.count())
+                        |> List.forEach(rank -> {
                             let turned =
                                 Orbit64.State.FramedState.FramedState(
                                     Orbit64.Frame.unrank(rank),
@@ -170,12 +170,12 @@ def everyFrameOfAnOddCubeHasTheSameToken(): Unit \ Assert =
 
 @Test
 def differentColorStatesGetDifferentTokens(): Unit \ Assert =
-    List.range(2, 8) |>
-        List.forEach(n -> {
+    List.range(2, 8)
+        |> List.forEach(n -> {
             let tokens =
-                roundTrippable() |>
-                    List.filter(match (m, _) -> m == n) |>
-                    List.map(match (_, t) -> canonOf(n, t));
+                roundTrippable()
+                    |> List.filter(match (m, _) -> m == n)
+                    |> List.map(match (_, t) -> canonOf(n, t));
             Assert.assertEq(expected = List.length(tokens), Set.size(List.toSet(tokens)))
         })
 
@@ -185,8 +185,8 @@ def aSliceTurnThatMovesTheCentersHasAToken(): Unit \ Assert =
     // centers are not home, so the cube is recolored before it is encoded.
     let slices = faceletVectors3a() |> List.drop(3) |> List.take(2);
     Assert.assertEq(expected = 2, List.length(slices));
-    slices |>
-        List.forEach(match (n, faces, expected) -> {
+    slices
+        |> List.forEach(match (n, faces, expected) -> {
             let fs = canonStickers(faces);
             let centerColor = Symmetry.centerFacelet(n, 0) |> Option.map(at -> Vector.get(at, fs));
             Assert.assertTrue(centerColor != Some(0));
@@ -196,13 +196,13 @@ def aSliceTurnThatMovesTheCentersHasAToken(): Unit \ Assert =
 /// The physically mirrored cube: stickers across the R/L plane, with the R
 /// and L colors exchanged, so it is a cube in the standard scheme again.
 def canonMirrorImage(n: Int32, fs: Vector[Int32]): Vector[Int32] =
-    symmetryImage(n, Symmetry.mirrorAcrossRL(), fs) |>
-        Vector.map(c -> if (c == 1) 4 else if (c == 4) 1 else c)
+    symmetryImage(n, Symmetry.mirrorAcrossRL(), fs)
+        |> Vector.map(c -> if (c == 1) 4 else if (c == 4) 1 else c)
 
 def canonStateToken(n: Int32, fs: Vector[Int32]): String =
-    match Orbit64.Net.fromFacelets(n, fs) |>
-        Result.flatMap(state -> Orbit64.State.encode(n, state)) {
-        case Ok(t) => t
+    match Orbit64.Net.fromFacelets(n, fs)
+        |> Result.flatMap(state -> Orbit64.State.encode(n, state)) {
+        case Ok(t)  => t
         case Err(e) => "error: ${e}"
     }
 
@@ -212,8 +212,8 @@ def canonStateToken(n: Int32, fs: Vector[Int32]): String =
 ///
 @Test
 def aChiralPatternAndItsMirrorImageShareAToken(): Unit \ Assert =
-    roundTrippable() |>
-        List.forEach(match (n, token) -> {
+    roundTrippable()
+        |> List.forEach(match (n, token) -> {
             let fs = canonFaceletsOf(n, token);
             let mirror = canonMirrorImage(n, fs);
             Assert.assertEq(
@@ -229,8 +229,8 @@ def theMirrorImagesOfScramblesAreOtherStates(): Unit \ Assert =
         (3, "EKYDgqvYC5rw"),
         (4, "BJStkD4cayBhsWj6eHgDZLTP1th"),
         (5, "AQshP-X3WpOUAtv878ZKcZyT5P3So75Lb-WOh2gDJ2w")
-    } |>
-        List.forEach(match (n, token) -> {
+    }
+        |> List.forEach(match (n, token) -> {
             let mirror = canonMirrorImage(n, canonFaceletsOf(n, token));
             Assert.assertTrue(canonStateToken(n, mirror) != token);
             Assert.assertEq(
@@ -248,12 +248,12 @@ def canonSwap(i: Int32, j: Int32, fs: Vector[Int32]): Vector[Int32] =
 
 @Test
 def aTwistedCornerIsAnErrorAtEverySize(): Unit \ Assert =
-    List.range(2, 8) |>
-        List.forEach(n -> {
+    List.range(2, 8)
+        |> List.forEach(n -> {
             let solved = Vector.range(0, 6 * n * n) |> Vector.map(i -> i / (n * n));
             let swapped = match Symmetry.cornerStickers(n) |> List.head {
                 case Some(corner) => canonSwap(Vector.get(0, corner), Vector.get(1, corner), solved)
-                case None => solved
+                case None         => solved
             };
             Assert.assertTrue(Result.isErr(Orbit64.Canonical.fromFacelets(n, swapped)))
         })

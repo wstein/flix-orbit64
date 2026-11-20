@@ -75,7 +75,8 @@ pub mod Orbit64.State {
     pub def encode(n: Int32, state: FramedState): Result[String, String] =
         match stateFault(n, state) {
             case Some(why) => Err(why)
-            case None => Ok(Orbit64.Internal.Encoding.toBase64(encodedValue(n, state), width(n)))
+            case None      =>
+                Ok(Orbit64.Internal.Encoding.toBase64(encodedValue(n, state), width(n)))
         }
 
     def stateFault(n: Int32, state: FramedState): Option[String] =
@@ -84,9 +85,9 @@ pub mod Orbit64.State {
             layoutFault(n, orbits(state)),
             firstFault(orbits(state)),
             parityFault(n, orbits(state))
-        } |>
-            List.filterMap(x -> x) |>
-            List.head
+        }
+            |> List.filterMap(x -> x)
+            |> List.head
 
     def frameFault(n: Int32, value: Orbit64.Frame.Frame): Option[String] =
         if (not (Orbit64.Frame.faultOf(value) |> Option.isEmpty))
@@ -116,7 +117,7 @@ pub mod Orbit64.State {
             Err("expected ${width} characters for the ${n}x${n}x${n}, got ${String.length(token)}")
         else
             match Orbit64.Internal.Encoding.fromBase64(token) {
-                case None => Err("token contains a character outside the base64url alphabet")
+                case None        => Err("token contains a character outside the base64url alphabet")
                 case Some(value) =>
                     if (value >= total)
                         Err("token is out of range for the ${n}x${n}x${n}")
@@ -124,10 +125,10 @@ pub mod Orbit64.State {
                         let count = Int32.toBigInt(frameCount(n));
                         let coordinate = value / count;
                         let frame =
-                            BigInt.modulo(value, count) |>
-                                BigInt.tryToInt32 |>
-                                Option.getWithDefault(0) |>
-                                Orbit64.Frame.unrank;
+                            BigInt.modulo(value, count)
+                                |> BigInt.tryToInt32
+                                |> Option.getWithDefault(0)
+                                |> Orbit64.Frame.unrank;
                         Ok(FramedState.FramedState(frame, unrankCoordinates(n, coordinate)))
             }
 
@@ -135,13 +136,15 @@ pub mod Orbit64.State {
     pub def width(n: Int32): Int32 = widthLoop(stateCount(n), 16ii, 1)
 
     def firstFault(orbits: List[Coord]): Option[String] =
-        orbits |>
-            List.filterMap(
+        orbits
+            |> List.filterMap(
                 c ->
-                    Coord.faultOf(c) |>
-                        Option.map(why -> "the ${Coord.kind(c)} coordinate is not a cube: ${why}")
-            ) |>
-            List.head
+                    Coord.faultOf(c)
+                        |> Option.map(
+                            why -> "the ${Coord.kind(c)} coordinate is not a cube: ${why}"
+                        )
+            )
+            |> List.head
 
     ///
     /// Why an odd cube's corners and midges cannot sit in these permutations, or
@@ -167,7 +170,10 @@ pub mod Orbit64.State {
     def rankCoordinates(n: Int32, orbits: List[Coord]): BigInt =
         if (n == 3)
             rankOddCoordinates(orbits)
-        else if (carriesFrame(n)) rankLegacyOddCoordinates(orbits) else rankAll(orbits, 0ii)
+        else if (carriesFrame(n))
+            rankLegacyOddCoordinates(orbits)
+        else
+            rankAll(orbits, 0ii)
 
     def rankAll(orbits: List[Coord], initial: BigInt): BigInt =
         let appendRank = (acc, c) -> acc * Orbit.radix(Coord.kind(c)) + Coord.rank(c);
@@ -176,7 +182,7 @@ pub mod Orbit64.State {
     def rankOddCoordinates(orbits: List[Coord]): BigInt =
         match orbits {
             case corner :: midge :: tail => rankOddHead(corner, midge, tail)
-            case _ => 0ii
+            case _                       => 0ii
         }
 
     /// The wider odd-cube drafts retain their original coordinate ordering.
@@ -358,7 +364,7 @@ pub mod Orbit64.State {
     ///
     def split(acc: BigInt, pending: List[Orbit], out: List[Coord]): List[Coord] =
         match pending {
-            case Nil => out
+            case Nil     => out
             case o :: os =>
                 let r = Orbit.radix(o);
                 let q = acc / r;

@@ -14,18 +14,18 @@ pub mod AlgorithmTool.Lowering {
     ] = match program {
         case Program(definitions, export) =>
             let slicedNames = collectSlicedNames(definitions);
-            lowerDefinitions(definitions, slicedNames, Nil, Nil) |>
-                Result.flatMap(
-                    match (nodes, bindings) -> lookup(export, bindings) |>
-                        Result.map(root -> Algorithm(nodes, root))
+            lowerDefinitions(definitions, slicedNames, Nil, Nil)
+                |> Result.flatMap(
+                    match (nodes, bindings) -> lookup(export, bindings)
+                        |> Result.map(root -> Algorithm(nodes, root))
                 )
     }
 
     /// Names that some `Slice` in the program selects terms from, and therefore
     /// need a stable block even when their own definition would not otherwise.
     def collectSlicedNames(definitions: List[AlgorithmTool.Ast.Definition]): Set[String] =
-        definitions |>
-            List.foldLeft(
+        definitions
+            |> List.foldLeft(
                 (acc, definition) -> match definition {
                     case Definition(_, body) => Set.union(acc, slicedNamesIn(body))
                 },
@@ -33,16 +33,16 @@ pub mod AlgorithmTool.Lowering {
             )
 
     def slicedNamesIn(expr: AlgorithmTool.Ast.Expr): Set[String] = match expr {
-        case Move(_) => Set.empty()
-        case Reference(_) => Set.empty()
-        case Concat(children) =>
-            children |>
-                List.foldLeft((acc, child) -> Set.union(acc, slicedNamesIn(child)), Set.empty())
-        case Repeat(child, _) => slicedNamesIn(child)
-        case Inverse(child) => slicedNamesIn(child)
-        case Conjugate(left, right) => Set.union(slicedNamesIn(left), slicedNamesIn(right))
+        case Move(_)                 => Set.empty()
+        case Reference(_)            => Set.empty()
+        case Concat(children)        =>
+            children
+                |> List.foldLeft((acc, child) -> Set.union(acc, slicedNamesIn(child)), Set.empty())
+        case Repeat(child, _)        => slicedNamesIn(child)
+        case Inverse(child)          => slicedNamesIn(child)
+        case Conjugate(left, right)  => Set.union(slicedNamesIn(left), slicedNamesIn(right))
         case Commutator(left, right) => Set.union(slicedNamesIn(left), slicedNamesIn(right))
-        case Slice(name, _, _) => Set.singleton(name)
+        case Slice(name, _, _)       => Set.singleton(name)
     }
 
     def lowerDefinitions(
@@ -57,13 +57,8 @@ pub mod AlgorithmTool.Lowering {
                 if (hasBinding(name, bindings))
                     Err("definition '${name}' is repeated")
                 else
-                    lowerDefinition(
-                        body,
-                        Set.memberOf(name, slicedNames),
-                        bindings,
-                        reversedNodes
-                    ) |>
-                        Result.flatMap(
+                    lowerDefinition(body, Set.memberOf(name, slicedNames), bindings, reversedNodes)
+                        |> Result.flatMap(
                             match (root, afterBody) -> lowerDefinitions(
                                 rest,
                                 slicedNames,
@@ -84,16 +79,16 @@ pub mod AlgorithmTool.Lowering {
     ): Result[String, (Int32, List[Orbit64.Algorithm.Node])] =
         match body {
             case Concat(children) if needsStableBlock =>
-                lowerExpressions(children, bindings, reversedNodes, Nil) |>
-                    Result.map(
+                lowerExpressions(children, bindings, reversedNodes, Nil)
+                    |> Result.map(
                         match (parts, afterChildren) -> appendNode(
                             Orbit64.Algorithm.Node.Block(parts),
                             afterChildren
                         )
                     )
             case _ if needsStableBlock =>
-                lowerExpression(body, bindings, reversedNodes) |>
-                    Result.map(
+                lowerExpression(body, bindings, reversedNodes)
+                    |> Result.map(
                         match (child, afterChild) -> appendNode(
                             Orbit64.Algorithm.Node.Block(child :: Nil),
                             afterChild
@@ -107,38 +102,39 @@ pub mod AlgorithmTool.Lowering {
         bindings: List[(String, Int32)],
         reversedNodes: List[Orbit64.Algorithm.Node]
     ): Result[String, (Int32, List[Orbit64.Algorithm.Node])] = match expr {
-        case Move(move) => Ok(internNode(Orbit64.Algorithm.Node.Terminal(move), reversedNodes))
-        case Reference(name) =>
+        case Move(move)              =>
+            Ok(internNode(Orbit64.Algorithm.Node.Terminal(move), reversedNodes))
+        case Reference(name)         =>
             lookup(name, bindings) |> Result.map(reference -> (reference, reversedNodes))
-        case Concat(children) =>
-            lowerExpressions(children, bindings, reversedNodes, Nil) |>
-                Result.map(
+        case Concat(children)        =>
+            lowerExpressions(children, bindings, reversedNodes, Nil)
+                |> Result.map(
                     match (references, afterChildren) -> internNode(
                         Orbit64.Algorithm.Node.Concat(references),
                         afterChildren
                     )
                 )
-        case Repeat(child, count) =>
-            lowerExpression(child, bindings, reversedNodes) |>
-                Result.map(
+        case Repeat(child, count)    =>
+            lowerExpression(child, bindings, reversedNodes)
+                |> Result.map(
                     match (reference, afterChild) -> internNode(
                         Orbit64.Algorithm.Node.Repeat(reference, count),
                         afterChild
                     )
                 )
-        case Inverse(child) =>
-            lowerExpression(child, bindings, reversedNodes) |>
-                Result.map(
+        case Inverse(child)          =>
+            lowerExpression(child, bindings, reversedNodes)
+                |> Result.map(
                     match (reference, afterChild) -> internNode(
                         Orbit64.Algorithm.Node.Inverse(reference),
                         afterChild
                     )
                 )
-        case Conjugate(left, right) => lowerConjugate(left, right, bindings, reversedNodes)
+        case Conjugate(left, right)  => lowerConjugate(left, right, bindings, reversedNodes)
         case Commutator(left, right) => lowerCommutator(left, right, bindings, reversedNodes)
         case Slice(name, start, end) =>
-            lookup(name, bindings) |>
-                Result.map(
+            lookup(name, bindings)
+                |> Result.map(
                     reference ->
                         internNode(
                             Orbit64.Algorithm.Node.SliceParts(reference, start, end),
@@ -153,10 +149,10 @@ pub mod AlgorithmTool.Lowering {
         reversedNodes: List[Orbit64.Algorithm.Node],
         reversedReferences: List[Int32]
     ): Result[String, (List[Int32], List[Orbit64.Algorithm.Node])] = match expressions {
-        case Nil => Ok((List.reverse(reversedReferences), reversedNodes))
+        case Nil                => Ok((List.reverse(reversedReferences), reversedNodes))
         case expression :: rest =>
-            lowerExpression(expression, bindings, reversedNodes) |>
-                Result.flatMap(
+            lowerExpression(expression, bindings, reversedNodes)
+                |> Result.flatMap(
                     match (reference, afterExpression) -> lowerExpressions(
                         rest,
                         bindings,
@@ -172,10 +168,10 @@ pub mod AlgorithmTool.Lowering {
         bindings: List[(String, Int32)],
         reversedNodes: List[Orbit64.Algorithm.Node]
     ): Result[String, (Int32, List[Orbit64.Algorithm.Node])] =
-        lowerExpression(left, bindings, reversedNodes) |>
-            Result.flatMap(
-                match (leftRef, afterLeft) -> lowerExpression(right, bindings, afterLeft) |>
-                    Result.map(
+        lowerExpression(left, bindings, reversedNodes)
+            |> Result.flatMap(
+                match (leftRef, afterLeft) -> lowerExpression(right, bindings, afterLeft)
+                    |> Result.map(
                         match (rightRef, afterRight) -> let (inverseRef, afterInverse) =
                             internNode(Orbit64.Algorithm.Node.Inverse(leftRef), afterRight);
                         internNode(
@@ -191,10 +187,10 @@ pub mod AlgorithmTool.Lowering {
         bindings: List[(String, Int32)],
         reversedNodes: List[Orbit64.Algorithm.Node]
     ): Result[String, (Int32, List[Orbit64.Algorithm.Node])] =
-        lowerExpression(left, bindings, reversedNodes) |>
-            Result.flatMap(
-                match (leftRef, afterLeft) -> lowerExpression(right, bindings, afterLeft) |>
-                    Result.map(
+        lowerExpression(left, bindings, reversedNodes)
+            |> Result.flatMap(
+                match (leftRef, afterLeft) -> lowerExpression(right, bindings, afterLeft)
+                    |> Result.map(
                         match (rightRef, afterRight) -> let (leftInverse, afterLeftInverse) =
                             internNode(Orbit64.Algorithm.Node.Inverse(leftRef), afterRight);
                         let (rightInverse, afterRightInverse) =
@@ -223,15 +219,12 @@ pub mod AlgorithmTool.Lowering {
     ) =
         match findNode(node, reversedNodes, List.length(reversedNodes) - 1) {
             case Some(index) => (index, reversedNodes)
-            case None => appendNode(node, reversedNodes)
+            case None        => appendNode(node, reversedNodes)
         }
 
-    def findNode(
-        node: Orbit64.Algorithm.Node,
-        nodes: List[Orbit64.Algorithm.Node],
-        index: Int32
-    ): Option[Int32] = match nodes {
-        case Nil => None
+    def findNode(node: Orbit64.Algorithm.Node, nodes: List[Orbit64.Algorithm.Node], index: Int32):
+        Option[Int32] = match nodes {
+        case Nil              => None
         case existing :: rest =>
             if (existing == node) Some(index) else findNode(node, rest, index - 1)
     }

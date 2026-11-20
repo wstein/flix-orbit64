@@ -33,9 +33,9 @@ def asString(r: Result[String, Vector[Int32]]): Result[String, String] =
 ///
 def asFacelets(s: String): Vector[Int32] =
     let table = String.toList(faceSymbols() |> Vector.join(""));
-    String.toList(s) |>
-        List.map(c -> List.indexOf(c, table) |> Option.getWithDefault(-1)) |>
-        List.toVector
+    String.toList(s)
+        |> List.map(c -> List.indexOf(c, table) |> Option.getWithDefault(-1))
+        |> List.toVector
 
 ///
 /// Both directions of one fixture.

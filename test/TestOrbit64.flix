@@ -91,8 +91,8 @@ def widthsAreDistinct(): Unit \ Assert =
 @Test
 def noSizeBelowTwoBorrowsARealWidth(): Unit \ Assert =
     let real = List.range(2, 8) |> List.map(Orbit64.State.width) |> List.toSet;
-    List.range(-1, 2) |>
-        List.forEach(
+    List.range(-1, 2)
+        |> List.forEach(
             n ->
                 Assert.assertFalseWithMsg(
                     Set.memberOf(Orbit64.State.width(n), real),
@@ -102,8 +102,8 @@ def noSizeBelowTwoBorrowsARealWidth(): Unit \ Assert =
 
 @Test
 def nothingBelowTheSmallestCubeHasAnOrbit(): Unit \ Assert =
-    List.range(-1, 2) |>
-        List.forEach(
+    List.range(-1, 2)
+        |> List.forEach(
             n ->
                 Assert.assertEqWithMsg(
                     expected = (Nil: List[Orbit64.Orbit.Orbit]),
@@ -117,8 +117,8 @@ def nothingBelowTheSmallestCubeHasAnOrbit(): Unit \ Assert =
 ///
 @Test
 def widthIsMinimal(): Unit \ Assert =
-    List.range(2, 8) |>
-        List.forEach(n -> {
+    List.range(2, 8)
+        |> List.forEach(n -> {
             let w = Orbit64.State.width(n);
             let total = Orbit64.State.stateCount(n);
             Assert.assertTrue(16ii * BigInt.pow(base = 64ii, w - 1) >= total);
@@ -129,8 +129,8 @@ def widthIsMinimal(): Unit \ Assert =
 
 @Test
 def solvedIsAllPaddingCharacters(): Unit \ Assert =
-    List.range(2, 8) |>
-        List.forEach(
+    List.range(2, 8)
+        |> List.forEach(
             n ->
                 Assert.assertEq(
                     expected = Ok(String.repeat(Orbit64.State.width(n), "A")),
@@ -149,11 +149,11 @@ def solvedCornersAreIdentity(): Unit \ Assert =
 
 @Test
 def encodeDecodeRoundTripsForEverySize(): Unit \ Assert =
-    List.range(2, 8) |>
-        List.forEach(n -> {
+    List.range(2, 8)
+        |> List.forEach(n -> {
             let orbits =
-                Orbit64.Orbit.layout(n) |>
-                    List.map(
+                Orbit64.Orbit.layout(n)
+                    |> List.map(
                         o ->
                             Orbit64.Coord.unrank(
                                 o,
@@ -162,7 +162,7 @@ def encodeDecodeRoundTripsForEverySize(): Unit \ Assert =
                     );
             let state = legalState(n, orbits);
             match Orbit64.State.encode(n, state) {
-                case Err(e) => Assert.assert(false, RichString.fromString("encode failed: ${e}"))
+                case Err(e)    => Assert.assert(false, RichString.fromString("encode failed: ${e}"))
                 case Ok(token) =>
                     Assert.assertEq(expected = Ok(state), Orbit64.State.decode(n, token))
             }
@@ -198,11 +198,11 @@ def pseudo(n: Int32, o: Orbit64.Orbit.Orbit): BigInt =
 
 @Test
 def coordRankUnrankAreInverse(): Unit \ Assert =
-    List#{Corners, Midges, Wings, Centers} |>
-        List.forEach(
+    List#{Corners, Midges, Wings, Centers}
+        |> List.forEach(
             o ->
-                List#{0ii, 1ii, 1000003ii} |>
-                    List.forEach(v -> {
+                List#{0ii, 1ii, 1000003ii}
+                    |> List.forEach(v -> {
                         let x = BigInt.modulo(v, Orbit64.Orbit.radix(o));
                         Assert.assertEq(
                             expected = x,
@@ -213,12 +213,12 @@ def coordRankUnrankAreInverse(): Unit \ Assert =
 
 @Test
 def unrankedCoordsAreValid(): Unit \ Assert =
-    List#{Corners, Midges, Wings, Centers} |>
-        List.forEach(
+    List#{Corners, Midges, Wings, Centers}
+        |> List.forEach(
             o ->
                 Assert.assertTrue(
-                    Orbit64.Coord.unrank(o, BigInt.modulo(987654321ii, Orbit64.Orbit.radix(o))) |>
-                        Orbit64.Coord.isValid
+                    Orbit64.Coord.unrank(o, BigInt.modulo(987654321ii, Orbit64.Orbit.radix(o)))
+                        |> Orbit64.Coord.isValid
                 )
         )
 
@@ -241,8 +241,8 @@ def binomialValues(): Unit \ Assert =
 def binomialIsSymmetricAndSurvivesTheLongSide(): Unit \ Assert = {
     Assert.assertEq(expected = 100, Orbit64.Rank.binomial(100, 99));
     Assert.assertEq(expected = 1, Orbit64.Rank.binomial(100, 100));
-    List#{(24, 4), (30, 7), (52, 5)} |>
-        List.forEach(
+    List#{(24, 4), (30, 7), (52, 5)}
+        |> List.forEach(
             match (n, k) -> Assert.assertEqWithMsg(
                 expected = Orbit64.Rank.binomial(n, k),
                 Orbit64.Rank.binomial(n, n - k),
@@ -260,8 +260,8 @@ def binomialIsSymmetricAndSurvivesTheLongSide(): Unit \ Assert = {
 @Test
 def binomialSaturatesRatherThanWrapping(): Unit \ Assert = {
     Assert.assertEq(expected = Int32.maxValue(), Orbit64.Rank.binomial(1000, 500));
-    List#{(1000, 500), (200, 60), (60, 30)} |>
-        List.forEach(
+    List#{(1000, 500), (200, 60), (60, 30)}
+        |> List.forEach(
             match (n, k) -> Assert.assertTrueWithMsg(
                 Orbit64.Rank.binomial(n, k) > 0,
                 "C(${n}, ${k}) came back negative"
@@ -292,8 +292,8 @@ def permRankIsMaximalWhenReversed(): Unit \ Assert =
 
 @Test
 def permRankUnrankRoundTrip(): Unit \ Assert =
-    List#{0ii, 1ii, 40319ii, 123456789ii} |>
-        List.forEach(r -> {
+    List#{0ii, 1ii, 40319ii, 123456789ii}
+        |> List.forEach(r -> {
             let p = Orbit64.Rank.permUnrank(r, 12);
             Assert.assertEq(expected = r, Orbit64.Rank.permRank(p))
         })
@@ -303,11 +303,11 @@ def permRankUnrankRoundTrip(): Unit \ Assert =
 ///
 @Test
 def parityRestrictedPermutationRanksRoundTrip(): Unit \ Assert =
-    List#{0, 1} |>
-        List.forEach(
+    List#{0, 1}
+        |> List.forEach(
             parity ->
-                List.range(0, 12) |>
-                    List.forEach(rank -> {
+                List.range(0, 12)
+                    |> List.forEach(rank -> {
                         let p = Orbit64.Rank.permUnrankWithParity(Int32.toBigInt(rank), 4, parity);
                         Assert.assertEq(expected = parity, Orbit64.Rank.permParity(p));
                         Assert.assertEq(
@@ -331,7 +331,7 @@ def framedOddStatesRoundTripWithoutGrowingTheThreeByThreeWidth(): Unit \ Assert 
     Assert.assertEq(expected = 12, Orbit64.State.width(3));
     Assert.assertEq(expected = 1038048078587756544000ii, Orbit64.State.stateCount(3));
     match Orbit64.State.encode(3, state) {
-        case Err(e) => Assert.assertTrueWithMsg(false, "framed state did not encode: ${e}")
+        case Err(e)    => Assert.assertTrueWithMsg(false, "framed state did not encode: ${e}")
         case Ok(token) => Assert.assertEq(expected = Ok(state), Orbit64.State.decode(3, token))
     }
 
@@ -347,8 +347,8 @@ def framedEvenStatesRequireTheCanonicalFrame(): Unit \ Assert =
 
 @Test
 def combRankUnrankRoundTrip(): Unit \ Assert =
-    List.range(0, 10626) |>
-        List.forEach(
+    List.range(0, 10626)
+        |> List.forEach(
             r ->
                 if (Int32.modulo(r, 997) == 0)
                     Assert.assertEq(
@@ -361,8 +361,8 @@ def combRankUnrankRoundTrip(): Unit \ Assert =
 
 @Test
 def multisetRankUnrankRoundTrip(): Unit \ Assert =
-    List#{0ii, 1ii, 3246670537109999ii} |>
-        List.forEach(v -> {
+    List#{0ii, 1ii, 3246670537109999ii}
+        |> List.forEach(v -> {
             let labels = Orbit64.Rank.multisetUnrank(v, 24, 4, 6);
             Assert.assertEq(expected = v, Orbit64.Rank.multisetRank(labels, 4, 6))
         })
@@ -384,11 +384,8 @@ def decodeRejectsOutOfRangeTokens(): Unit \ Assert =
 @Test
 def encodeRejectsOrbitsThatDoNotMatchTheLayout(): Unit \ Assert =
     Assert.assertTrue(
-        Orbit64.State.encode(
-            3,
-            Orbit64.State.canonical(List#{Orbit64.Coord.unrank(Corners, 0ii)})
-        ) |>
-            Result.isErr
+        Orbit64.State.encode(3, Orbit64.State.canonical(List#{Orbit64.Coord.unrank(Corners, 0ii)}))
+            |> Result.isErr
     )
 
 ///
@@ -405,8 +402,8 @@ def encodeRejectsAPermutationWithARepeat(): Unit \ Assert = {
         Orbit64.State.encode(
             3,
             Orbit64.State.canonical(List#{bogus, Orbit64.Coord.unrank(Midges, 0ii)})
-        ) |>
-            Result.isErr
+        )
+            |> Result.isErr
     )
 }
 
@@ -431,8 +428,8 @@ def encodeRejectsCentersInTheWrongMultiplicities(): Unit \ Assert = {
                 Orbit64.Coord.unrank(Wings, 0ii),
                 skewed
             })
-        ) |>
-            Result.isErr
+        )
+            |> Result.isErr
     )
 }
 
@@ -449,8 +446,8 @@ def encodeRejectsAShortOrientationVectorRatherThanThrowing(): Unit \ Assert =
                 CornerCoord(Vector.range(0, 8), Vector#{0, 0, 0}),
                 Orbit64.Coord.unrank(Midges, 0ii)
             })
-        ) |>
-            Result.isErr
+        )
+            |> Result.isErr
     )
 
 ///
@@ -461,14 +458,14 @@ def encodeRejectsAShortOrientationVectorRatherThanThrowing(): Unit \ Assert =
 def refusingNamesTheRuleThatWasBroken(): Unit \ Assert = {
     let twisted = CornerCoord(Vector.range(0, 8), Vector#{1, 0, 0, 0, 0, 0, 0, 0});
     match Orbit64.Coord.faultOf(twisted) {
-        case None => Assert.assert(false, RichString.fromString("accepted a bad twist sum"))
+        case None      => Assert.assert(false, RichString.fromString("accepted a bad twist sum"))
         case Some(why) => Assert.assertTrue(String.contains(substr = "sum to 0 mod 3", why))
     };
     match Orbit64.State.encode(
         3,
         Orbit64.State.canonical(List#{twisted, Orbit64.Coord.unrank(Midges, 0ii)})
     ) {
-        case Ok(_) => Assert.assert(false, RichString.fromString("encoded a bad twist sum"))
+        case Ok(_)  => Assert.assert(false, RichString.fromString("encoded a bad twist sum"))
         case Err(e) => Assert.assertTrue(String.contains(substr = "Corners", e))
     }
 }
@@ -479,14 +476,14 @@ def refusingNamesTheRuleThatWasBroken(): Unit \ Assert = {
 ///
 @Test
 def everyDecodedStateStillEncodes(): Unit \ Assert =
-    List.range(2, 8) |>
-        List.forEach(
+    List.range(2, 8)
+        |> List.forEach(
             n ->
-                List#{0ii, 1ii, 987654321ii} |>
-                    List.forEach(seed -> {
+                List#{0ii, 1ii, 987654321ii}
+                    |> List.forEach(seed -> {
                         let orbits =
-                            Orbit64.Orbit.layout(n) |>
-                                List.map(
+                            Orbit64.Orbit.layout(n)
+                                |> List.map(
                                     o ->
                                         Orbit64.Coord.unrank(
                                             o,
@@ -532,14 +529,14 @@ def netDeclinesAStateThatIsNotACube(): Unit \ Assert = {
 ///
 @Test
 def netStillDrawsEveryDecodableSmallCube(): Unit \ Assert =
-    List#{2, 3} |>
-        List.forEach(
+    List#{2, 3}
+        |> List.forEach(
             n ->
-                List#{0ii, 1ii, 987654321ii} |>
-                    List.forEach(seed -> {
+                List#{0ii, 1ii, 987654321ii}
+                    |> List.forEach(seed -> {
                         let orbits =
-                            Orbit64.Orbit.layout(n) |>
-                                List.map(
+                            Orbit64.Orbit.layout(n)
+                                |> List.map(
                                     o ->
                                         Orbit64.Coord.unrank(
                                             o,
@@ -597,8 +594,8 @@ def solved2x2DrawsFourStickersPerFace(): Unit \ Assert =
 
 @Test
 def sizesWithoutAConventionAreNotDrawn(): Unit \ Assert =
-    List#{1, 8} |>
-        List.forEach(n -> {
+    List#{1, 8}
+        |> List.forEach(n -> {
             Assert.assertEq(expected = false, Orbit64.Net.canDraw(n));
             Assert.assertEq(
                 expected = true,
@@ -609,7 +606,7 @@ def sizesWithoutAConventionAreNotDrawn(): Unit \ Assert =
 @Test
 def colorWrapsEveryStickerAndResetsIt(): Unit \ Assert =
     match Orbit64.Net.draw(3, Orbit64.State.solved(3), true) {
-        case Err(e) => Assert.assertEq(expected = "a net", e)
+        case Err(e)  => Assert.assertEq(expected = "a net", e)
         case Ok(net) =>
             // 54 stickers, each opened with a background and closed with a reset.
             Assert.assertEq(expected = 54, String.countSubstring(substr = "[48;5;", net));
