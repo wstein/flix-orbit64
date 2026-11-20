@@ -8,15 +8,15 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
     pub def settings(limits: Limits): Result[Fault, Unit] =
         let ceiling = Orbit64.Algorithm.Envelope.defaultLimits();
         let pairs =
-            (limits#maxInputChars, ceiling#maxInputChars) ::
-                (limits#maxNodes, ceiling#maxNodes) ::
-                (limits#maxReferences, ceiling#maxReferences) ::
-                (limits#maxSymbols, ceiling#maxSymbols) ::
-                (limits#maxCountDigits, ceiling#maxCountDigits) ::
-                (limits#maxDepth, ceiling#maxDepth) ::
-                (limits#maxJsonDepth, ceiling#maxJsonDepth) ::
-                (limits#maxMetadataWork, ceiling#maxMetadataWork) ::
-                Nil;
+            (limits#maxInputChars, ceiling#maxInputChars)
+                :: (limits#maxNodes, ceiling#maxNodes)
+                :: (limits#maxReferences, ceiling#maxReferences)
+                :: (limits#maxSymbols, ceiling#maxSymbols)
+                :: (limits#maxCountDigits, ceiling#maxCountDigits)
+                :: (limits#maxDepth, ceiling#maxDepth)
+                :: (limits#maxJsonDepth, ceiling#maxJsonDepth)
+                :: (limits#maxMetadataWork, ceiling#maxMetadataWork)
+                :: Nil;
         if (List.forAll(match (value, cap) -> value > 0 and value <= cap, pairs))
             Ok(())
         else
@@ -27,41 +27,33 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
         if (String.length(text) > limits#maxInputChars)
             Err(Fault.ResourceLimit("input character budget exceeded"))
         else
-            String.toList(text) |>
-                List.foldLeft(
+            String.toList(text)
+                |> List.foldLeft(
                     (out, c) -> out |> Result.flatMap(state -> scan(limits#maxJsonDepth, state, c)),
                     Ok((0, false, false, 0))
-                ) |>
-                Result.map(_ -> ())
+                )
+                |> Result.map(_ -> ())
 
-    def scan(maxDepth: Int32, state: (Int32, Bool, Bool, Int32), c: Char): Result[
-        Fault,
-        (Int32, Bool, Bool, Int32)
-    ] =
+    def scan(maxDepth: Int32, state: (Int32, Bool, Bool, Int32), c: Char):
+        Result[Fault, (Int32, Bool, Bool, Int32)] =
         if (Char.isAscii(c))
             scanAscii(maxDepth, state, c)
         else
             Err(Fault.Malformed("only ASCII input is accepted"))
 
-    def scanAscii(maxDepth: Int32, state: (Int32, Bool, Bool, Int32), c: Char): Result[
-        Fault,
-        (Int32, Bool, Bool, Int32)
-    ] =
+    def scanAscii(maxDepth: Int32, state: (Int32, Bool, Bool, Int32), c: Char):
+        Result[Fault, (Int32, Bool, Bool, Int32)] =
         let (depth, quoted, escaped, digits) = state;
         if (quoted) quotedChar(depth, escaped, c) else outside(maxDepth, depth, digits, c)
 
-    def quotedChar(depth: Int32, escaped: Bool, c: Char): Result[
-        Fault,
-        (Int32, Bool, Bool, Int32)
-    ] =
+    def quotedChar(depth: Int32, escaped: Bool, c: Char):
+        Result[Fault, (Int32, Bool, Bool, Int32)] =
         let closes = not escaped and c == '"';
         let nextEscape = not escaped and c == '\\';
         Ok((depth, not closes, nextEscape, 0))
 
-    def outside(maxDepth: Int32, depth: Int32, digits: Int32, c: Char): Result[
-        Fault,
-        (Int32, Bool, Bool, Int32)
-    ] = match c {
+    def outside(maxDepth: Int32, depth: Int32, digits: Int32, c: Char):
+        Result[Fault, (Int32, Bool, Bool, Int32)] = match c {
         case '"' => Ok((depth, true, false, 0))
         case '[' => open(maxDepth, depth)
         case '{' => open(maxDepth, depth)
@@ -72,12 +64,12 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
         case '+' => numberFault()
         case 'e' => numberFault()
         case 'E' => numberFault()
-        case _ => scanDigit(depth, digits, c)
+        case _   => scanDigit(depth, digits, c)
     }
 
     def open(maxDepth: Int32, depth: Int32): Result[Fault, (Int32, Bool, Bool, Int32)] =
-        bound(depth + 1, maxDepth, "JSON nesting budget exceeded") |>
-            Result.map(_ -> (depth + 1, false, false, 0))
+        bound(depth + 1, maxDepth, "JSON nesting budget exceeded")
+            |> Result.map(_ -> (depth + 1, false, false, 0))
 
     def numberFault(): Result[Fault, (Int32, Bool, Bool, Int32)] =
         Err(Fault.Malformed("JSON numbers must be nonnegative decimal integers"))
@@ -86,9 +78,9 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
         Fault,
         (Int32, Bool, Bool, Int32)
     ] = match Char.isAsciiDigit(c) {
-        case false => Ok((depth, false, false, 0))
+        case false                => Ok((depth, false, false, 0))
         case true if digits >= 10 => Err(Fault.Malformed("JSON integer exceeds Int32 spelling"))
-        case true => Ok((depth, false, false, digits + 1))
+        case true                 => Ok((depth, false, false, digits + 1))
     }
 
     type alias Totals = {
@@ -102,15 +94,15 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
 
     /// Bound stored structures and longest reference path before metadata arithmetic.
     pub def graph(limits: Limits, nodes: List[Node]): Result[Fault, Unit] =
-        bound(List.length(nodes), limits#maxNodes, "node budget exceeded") |>
-            Result.flatMap(
+        bound(List.length(nodes), limits#maxNodes, "node budget exceeded")
+            |> Result.flatMap(
                 _ -> walk(limits, nodes, {
-                    refs = 0i64,
+                    refs    = 0i64,
                     symbols = 0i64,
-                    digits = 0i64,
-                    work = 0i64,
-                    depths = Nil,
-                    parts = Nil
+                    digits  = 0i64,
+                    work    = 0i64,
+                    depths  = Nil,
+                    parts   = Nil
                 })
             )
 
@@ -119,7 +111,7 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
 
     def walk(limits: Limits, nodes: List[Node], totals: Totals): Result[Fault, Unit] =
         match nodes {
-            case Nil => Ok(())
+            case Nil          => Ok(())
             case node :: rest => match advance(limits, node, totals) {
                 case Err(why) => Err(why)
                 case Ok(next) => walk(limits, rest, next)
@@ -144,8 +136,8 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
             depths = totals#depths,
             parts = produced :: totals#parts
         };
-        checkTotals(limits, next) |>
-            Result.flatMap(
+        checkTotals(limits, next)
+            |> Result.flatMap(
                 _ ->
                     let depth =
                         1 +
@@ -155,23 +147,23 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
                                 0,
                                 children
                             );
-                    bound(depth, limits#maxDepth, "DAG depth budget exceeded") |>
-                        Result.map(_ -> { depths = depth :: totals#depths | next })
+                    bound(depth, limits#maxDepth, "DAG depth budget exceeded")
+                        |> Result.map(_ -> { depths = depth :: totals#depths | next })
             )
 
     def checkTotals(limits: Limits, totals: Totals): Result[Fault, Unit] =
         let checks =
-            (totals#refs, limits#maxReferences, "reference budget exceeded") ::
-                (
+            (totals#refs, limits#maxReferences, "reference budget exceeded")
+                :: (
                     totals#symbols,
                     limits#maxSymbols,
                     "packed-symbol/partition-boundary budget exceeded"
-                ) ::
-                (totals#digits, limits#maxCountDigits, "repeat count digit budget exceeded") ::
-                (totals#work, limits#maxMetadataWork, "metadata work budget exceeded") ::
-                Nil;
+                )
+                :: (totals#digits, limits#maxCountDigits, "repeat count digit budget exceeded")
+                :: (totals#work, limits#maxMetadataWork, "metadata work budget exceeded")
+                :: Nil;
         match List.find(match (value, cap, _) -> value > Int32.toInt64(cap), checks) {
-            case None => Ok(())
+            case None              => Ok(())
             case Some((_, _, why)) => Err(Fault.ResourceLimit(why))
         }
 
@@ -196,31 +188,31 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
         if (index < 0) 0i64 else partValue(index, parts)
 
     def partValue(index: Int32, parts: List[Int64]): Int64 = match parts {
-        case Nil => 0i64
+        case Nil                      => 0i64
         case count :: _ if index == 0 => count
-        case _ :: rest => partValue(index - 1, rest)
+        case _ :: rest                => partValue(index - 1, rest)
     }
 
     def references(node: Node): List[Int32] = match node {
-        case Node.Terminal(_) => Nil
-        case Node.Concat(children) => children
-        case Node.Block(children) => children
-        case Node.Repeat(child, _) => child :: Nil
-        case Node.Inverse(child) => child :: Nil
+        case Node.Terminal(_)              => Nil
+        case Node.Concat(children)         => children
+        case Node.Block(children)          => children
+        case Node.Repeat(child, _)         => child :: Nil
+        case Node.Inverse(child)           => child :: Nil
         case Node.PackedBlock(alphabet, _) => alphabet
-        case Node.Partition(child, _) => child :: Nil
-        case Node.SliceParts(child, _, _) => child :: Nil
+        case Node.Partition(child, _)      => child :: Nil
+        case Node.SliceParts(child, _, _)  => child :: Nil
     }
 
     def symbolCount(node: Node): Int64 = match node {
-        case Node.PackedBlock(_, symbols) => Int32.toInt64(List.length(symbols))
+        case Node.PackedBlock(_, symbols)  => Int32.toInt64(List.length(symbols))
         case Node.Partition(_, boundaries) => Int32.toInt64(List.length(boundaries))
-        case _ => 0i64
+        case _                             => 0i64
     }
 
     def countDigits(node: Node): Int32 = match node {
         case Node.Repeat(_, count) => String.length("${count}")
-        case _ => 0
+        case _                     => 0
     }
 
     def depthAt(child: Int32, reversed: List[Int32]): Int32 =
@@ -228,8 +220,8 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
         if (index < 0) 0 else at(index, reversed)
 
     def at(index: Int32, values: List[Int32]): Int32 = match values {
-        case Nil => 0
+        case Nil                      => 0
         case depth :: _ if index == 0 => depth
-        case _ :: rest => at(index - 1, rest)
+        case _ :: rest                => at(index - 1, rest)
     }
 }

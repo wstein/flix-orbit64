@@ -36,8 +36,8 @@ pub mod Orbit64.Internal.Encoding {
     ///
     pub def fromBase64(s: String): Option[BigInt] =
         let table = String.toList(alphabet());
-        String.toList(s) |>
-            List.foldLeft(
+        String.toList(s)
+            |> List.foldLeft(
                 (acc, c) -> {
                     let digit = List.indexOf(c, table);
                     Option.flatMap(a -> Option.map(d -> a * 64ii + Int32.toBigInt(d), digit), acc)
@@ -46,10 +46,8 @@ pub mod Orbit64.Internal.Encoding {
             )
 
     /// Pack a class, gamma-coded layer count, rank, marker, and zero fill.
-    pub def encodeDelimitedRank(tokenClass: Int32, layers: Int32, rank: BigInt): Result[
-        String,
-        String
-    ] =
+    pub def encodeDelimitedRank(tokenClass: Int32, layers: Int32, rank: BigInt):
+        Result[String, String] =
         if (tokenClass < 0 or tokenClass > 3)
             Err("token class must be in 0..3")
         else if (layers < 1)
@@ -70,22 +68,18 @@ pub mod Orbit64.Internal.Encoding {
             Ok(toBase64(classPart + gammaPart + rankPart + pow2(fill), width))
 
     /// Unpack and canonically validate a delimiter-padded rank token.
-    pub def decodeDelimitedRank(expectedClass: Int32, token: String): Result[
-        String,
-        (Int32, BigInt)
-    ] =
+    pub def decodeDelimitedRank(expectedClass: Int32, token: String):
+        Result[String, (Int32, BigInt)] =
         if (String.isEmpty(token))
             Err("token is empty")
         else
             match fromBase64(token) {
-                case None => Err("token contains a character outside the base64url alphabet")
+                case None        => Err("token contains a character outside the base64url alphabet")
                 case Some(value) => decodeDelimitedValue(expectedClass, token, value)
             }
 
-    def decodeDelimitedValue(expectedClass: Int32, token: String, value: BigInt): Result[
-        String,
-        (Int32, BigInt)
-    ] =
+    def decodeDelimitedValue(expectedClass: Int32, token: String, value: BigInt):
+        Result[String, (Int32, BigInt)] =
         let payloadWidth = 6 * String.length(token) - 2;
         let classCapacity = pow2(payloadWidth);
         let actualClass = (value / classCapacity) |> BigInt.tryToInt32 |> Option.getWithDefault(-1);
@@ -93,15 +87,18 @@ pub mod Orbit64.Internal.Encoding {
             Err("token has class ${actualClass}, expected ${expectedClass}")
         else
             let body = value - Int32.toBigInt(actualClass) * classCapacity;
-            locateGamma(body, pow2(payloadWidth - 1), 0) |>
-                Result.flatMap(
+            locateGamma(body, pow2(payloadWidth - 1), 0)
+                |> Result.flatMap(
                     zeros -> decodeGammaTail(expectedClass, token, body, payloadWidth, zeros)
                 )
 
     def locateGamma(body: BigInt, place: BigInt, zeros: Int32): Result[String, Int32] =
         if (place == 0ii)
             Err("token has no layer-count gamma code")
-        else if (body >= place) Ok(zeros) else locateGamma(body, place / 2ii, zeros + 1)
+        else if (body >= place)
+            Ok(zeros)
+        else
+            locateGamma(body, place / 2ii, zeros + 1)
 
     def decodeGammaTail(
         expectedClass: Int32,
@@ -117,11 +114,11 @@ pub mod Orbit64.Internal.Encoding {
             let tailWidth = payloadWidth - gammaWidth;
             let scale = pow2(tailWidth);
             match (body / scale) |> BigInt.tryToInt32 {
-                case None => Err("layer count exceeds Int32")
+                case None         => Err("layer count exceeds Int32")
                 case Some(layers) =>
                     let tail = body - Int32.toBigInt(layers) * scale;
-                    stripFill(tail, 0) |>
-                        Result.flatMap(
+                    stripFill(tail, 0)
+                        |> Result.flatMap(
                             match (marked, _fill) -> finishDelimitedRank(
                                 expectedClass,
                                 token,
@@ -139,16 +136,12 @@ pub mod Orbit64.Internal.Encoding {
         else
             Ok((tail, fill))
 
-    def finishDelimitedRank(
-        expectedClass: Int32,
-        token: String,
-        layers: Int32,
-        rank: BigInt
-    ): Result[String, (Int32, BigInt)] =
+    def finishDelimitedRank(expectedClass: Int32, token: String, layers: Int32, rank: BigInt):
+        Result[String, (Int32, BigInt)] =
         match encodeDelimitedRank(expectedClass, layers, rank) {
             case Ok(canonical) if canonical == token => Ok((layers, rank))
-            case Ok(_) => Err("token has non-canonical rank padding")
-            case Err(e) => Err(e)
+            case Ok(_)                               => Err("token has non-canonical rank padding")
+            case Err(e)                              => Err(e)
         }
 
     def bitWidth(value: BigInt): Int32 = if (value == 0ii) 0 else floorLog2(value) + 1

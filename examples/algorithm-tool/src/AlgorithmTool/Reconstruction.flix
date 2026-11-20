@@ -52,7 +52,7 @@ pub mod AlgorithmTool.Reconstruction {
             case Orbit64.Algorithm.Node.Terminal(_) => true
             case Orbit64.Algorithm.Node.Inverse(child) => match nodeAt(child, all) {
                 case Some(childNode) => isAlwaysInlinable(childNode, all)
-                case None => false
+                case None            => false
             }
             case _ => false
         }
@@ -116,7 +116,7 @@ pub mod AlgorithmTool.Reconstruction {
         refCounts: List[Int32]
     ): String =
         match symbols {
-            case Nil => ""
+            case Nil            => ""
             case symbol :: rest =>
                 String.concat(
                     referenceAt(alphabet, symbol, all, refCounts),
@@ -131,7 +131,7 @@ pub mod AlgorithmTool.Reconstruction {
         refCounts: List[Int32]
     ): String =
         match symbols {
-            case Nil => ""
+            case Nil            => ""
             case symbol :: rest =>
                 String.concat(
                     " ${referenceAt(alphabet, symbol, all, refCounts)}",
@@ -148,8 +148,8 @@ pub mod AlgorithmTool.Reconstruction {
 
     def alphabetAt(alphabet: List[Int32], wanted: Int32, index: Int32): Int32 = match alphabet {
         case value :: _ if wanted == index => value
-        case _ :: rest => alphabetAt(rest, wanted, index + 1)
-        case Nil => 0
+        case _ :: rest                     => alphabetAt(rest, wanted, index + 1)
+        case Nil                           => 0
     }
 
     /// How many times each node index is referenced by another node's
@@ -162,14 +162,14 @@ pub mod AlgorithmTool.Reconstruction {
     /// Their source must therefore remain named even if it has one ordinary
     /// reference and would otherwise be inlined.
     def anchoredReferences(nodes: List[Orbit64.Algorithm.Node]): Set[Int32] =
-        nodes |>
-            List.foldLeft(
+        nodes
+            |> List.foldLeft(
                 (anchors, node) -> match node {
-                    case Orbit64.Algorithm.Node.Partition(sequence, _) =>
+                    case Orbit64.Algorithm.Node.Partition(sequence, _)     =>
                         Set.insert(sequence, anchors)
                     case Orbit64.Algorithm.Node.SliceParts(sequence, _, _) =>
                         Set.insert(sequence, anchors)
-                    case _ => anchors
+                    case _                                                 => anchors
                 },
                 Set.empty()
             )
@@ -181,8 +181,8 @@ pub mod AlgorithmTool.Reconstruction {
         case Orbit64.Algorithm.Node.Inverse(child) => incrementAt(child, counts)
         case Orbit64.Algorithm.Node.Block(children) => tallyRefs(children, counts)
         case Orbit64.Algorithm.Node.PackedBlock(alphabet, symbols) =>
-            symbols |>
-                List.foldLeft(
+            symbols
+                |> List.foldLeft(
                     (acc, symbol) -> incrementAt(alphabetAt(alphabet, symbol, 0), acc),
                     counts
                 )
@@ -194,25 +194,25 @@ pub mod AlgorithmTool.Reconstruction {
         refs |> List.foldLeft((acc, r) -> incrementAt(r, acc), counts)
 
     def incrementAt(index: Int32, counts: List[Int32]): List[Int32] = match counts {
-        case Nil => Nil
+        case Nil                     => Nil
         case c :: rest if index == 0 => (c + 1) :: rest
-        case c :: rest if index > 0 => c :: incrementAt(index - 1, rest)
-        case _ => counts
+        case c :: rest if index > 0  => c :: incrementAt(index - 1, rest)
+        case _                       => counts
     }
 
     def countAt(index: Int32, counts: List[Int32]): Int32 = match counts {
-        case Nil => 0
-        case c :: _ if index == 0 => c
+        case Nil                    => 0
+        case c :: _ if index == 0   => c
         case _ :: rest if index > 0 => countAt(index - 1, rest)
-        case _ => 0
+        case _                      => 0
     }
 
     def nodeAt(index: Int32, nodes: List[Orbit64.Algorithm.Node]): Option[Orbit64.Algorithm.Node] =
         match nodes {
-            case Nil => None
+            case Nil                     => None
             case node :: _ if index == 0 => Some(node)
-            case _ :: rest if index > 0 => nodeAt(index - 1, rest)
-            case _ => None
+            case _ :: rest if index > 0  => nodeAt(index - 1, rest)
+            case _                       => None
         }
 
     def nameOf(index: Int32): String = "n${index}"
@@ -234,8 +234,8 @@ pub mod AlgorithmTool.Reconstruction {
     }
 
     def amountText(amount: Orbit64.Move.Amount): String = match amount {
-        case Orbit64.Move.Amount.Clockwise => ""
-        case Orbit64.Move.Amount.Half => "2"
+        case Orbit64.Move.Amount.Clockwise        => ""
+        case Orbit64.Move.Amount.Half             => "2"
         case Orbit64.Move.Amount.CounterClockwise => "'"
     }
 }

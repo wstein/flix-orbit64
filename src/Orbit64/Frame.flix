@@ -58,16 +58,16 @@ pub mod Orbit64.Frame {
         faces(frame) |> List.map(Orbit64.Move.notation) |> List.join(" ")
 
     def facesAt(value: Int32): List[Face] = match value {
-        case 0 => Face.U :: Face.R :: Face.F :: Face.D :: Face.L :: Face.B :: Nil
-        case 1 => Face.U :: Face.B :: Face.R :: Face.D :: Face.F :: Face.L :: Nil
-        case 2 => Face.U :: Face.L :: Face.B :: Face.D :: Face.R :: Face.F :: Nil
-        case 3 => Face.U :: Face.F :: Face.L :: Face.D :: Face.B :: Face.R :: Nil
-        case 4 => Face.F :: Face.R :: Face.D :: Face.B :: Face.L :: Face.U :: Nil
-        case 5 => Face.F :: Face.U :: Face.R :: Face.B :: Face.D :: Face.L :: Nil
-        case 6 => Face.F :: Face.L :: Face.U :: Face.B :: Face.R :: Face.D :: Nil
-        case 7 => Face.F :: Face.D :: Face.L :: Face.B :: Face.U :: Face.R :: Nil
-        case 8 => Face.D :: Face.R :: Face.B :: Face.U :: Face.L :: Face.F :: Nil
-        case 9 => Face.D :: Face.F :: Face.R :: Face.U :: Face.B :: Face.L :: Nil
+        case 0  => Face.U :: Face.R :: Face.F :: Face.D :: Face.L :: Face.B :: Nil
+        case 1  => Face.U :: Face.B :: Face.R :: Face.D :: Face.F :: Face.L :: Nil
+        case 2  => Face.U :: Face.L :: Face.B :: Face.D :: Face.R :: Face.F :: Nil
+        case 3  => Face.U :: Face.F :: Face.L :: Face.D :: Face.B :: Face.R :: Nil
+        case 4  => Face.F :: Face.R :: Face.D :: Face.B :: Face.L :: Face.U :: Nil
+        case 5  => Face.F :: Face.U :: Face.R :: Face.B :: Face.D :: Face.L :: Nil
+        case 6  => Face.F :: Face.L :: Face.U :: Face.B :: Face.R :: Face.D :: Nil
+        case 7  => Face.F :: Face.D :: Face.L :: Face.B :: Face.U :: Face.R :: Nil
+        case 8  => Face.D :: Face.R :: Face.B :: Face.U :: Face.L :: Face.F :: Nil
+        case 9  => Face.D :: Face.F :: Face.R :: Face.U :: Face.B :: Face.L :: Nil
         case 10 => Face.D :: Face.L :: Face.F :: Face.U :: Face.R :: Face.B :: Nil
         case 11 => Face.D :: Face.B :: Face.L :: Face.U :: Face.F :: Face.R :: Nil
         case 12 => Face.B :: Face.R :: Face.U :: Face.F :: Face.L :: Face.D :: Nil
@@ -81,6 +81,6 @@ pub mod Orbit64.Frame {
         case 20 => Face.R :: Face.D :: Face.F :: Face.L :: Face.U :: Face.B :: Nil
         case 21 => Face.R :: Face.B :: Face.D :: Face.L :: Face.F :: Face.U :: Nil
         case 22 => Face.R :: Face.U :: Face.B :: Face.L :: Face.D :: Face.F :: Nil
-        case _ => Face.R :: Face.F :: Face.U :: Face.L :: Face.B :: Face.D :: Nil
+        case _  => Face.R :: Face.F :: Face.U :: Face.L :: Face.B :: Face.D :: Nil
     }
 }

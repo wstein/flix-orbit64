@@ -32,8 +32,8 @@ pub mod Orbit64.V2.Registry {
 
     /// The types of the initial registry, in registry order, as `(n, model, pose)`.
     pub def initialTypes(): List[(Int32, Model, Pose)] =
-        List.range(2, 16) |>
-            List.flatMap(
+        List.range(2, 16)
+            |> List.flatMap(
                 n ->
                     let color =
                         (n, Model.Color, Pose.Canonical) :: (n, Model.Color, Pose.Framed) :: Nil;
@@ -42,9 +42,9 @@ pub mod Orbit64.V2.Registry {
                     else
                         List.append(
                             color,
-                            (n, Model.Picture, Pose.Canonical) ::
-                                (n, Model.Picture, Pose.Framed) ::
-                                Nil
+                            (n, Model.Picture, Pose.Canonical)
+                                :: (n, Model.Picture, Pose.Framed)
+                                :: Nil
                         )
             )
 
@@ -61,13 +61,13 @@ pub mod Orbit64.V2.Registry {
             let length = shortest(used, count);
             let offset = Map.getWithDefault(length, 0ii, used);
             let entry = {
-                id = id,
-                n = n,
-                model = model,
-                pose = pose,
+                id     = id,
+                n      = n,
+                model  = model,
+                pose   = pose,
                 length = length,
                 offset = offset,
-                count = count
+                count  = count
             };
             (Map.insert(length, offset + count, used), entry :: out)
         };
@@ -96,7 +96,7 @@ pub mod Orbit64.V2.Registry {
 
     /// The entry and rank a token of the given length and value addresses.
     pub def lookup(length: Int32, value: BigInt): Option[(Entry, BigInt)] =
-        entries() |>
-            List.find(e -> e#length == length and holds(e, value)) |>
-            Option.map(e -> (e, value - e#offset))
+        entries()
+            |> List.find(e -> e#length == length and holds(e, value))
+            |> Option.map(e -> (e, value - e#offset))
 }

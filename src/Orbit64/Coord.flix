@@ -35,9 +35,9 @@ pub mod Orbit64.Coord {
     ///
     pub def kind(c: Coord): Orbit = match c {
         case CornerCoord(_, _) => Corners
-        case MidgeCoord(_, _) => Midges
-        case WingCoord(_) => Wings
-        case CenterCoord(_) => Centers
+        case MidgeCoord(_, _)  => Midges
+        case WingCoord(_)      => Wings
+        case CenterCoord(_)    => Centers
     }
 
     ///
@@ -55,43 +55,43 @@ pub mod Orbit64.Coord {
     pub def faultOf(c: Coord): Option[String] =
         let checks = match c {
             case CornerCoord(p, t) =>
-                (isPermutation(p, 8), "the corner permutation is not a permutation of 0..7") ::
-                    (
+                (isPermutation(p, 8), "the corner permutation is not a permutation of 0..7")
+                    :: (
                         Vector.length(t) == 8,
                         "there must be exactly 8 corner twists, one per slot"
-                    ) ::
-                    (
+                    )
+                    :: (
                         Vector.forAll(x -> x >= 0 and x < 3, t),
                         "every corner twist must be 0, 1 or 2"
-                    ) ::
-                    (
+                    )
+                    :: (
                         Int32.modulo(Vector.sum(t), 3) == 0,
                         "the corner twists must sum to 0 mod 3"
-                    ) ::
-                    Nil
-            case MidgeCoord(p, f) =>
-                (isPermutation(p, 12), "the midge permutation is not a permutation of 0..11") ::
-                    (
+                    )
+                    :: Nil
+            case MidgeCoord(p, f)  =>
+                (isPermutation(p, 12), "the midge permutation is not a permutation of 0..11")
+                    :: (
                         Vector.length(f) == 12,
                         "there must be exactly 12 midge flips, one per slot"
-                    ) ::
-                    (Vector.forAll(x -> x >= 0 and x < 2, f), "every midge flip must be 0 or 1") ::
-                    (Int32.modulo(Vector.sum(f), 2) == 0, "the midge flips must sum to 0 mod 2") ::
-                    Nil
-            case WingCoord(p) =>
+                    )
+                    :: (Vector.forAll(x -> x >= 0 and x < 2, f), "every midge flip must be 0 or 1")
+                    :: (Int32.modulo(Vector.sum(f), 2) == 0, "the midge flips must sum to 0 mod 2")
+                    :: Nil
+            case WingCoord(p)      =>
                 (isPermutation(p, 24), "the wing permutation is not a permutation of 0..23") :: Nil
             case CenterCoord(cols) =>
-                (Vector.length(cols) == 24, "there must be exactly 24 center slots") ::
-                    (
+                (Vector.length(cols) == 24, "there must be exactly 24 center slots")
+                    :: (
                         Vector.forAll(x -> x >= 0 and x < 6, cols),
                         "every center color must be 0..5"
-                    ) ::
-                    (
-                        List.range(0, 6) |>
-                            List.forAll(col -> Vector.count(x -> x == col, cols) == 4),
+                    )
+                    :: (
+                        List.range(0, 6)
+                            |> List.forAll(col -> Vector.count(x -> x == col, cols) == 4),
                         "each of the six center colors must appear exactly four times"
-                    ) ::
-                    Nil
+                    )
+                    :: Nil
         };
         List.filterMap(match (ok, why) -> if (ok) None else Some(why), checks) |> List.head
 
@@ -111,8 +111,8 @@ pub mod Orbit64.Coord {
     ///
     pub def rank(c: Coord): BigInt = match c {
         case CornerCoord(p, t) => Rank.permRank(p) * 2187ii + Int32.toBigInt(baseN(3, 7, t))
-        case MidgeCoord(p, f) => Rank.permRank(p) * 2048ii + Int32.toBigInt(baseN(2, 11, f))
-        case WingCoord(p) => Rank.permRank(p)
+        case MidgeCoord(p, f)  => Rank.permRank(p) * 2048ii + Int32.toBigInt(baseN(2, 11, f))
+        case WingCoord(p)      => Rank.permRank(p)
         case CenterCoord(cols) => Rank.multisetRank(cols, 4, 6)
     }
 
@@ -124,11 +124,11 @@ pub mod Orbit64.Coord {
             let (r, tv) = (v / 2187ii, BigInt.modulo(v, 2187ii));
             let t = unBaseN(3, 7, toI32(tv));
             CornerCoord(Rank.permUnrank(r, 8), closeOver(3, t))
-        case Midges =>
+        case Midges  =>
             let (r, fv) = (v / 2048ii, BigInt.modulo(v, 2048ii));
             let f = unBaseN(2, 11, toI32(fv));
             MidgeCoord(Rank.permUnrank(r, 12), closeOver(2, f))
-        case Wings => WingCoord(Rank.permUnrank(v, 24))
+        case Wings   => WingCoord(Rank.permUnrank(v, 24))
         case Centers => CenterCoord(Rank.multisetUnrank(v, 24, 4, 6))
     }
 
@@ -137,8 +137,8 @@ pub mod Orbit64.Coord {
     /// The dropped tail is exactly the redundant entry.
     ///
     def baseN(b: Int32, k: Int32, xs: Vector[Int32]): Int32 =
-        Vector.range(0, k) |>
-            Vector.foldLeft((acc, i) -> acc + Vector.get(i, xs) * Int32.pow(base = b, i), 0)
+        Vector.range(0, k)
+            |> Vector.foldLeft((acc, i) -> acc + Vector.get(i, xs) * Int32.pow(base = b, i), 0)
 
     ///
     /// The inverse of `baseN`: `k` little-endian base-`b` digits of `v`.

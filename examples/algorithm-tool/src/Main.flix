@@ -17,7 +17,7 @@ def convert(input: String, tokenPath: String, textPath: String): Unit \ {
     match FileRead.read(input) {
         case Err(error) => println("cannot read ${input}: ${error}")
         case Ok(source) => match AlgorithmTool.RoundTrip.roundTrip(2, source) {
-            case Err(message) => println("round trip failed: ${message}")
+            case Err(message)      => println("round trip failed: ${message}")
             case Ok((token, text)) => writeArtifacts(tokenPath, textPath, token, text)
         }
     }
@@ -29,8 +29,8 @@ def writeArtifacts(tokenPath: String, textPath: String, token: String, text: Str
 } =
     match FileWrite.write(str = String.concat(token, "\n"), tokenPath) {
         case Err(error) => println("cannot write ${tokenPath}: ${error}")
-        case Ok(_) => match FileWrite.write(str = text, textPath) {
+        case Ok(_)      => match FileWrite.write(str = text, textPath) {
             case Err(error) => println("cannot write ${textPath}: ${error}")
-            case Ok(_) => println("wrote ${tokenPath} and ${textPath}")
+            case Ok(_)      => println("wrote ${tokenPath} and ${textPath}")
         }
     }

@@ -131,9 +131,9 @@ pub mod Orbit64.V2.Facelets {
             Vector#{0, depth, n / 2, n - 1 - depth, n - 1};
         Vector.get(value, mapped)
 
-    def expandTable(n: Int32, base: Int32, depth: Int32, table: Vector[Vector[Int32]]): Vector[
-        Vector[Int32]
-    ] = Vector.map(row -> Vector.map(i -> expandFacelet(n, base, depth, i), row), table)
+    def expandTable(n: Int32, base: Int32, depth: Int32, table: Vector[Vector[Int32]]):
+        Vector[Vector[Int32]] =
+        Vector.map(row -> Vector.map(i -> expandFacelet(n, base, depth, i), row), table)
 
     def centerRepresentative(n: Int32, row: Int32, col: Int32): Bool =
         let last = n - 1;
@@ -145,23 +145,23 @@ pub mod Orbit64.V2.Facelets {
     /// The four quarter turn images of a cell, on all six faces, by facelet index.
     def centerTable(n: Int32, row: Int32, col: Int32): Vector[Int32] =
         let last = n - 1;
-        List.range(0, 6 * n * n) |>
-            List.filter(i -> {
+        List.range(0, 6 * n * n)
+            |> List.filter(i -> {
                 let cell = Int32.modulo(i, n * n);
                 cell == row * n + col or
                     cell == col * n + last - row or
                     cell == (last - row) * n + last - col or
                     cell == (last - col) * n + row
-            }) |>
-            List.toVector
+            })
+            |> List.toVector
 
     /// Center orbits ordered by their lowest facelet; the fixed center of an odd cube is no orbit.
     def centerTables(n: Int32): Vector[Vector[Int32]] =
-        List.range(1, n - 1) |>
-            List.flatMap(
+        List.range(1, n - 1)
+            |> List.flatMap(
                 row ->
-                    List.range(1, n - 1) |>
-                        List.filterMap(
+                    List.range(1, n - 1)
+                        |> List.filterMap(
                             col ->
                                 if (
                                     centerRepresentative(n, row, col) and
@@ -171,8 +171,8 @@ pub mod Orbit64.V2.Facelets {
                                 else
                                     None
                         )
-            ) |>
-            List.toVector
+            )
+            |> List.toVector
 
     def fixedFacelets(n: Int32): Vector[Int32] =
         let middle = (n * n - 1) / 2;
@@ -182,8 +182,8 @@ pub mod Orbit64.V2.Facelets {
         {
             corners = expandTable(n, 5, 1, cornerReference()),
             midges = if (odd(n)) expandTable(n, 5, 1, midgeReference()) else Vector.empty(),
-            wings = Vector.range(1, Orbit64.V2.State.wingOrbits(n) + 1) |>
-                Vector.map(d -> expandTable(n, 4, d, wingReference())),
+            wings = Vector.range(1, Orbit64.V2.State.wingOrbits(n) + 1)
+                |> Vector.map(d -> expandTable(n, 4, d, wingReference())),
             centers = centerTables(n),
             fixed = fixedFacelets(n)
         }
@@ -216,12 +216,12 @@ pub mod Orbit64.V2.Facelets {
         face * n * n + (b + m) / 2 * n + (a + m) / 2
 
     def faceOfNormal(normal: Vec): Int32 = match normal {
-        case (0, 1, 0) => 0
-        case (1, 0, 0) => 1
-        case (0, 0, 1) => 2
+        case (0, 1, 0)  => 0
+        case (1, 0, 0)  => 1
+        case (0, 0, 1)  => 2
         case (0, -1, 0) => 3
         case (-1, 0, 0) => 4
-        case _ => 5
+        case _          => 5
     }
 
     /// The `(a, b)` grid coordinates of a position on a face, as in `geometry`.
@@ -324,8 +324,8 @@ pub mod Orbit64.V2.Facelets {
 
     /// What each sticker of each piece shows in the picture model: `m p + j`.
     def pictureLabels(table: Vector[Vector[Int32]]): Vector[Vector[Int32]] =
-        Vector.range(0, Vector.length(table)) |>
-            Vector.map(p -> {
+        Vector.range(0, Vector.length(table))
+            |> Vector.map(p -> {
                 let m = Vector.length(Vector.get(p, table));
                 Vector.range(0, m) |> Vector.map(j -> m * p + j)
             })
@@ -340,13 +340,13 @@ pub mod Orbit64.V2.Facelets {
         pieces: Vector[Int32],
         twists: Vector[Int32]
     ): Unit \ r =
-        Vector.range(0, Vector.length(table)) |>
-            Vector.forEach(slot -> {
+        Vector.range(0, Vector.length(table))
+            |> Vector.forEach(slot -> {
                 let m = Vector.length(Vector.get(slot, table));
                 let shown = Vector.get(Vector.get(slot, pieces), labels);
                 let twist = Vector.get(slot, twists);
-                Vector.range(0, m) |>
-                    Vector.forEach(
+                Vector.range(0, m)
+                    |> Vector.forEach(
                         k ->
                             Array.put(
                                 Vector.get(Int32.modulo(k - twist + m, m), shown),
@@ -363,13 +363,10 @@ pub mod Orbit64.V2.Facelets {
         pieces: Vector[Int32]
     ): Unit \ r = writeOriented(sticker, table, labels, pieces, Vector.repeat(24, 0))
 
-    def writeCenters(
-        sticker: Array[Int32, r],
-        table: Vector[Int32],
-        colors: Vector[Int32]
-    ): Unit \ r =
-        Vector.range(0, Vector.length(table)) |>
-            Vector.forEach(
+    def writeCenters(sticker: Array[Int32, r], table: Vector[Int32], colors: Vector[Int32]): Unit
+        \ r =
+        Vector.range(0, Vector.length(table))
+            |> Vector.forEach(
                 slot -> Array.put(Vector.get(slot, colors), Vector.get(slot, table), sticker)
             )
 
@@ -382,8 +379,8 @@ pub mod Orbit64.V2.Facelets {
         region rc {
             let sticker = Array.repeat(rc, 6 * n * n, 0);
             let labels = table -> labelsOf(n, model, table);
-            Vector.range(0, Vector.length(t#fixed)) |>
-                Vector.forEach(
+            Vector.range(0, Vector.length(t#fixed))
+                |> Vector.forEach(
                     f -> Array.put(fixedValue(model, cube, f), Vector.get(f, t#fixed), sticker)
                 );
             writeOriented(
@@ -403,8 +400,8 @@ pub mod Orbit64.V2.Facelets {
                 )
             else
                 ();
-            Vector.range(0, Vector.length(t#wings)) |>
-                Vector.forEach(
+            Vector.range(0, Vector.length(t#wings))
+                |> Vector.forEach(
                     i ->
                         writeWings(
                             sticker,
@@ -413,8 +410,8 @@ pub mod Orbit64.V2.Facelets {
                             Vector.get(i, cube#wings)
                         )
                 );
-            Vector.range(0, Vector.length(t#centers)) |>
-                Vector.forEach(
+            Vector.range(0, Vector.length(t#centers))
+                |> Vector.forEach(
                     i ->
                         writeCenters(sticker, Vector.get(i, t#centers), Vector.get(i, cube#centers))
                 );
@@ -443,14 +440,14 @@ pub mod Orbit64.V2.Facelets {
             Vector.get(value, letters())
 
     def spell(n: Int32, model: Model, fs: Vector[Int32]): String =
-        Vector.range(0, 6) |>
-            Vector.map(
+        Vector.range(0, 6)
+            |> Vector.map(
                 face ->
-                    Vector.range(0, n * n) |>
-                        Vector.map(i -> symbolOf(model, Vector.get(face * n * n + i, fs))) |>
-                        Vector.join("")
-            ) |>
-            Vector.join(" ")
+                    Vector.range(0, n * n)
+                        |> Vector.map(i -> symbolOf(model, Vector.get(face * n * n + i, fs)))
+                        |> Vector.join("")
+            )
+            |> Vector.join(" ")
 
     // ------------------------------------------------- fixed center rotations
 
@@ -472,9 +469,9 @@ pub mod Orbit64.V2.Facelets {
 
     /// The clockwise quarter turns from the reference direction of `face` to `direction`.
     def quarterTurns(face: Int32, direction: Vec): Int32 =
-        List.range(0, 4) |>
-            List.find(k -> spin(normalOf(face), reference(face), k) == direction) |>
-            Option.getWithDefault(0)
+        List.range(0, 4)
+            |> List.find(k -> spin(normalOf(face), reference(face), k) == direction)
+            |> Option.getWithDefault(0)
 
     /// Where the fixed center of `face` with rotation `r` lands under `move`, and its new rotation.
     def carryFixed(move: Vec -> Vec, face: Int32, r: Int32): (Int32, Int32) =
@@ -483,18 +480,14 @@ pub mod Orbit64.V2.Facelets {
         (landed, quarterTurns(landed, move(own)))
 
     /// `permuted` is `before` with its facelets moved; carry the fixed centers along.
-    def turnFixed(
-        n: Int32,
-        move: Vec -> Vec,
-        before: Vector[Int32],
-        permuted: Vector[Int32]
-    ): Vector[Int32] =
+    def turnFixed(n: Int32, move: Vec -> Vec, before: Vector[Int32], permuted: Vector[Int32]):
+        Vector[Int32] =
         region rc {
             let out = Array.repeat(rc, Vector.length(permuted), 0);
-            Vector.range(0, Vector.length(permuted)) |>
-                Vector.forEach(i -> Array.put(Vector.get(i, permuted), i, out));
-            Vector.range(0, 6) |>
-                Vector.forEach(face -> {
+            Vector.range(0, Vector.length(permuted))
+                |> Vector.forEach(i -> Array.put(Vector.get(i, permuted), i, out));
+            Vector.range(0, 6)
+                |> Vector.forEach(face -> {
                     let value = Vector.get(Vector.get(face, fixedFacelets(n)), before);
                     let (landed, r) = carryFixed(move, face, Int32.modulo(value, 4));
                     Array.put(4 * (value / 4) + r, Vector.get(landed, fixedFacelets(n)), out)
@@ -520,8 +513,8 @@ pub mod Orbit64.V2.Facelets {
         if (not Option.isEmpty(typeFault(n, model)))
             Err(faultText(n, model))
         else
-            Orbit64.V2.State.rank(n, model, pose, cube) |>
-                Result.map(_ -> {
+            Orbit64.V2.State.rank(n, model, pose, cube)
+                |> Result.map(_ -> {
                     let fs = paint(n, tables(n), model, cube);
                     spell(
                         n,
@@ -538,14 +531,12 @@ pub mod Orbit64.V2.Facelets {
     // ---------------------------------------------------------- stickers to cube
 
     /// The stickers of a facelet string, as face indices, or why it is no string of `n^2` per face.
-    def parse(n: Int32, text: String, symbolIndex: Char -> Result[String, Int32]): Result[
-        String,
-        Vector[Int32]
-    ] =
-        String.toList(text) |>
-            List.filter(c -> c != ' ') |>
-            Result.traverse(symbolIndex) |>
-            Result.flatMap(indices -> {
+    def parse(n: Int32, text: String, symbolIndex: Char -> Result[String, Int32]):
+        Result[String, Vector[Int32]] =
+        String.toList(text)
+            |> List.filter(c -> c != ' ')
+            |> Result.traverse(symbolIndex)
+            |> Result.flatMap(indices -> {
                 let length = List.length(indices);
                 if (length != 6 * n * n)
                     Err("expected ${6 * n * n} facelets for the ${n}x${n}x${n}, got ${length}")
@@ -557,7 +548,7 @@ pub mod Orbit64.V2.Facelets {
     def letterIndex(c: Char): Result[String, Int32] =
         match List.indexOf(c, "URFDLB" |> String.toList) {
             case Some(i) => Ok(i)
-            case None => Err("facelet '${c}' is not one of U R F D L B")
+            case None    => Err("facelet '${c}' is not one of U R F D L B")
         }
 
     def checkCounts(n: Int32, fs: Vector[Int32]): Result[String, Unit] =
@@ -567,7 +558,7 @@ pub mod Orbit64.V2.Facelets {
                     "color ${Vector.get(f, letters())} occurs " +
                         "${Vector.count(x -> x == f, fs)} times, expected ${n * n}"
                 )
-            case None => Ok(())
+            case None    => Ok(())
         }
 
     /// The stickers on the facelets of one slot.
@@ -575,18 +566,17 @@ pub mod Orbit64.V2.Facelets {
         Vector.get(slot, table) |> Vector.map(at -> Vector.get(at, fs))
 
     /// The piece and twist whose colors, read from the slot's first facelet, are `seen`.
-    def readPiece(n: Int32, table: Vector[Vector[Int32]], seen: Vector[Int32]): Option[
-        (Int32, Int32)
-    ] =
+    def readPiece(n: Int32, table: Vector[Vector[Int32]], seen: Vector[Int32]):
+        Option[(Int32, Int32)] =
         let m = Vector.length(seen);
-        List.range(0, Vector.length(table)) |>
-            List.findMap(
+        List.range(0, Vector.length(table))
+            |> List.findMap(
                 p ->
-                    List.range(0, m) |>
-                        List.find(
+                    List.range(0, m)
+                        |> List.find(
                             o ->
-                                List.range(0, m) |>
-                                    List.forAll(
+                                List.range(0, m)
+                                    |> List.forAll(
                                         k ->
                                             Vector.get(k, seen) ==
                                                 faceOf(
@@ -597,49 +587,43 @@ pub mod Orbit64.V2.Facelets {
                                                     )
                                                 )
                                     )
-                        ) |>
-                        Option.map(o -> (p, o))
+                        )
+                        |> Option.map(o -> (p, o))
             )
 
     def noPiece(model: Model, what: String, slot: Int32, seen: Vector[Int32]): String =
         let shown = seen |> Vector.map(v -> symbolOf(model, v)) |> Vector.join("");
         "${what} slot ${slot} shows ${shown}, which is no ${what} of this cube"
 
-    def readOriented(
-        n: Int32,
-        what: String,
-        table: Vector[Vector[Int32]],
-        fs: Vector[Int32]
-    ): Result[String, (Vector[Int32], Vector[Int32])] =
-        List.range(0, Vector.length(table)) |>
-            Result.traverse(slot -> {
+    def readOriented(n: Int32, what: String, table: Vector[Vector[Int32]], fs: Vector[Int32]):
+        Result[String, (Vector[Int32], Vector[Int32])] =
+        List.range(0, Vector.length(table))
+            |> Result.traverse(slot -> {
                 let seen = seenAt(table, slot, fs);
                 match readPiece(n, table, seen) {
                     case Some(po) => Ok(po)
-                    case None => Err(noPiece(Model.Color, what, slot, seen))
+                    case None     => Err(noPiece(Model.Color, what, slot, seen))
                 }
-            }) |>
-            Result.map(ps -> (pick(fst, ps), pick(snd, ps)))
+            })
+            |> Result.map(ps -> (pick(fst, ps), pick(snd, ps)))
 
     def pick(f: ((Int32, Int32)) -> Int32, ps: List[(Int32, Int32)]): Vector[Int32] =
         ps |> List.map(f) |> List.toVector
 
     /// A wing carries no twist: its two stickers sit in the order of its home slot or not at all.
-    def readWingsStrict(n: Int32, table: Vector[Vector[Int32]], fs: Vector[Int32]): Result[
-        String,
-        Vector[Int32]
-    ] =
+    def readWingsStrict(n: Int32, table: Vector[Vector[Int32]], fs: Vector[Int32]):
+        Result[String, Vector[Int32]] =
         let solved = Vector.range(0, 6 * n * n) |> Vector.map(i -> faceOf(n, i));
         let homes = List.range(0, Vector.length(table)) |> List.map(p -> seenAt(table, p, solved));
-        List.range(0, Vector.length(table)) |>
-            Result.traverse(slot -> {
+        List.range(0, Vector.length(table))
+            |> Result.traverse(slot -> {
                 let seen = seenAt(table, slot, fs);
                 match List.indexOf(seen, homes) {
                     case Some(p) => Ok(p)
-                    case None => Err(noPiece(Model.Color, "wing", slot, seen))
+                    case None    => Err(noPiece(Model.Color, "wing", slot, seen))
                 }
-            }) |>
-            Result.map(List.toVector)
+            })
+            |> Result.map(List.toVector)
 
     def readCenters(table: Vector[Int32], fs: Vector[Int32]): Vector[Int32] =
         table |> Vector.map(at -> Vector.get(at, fs))
@@ -652,9 +636,9 @@ pub mod Orbit64.V2.Facelets {
                 readOriented(n, "midge", t#midges, fs)
             else
                 Ok((Vector.empty(), Vector.empty()));
-            ws <- t#wings |>
-                Vector.toList |>
-                Result.traverse(table -> readWingsStrict(n, table, fs))
+            ws <- t#wings
+                |> Vector.toList
+                |> Result.traverse(table -> readWingsStrict(n, table, fs))
         ) yield {
             cornerPieces = cp,
             cornerTwists = co,
@@ -667,10 +651,8 @@ pub mod Orbit64.V2.Facelets {
         }
 
     /// Rotate an odd cube so that its fixed centers are home; the frame is the one they show.
-    def normalizeOdd(n: Int32, t: Tables, fs: Vector[Int32]): Result[
-        String,
-        (Int32, Vector[Int32])
-    ] =
+    def normalizeOdd(n: Int32, t: Tables, fs: Vector[Int32]):
+        Result[String, (Int32, Vector[Int32])] =
         let shown = t#fixed |> Vector.map(at -> Vector.get(at, fs)) |> Vector.toList;
         frameShown(shown) |> Result.map(r -> (r, unrotate(n, turnOf(r), fs)))
 
@@ -678,20 +660,18 @@ pub mod Orbit64.V2.Facelets {
     def frameShown(shown: List[Int32]): Result[String, Int32] =
         match List.range(0, Orbit64.Frame.count()) |> List.find(r -> frameFaces(r) == shown) {
             case Some(r) => Ok(r)
-            case None => Err("the six fixed centers are not a right-handed whole-cube frame")
+            case None    => Err("the six fixed centers are not a right-handed whole-cube frame")
         }
 
     /// Rotate an even cube so that its DBL corner is in slot DBL with twist 0.
     /// `atHome` says whether a rotated string has the DBL corner home with twist 0.
-    def normalizeEven(n: Int32, fs: Vector[Int32], atHome: Vector[Int32] -> Bool): Result[
-        String,
-        Vector[Int32]
-    ] =
-        match List.range(0, Orbit64.Frame.count()) |>
-            List.map(r -> unrotate(n, turnOf(r), fs)) |>
-            List.find(atHome) {
+    def normalizeEven(n: Int32, fs: Vector[Int32], atHome: Vector[Int32] -> Bool):
+        Result[String, Vector[Int32]] =
+        match List.range(0, Orbit64.Frame.count())
+            |> List.map(r -> unrotate(n, turnOf(r), fs))
+            |> List.find(atHome) {
             case Some(rotated) => Ok(rotated)
-            case None => Err("no whole-cube rotation puts the DBL corner home")
+            case None          => Err("no whole-cube rotation puts the DBL corner home")
         }
 
     /// The cube state shown by a facelet string, in the pose of `pose`.
@@ -702,10 +682,8 @@ pub mod Orbit64.V2.Facelets {
     /// the orientation as `cube#frame`; of an even cube, in its corners.
     /// Anything that is no reachable cube is an error: wrong counts, a slot
     /// that shows no piece, a piece twice, a broken orientation law or parity.
-    pub def fromFacelets(n: Int32, model: Model, pose: Pose, facelets: String): Result[
-        String,
-        Cube
-    ] =
+    pub def fromFacelets(n: Int32, model: Model, pose: Pose, facelets: String):
+        Result[String, Cube] =
         if (not Option.isEmpty(typeFault(n, model)))
             Err(faultText(n, model))
         else if (model == Model.Picture)
@@ -724,20 +702,18 @@ pub mod Orbit64.V2.Facelets {
         ) yield cube
 
     /// The frame to record and the stickers in the pose the type reads them in.
-    def posedStickers(n: Int32, pose: Pose, t: Tables, fs: Vector[Int32]): Result[
-        String,
-        (Int32, Vector[Int32])
-    ] =
+    def posedStickers(n: Int32, pose: Pose, t: Tables, fs: Vector[Int32]):
+        Result[String, (Int32, Vector[Int32])] =
         if (odd(n))
-            normalizeOdd(n, t, fs) |>
-                Result.map(match (r, c) -> (if (pose == Pose.Framed) r else 0, c))
+            normalizeOdd(n, t, fs)
+                |> Result.map(match (r, c) -> (if (pose == Pose.Framed) r else 0, c))
         else if (pose == Pose.Canonical)
             normalizeEven(
                 n,
                 fs,
                 rotated -> readPiece(n, t#corners, seenAt(t#corners, 6, rotated)) == Some((6, 0))
-            ) |>
-                Result.map(c -> (0, c))
+            )
+                |> Result.map(c -> (0, c))
         else
             Ok((0, fs))
 
@@ -747,7 +723,7 @@ pub mod Orbit64.V2.Facelets {
     def symbolIndex(c: Char): Result[String, Int32] =
         match List.indexOf(c, String.toList(symbols())) {
             case Some(i) => Ok(i)
-            case None => Err("facelet '${c}' is not a base64url symbol")
+            case None    => Err("facelet '${c}' is not a base64url symbol")
         }
 
     /// The stickers of one piece type: where they sit, how many values they
@@ -775,12 +751,12 @@ pub mod Orbit64.V2.Facelets {
             t#wings |> Vector.toList |> List.map(w -> groupOf("wing", Vector.flatten(w), 48, 1));
         let centers = t#centers |> Vector.toList |> List.map(c -> groupOf("center", c, 24, 1));
         List.flatten(
-            (groupOf("corner", Vector.flatten(t#corners), 24, 1) :: Nil) ::
-                midges ::
-                wings ::
-                centers ::
-                fixed ::
-                Nil
+            (groupOf("corner", Vector.flatten(t#corners), 24, 1) :: Nil)
+                :: midges
+                :: wings
+                :: centers
+                :: fixed
+                :: Nil
         )
 
     /// A sticker on a facelet of the wrong class, or a piece shown twice.
@@ -793,12 +769,12 @@ pub mod Orbit64.V2.Facelets {
                     "facelet ${at} shows '${shows(Vector.get(at, vs))}', " +
                         "which is no ${g#what} sticker"
                 )
-            case None =>
-                match values |>
-                    Vector.toList |>
-                    List.find(v -> Vector.count(w -> w / g#per == v / g#per, values) > 1) {
+            case None     =>
+                match values
+                    |> Vector.toList
+                    |> List.find(v -> Vector.count(w -> w / g#per == v / g#per, values) > 1) {
                     case Some(v) => Err("${g#what} sticker '${shows(v)}' occurs more than once")
-                    case None => Ok(())
+                    case None    => Ok(())
                 }
         }
 
@@ -809,8 +785,8 @@ pub mod Orbit64.V2.Facelets {
         let p = first / m;
         let o = Int32.modulo(m - Int32.modulo(first, m), m);
         if (
-            List.range(0, m) |>
-                List.forAll(k -> Vector.get(k, seen) == m * p + Int32.modulo(k - o + m, m))
+            List.range(0, m)
+                |> List.forAll(k -> Vector.get(k, seen) == m * p + Int32.modulo(k - o + m, m))
         )
             Some((p, o))
         else
@@ -823,8 +799,8 @@ pub mod Orbit64.V2.Facelets {
         strict: Bool,
         vs: Vector[Int32]
     ): Result[String, (Vector[Int32], Vector[Int32])] =
-        List.range(0, Vector.length(table)) |>
-            Result.traverse(slot -> {
+        List.range(0, Vector.length(table))
+            |> Result.traverse(slot -> {
                 let seen = seenAt(table, slot, vs);
                 match readPictureSlot(seen) {
                     case Some((p, o)) =>
@@ -832,25 +808,23 @@ pub mod Orbit64.V2.Facelets {
                             Err(noPiece(Model.Picture, what, slot, seen))
                         else
                             Ok((p, o))
-                    case None => Err(noPiece(Model.Picture, what, slot, seen))
+                    case None         => Err(noPiece(Model.Picture, what, slot, seen))
                 }
-            }) |>
-            Result.map(ps -> (pick(fst, ps), pick(snd, ps)))
+            })
+            |> Result.map(ps -> (pick(fst, ps), pick(snd, ps)))
 
     /// The coordinates of a canonical-pose picture; the frame is `frame`.
-    def readPictureCube(n: Int32, t: Tables, frame: Int32, vs: Vector[Int32]): Result[
-        String,
-        Cube
-    ] =
+    def readPictureCube(n: Int32, t: Tables, frame: Int32, vs: Vector[Int32]):
+        Result[String, Cube] =
         forM (
             (cp, co) <- readPictureOriented("corner", t#corners, false, vs);
             (mp, mo) <- if (odd(n))
                 readPictureOriented("midge", t#midges, false, vs)
             else
                 Ok((Vector.empty(), Vector.empty()));
-            ws <- t#wings |>
-                Vector.toList |>
-                Result.traverse(
+            ws <- t#wings
+                |> Vector.toList
+                |> Result.traverse(
                     table -> readPictureOriented("wing", table, true, vs) |> Result.map(fst)
                 )
         ) yield {
@@ -865,13 +839,11 @@ pub mod Orbit64.V2.Facelets {
         }
 
     /// The frame to record and the symbols in the pose the type reads them in.
-    def posedPicture(n: Int32, pose: Pose, t: Tables, vs: Vector[Int32]): Result[
-        String,
-        (Int32, Vector[Int32])
-    ] =
+    def posedPicture(n: Int32, pose: Pose, t: Tables, vs: Vector[Int32]):
+        Result[String, (Int32, Vector[Int32])] =
         if (odd(n))
-            frameShown(t#fixed |> Vector.map(at -> Vector.get(at, vs) / 4) |> Vector.toList) |>
-                Result.map(
+            frameShown(t#fixed |> Vector.map(at -> Vector.get(at, vs) / 4) |> Vector.toList)
+                |> Result.map(
                     r -> (if (pose == Pose.Framed) r else 0, unrotatePicture(n, turnOf(r), vs))
                 )
         else if (pose == Pose.Canonical)
@@ -879,16 +851,16 @@ pub mod Orbit64.V2.Facelets {
                 n,
                 vs,
                 rotated -> readPictureSlot(seenAt(t#corners, 6, rotated)) == Some((6, 0))
-            ) |>
-                Result.map(c -> (0, c))
+            )
+                |> Result.map(c -> (0, c))
         else
             Ok((0, vs))
 
     /// Every sticker is of its class and every slot spells one piece, in any pose.
     def checkPieces(n: Int32, t: Tables, vs: Vector[Int32]): Result[String, Unit] =
-        Result.traverse(g -> checkGroup(vs, g), groups(t)) |>
-            Result.flatMap(_ -> readPictureCube(n, t, 0, vs)) |>
-            Result.map(_ -> ())
+        Result.traverse(g -> checkGroup(vs, g), groups(t))
+            |> Result.flatMap(_ -> readPictureCube(n, t, 0, vs))
+            |> Result.map(_ -> ())
 
     def readPictureStickers(n: Int32, pose: Pose, facelets: String): Result[String, Cube] =
         let t = tables(n);
@@ -905,17 +877,17 @@ pub mod Orbit64.V2.Facelets {
     /// The V2 token of the cube a facelet string shows, for registry entry `id`.
     pub def encode(id: Int32, facelets: String): Result[String, String] =
         match Orbit64.V2.Registry.entry(id) {
-            case None => Err("unknown registry entry ${id}")
+            case None    => Err("unknown registry entry ${id}")
             case Some(e) =>
-                fromFacelets(e#n, e#model, e#pose, facelets) |>
-                    Result.flatMap(cube -> Orbit64.V2.Codec.encode(id, cube))
+                fromFacelets(e#n, e#model, e#pose, facelets)
+                    |> Result.flatMap(cube -> Orbit64.V2.Codec.encode(id, cube))
         }
 
     /// The registry entry of a token and the facelet string of its state.
     pub def decode(token: String): Result[String, (Orbit64.V2.Registry.Entry, String)] =
-        Orbit64.V2.Codec.decode(token) |>
-            Result.flatMap(
-                match (e, cube) -> toFacelets(e#n, e#model, e#pose, cube) |>
-                    Result.map(text -> (e, text))
+        Orbit64.V2.Codec.decode(token)
+            |> Result.flatMap(
+                match (e, cube) -> toFacelets(e#n, e#model, e#pose, cube)
+                    |> Result.map(text -> (e, text))
             )
 }

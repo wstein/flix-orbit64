@@ -29,7 +29,7 @@ def swapFacelets(a: Int32, b: Int32, fs: Vector[Int32]): Vector[Int32] =
 
 def refuses(said: { said = String }, what: String, n: Int32, fs: Vector[Int32]): Unit \ Assert =
     match Orbit64.Net.fromFacelets(n, fs) {
-        case Ok(_) => Assert.assertTrueWithMsg(false, "read a ${n}x${n}x${n} from ${what}")
+        case Ok(_)    => Assert.assertTrueWithMsg(false, "read a ${n}x${n}x${n} from ${what}")
         case Err(why) =>
             Assert.assertTrueWithMsg(
                 String.contains(substr = said#said, why),
@@ -43,8 +43,8 @@ def refuses(said: { said = String }, what: String, n: Int32, fs: Vector[Int32]):
 ///
 @Test
 def fromFaceletsDeclinesASizeWithNoConvention(): Unit \ Assert =
-    List#{1, 8} |>
-        List.forEach(
+    List#{1, 8}
+        |> List.forEach(
             n ->
                 refuses(
                     said = "no slot convention",
@@ -60,8 +60,8 @@ def fromFaceletsDeclinesASizeWithNoConvention(): Unit \ Assert =
 ///
 @Test
 def fromFaceletsDeclinesTheWrongNumberOfFacelets(): Unit \ Assert =
-    readable() |>
-        List.forEach(n -> {
+    readable()
+        |> List.forEach(n -> {
             let fs = stickersOf(n);
             let short = Vector.init(i -> Vector.get(i, fs), Vector.length(fs) - 1);
             refuses(said = "facelets for the", "one facelet too few", n, short);
@@ -78,8 +78,8 @@ def fromFaceletsDeclinesTheWrongNumberOfFacelets(): Unit \ Assert =
 ///
 @Test
 def fromFaceletsDeclinesAFaceletThatIsNoFace(): Unit \ Assert =
-    readable() |>
-        List.forEach(n -> {
+    readable()
+        |> List.forEach(n -> {
             let fs = stickersOf(n);
             refuses(said = "must name a face", "a facelet numbered 6", n, withFacelet(0, 6, fs));
             refuses(said = "must name a face", "a facelet numbered -1", n, withFacelet(0, -1, fs))
@@ -178,16 +178,16 @@ def exchange(a: Int32, b: Int32, v: Vector[Int32]): Vector[Int32] =
     )
 
 def exchangeCorners(cs: List[Orbit64.Coord.Coord]): List[Orbit64.Coord.Coord] =
-    cs |>
-        List.map(c -> match c {
+    cs
+        |> List.map(c -> match c {
             case Orbit64.Coord.Coord.CornerCoord(p, t) =>
                 Orbit64.Coord.Coord.CornerCoord(exchange(0, 1, p), t)
             case _ => c
         })
 
 def exchangeMidges(cs: List[Orbit64.Coord.Coord]): List[Orbit64.Coord.Coord] =
-    cs |>
-        List.map(c -> match c {
+    cs
+        |> List.map(c -> match c {
             case Orbit64.Coord.Coord.MidgeCoord(p, f) =>
                 Orbit64.Coord.Coord.MidgeCoord(exchange(0, 1, p), f)
             case _ => c
@@ -207,8 +207,8 @@ def solvedOrbitsOf(n: Int32): List[Orbit64.Coord.Coord] =
 ///
 @Test
 def fromFaceletsDeclinesTwoSwappedCornersOnAnOddCube(): Unit \ Assert =
-    List#{3, 5, 7} |>
-        List.forEach(
+    List#{3, 5, 7}
+        |> List.forEach(
             n ->
                 refuses(
                     said = "corner and midge permutation parity must match",
@@ -223,8 +223,8 @@ def fromFaceletsDeclinesTwoSwappedCornersOnAnOddCube(): Unit \ Assert =
 ///
 @Test
 def fromFaceletsDeclinesTwoSwappedMidgesOnAnOddCube(): Unit \ Assert =
-    List#{3, 5, 7} |>
-        List.forEach(
+    List#{3, 5, 7}
+        |> List.forEach(
             n ->
                 refuses(
                     said = "corner and midge permutation parity must match",
@@ -239,8 +239,8 @@ def fromFaceletsDeclinesTwoSwappedMidgesOnAnOddCube(): Unit \ Assert =
 ///
 @Test
 def fromFaceletsAcceptsMatchingParityOnAnOddCube(): Unit \ Assert =
-    List#{3, 5, 7} |>
-        List.forEach(n -> {
+    List#{3, 5, 7}
+        |> List.forEach(n -> {
             let both = exchangeMidges(exchangeCorners(solvedOrbitsOf(n)));
             Assert.assertEq(
                 expected = Ok(Orbit64.State.canonical(both)),
@@ -248,8 +248,8 @@ def fromFaceletsAcceptsMatchingParityOnAnOddCube(): Unit \ Assert =
             );
             Assert.assertTrueWithMsg(
                 Result.isOk(
-                    Orbit64.Net.fromFacelets(n, drawn(n, both)) |>
-                        Result.flatMap(s -> Orbit64.State.encode(n, s))
+                    Orbit64.Net.fromFacelets(n, drawn(n, both))
+                        |> Result.flatMap(s -> Orbit64.State.encode(n, s))
                 ),
                 "a matching-parity ${n}x${n}x${n} did not encode"
             )
@@ -260,8 +260,8 @@ def fromFaceletsAcceptsMatchingParityOnAnOddCube(): Unit \ Assert =
 ///
 @Test
 def fromFaceletsAcceptsSwappedCornersOnAnEvenCube(): Unit \ Assert =
-    List#{2, 4, 6} |>
-        List.forEach(n -> {
+    List#{2, 4, 6}
+        |> List.forEach(n -> {
             let swapped = exchangeCorners(solvedOrbitsOf(n));
             Assert.assertEq(
                 expected = Ok(Orbit64.State.canonical(swapped)),

@@ -13,8 +13,8 @@ def loweringPreservesNamedSharingAndAlgebraicOperators(): Unit \ Assert =
         lowered |> Result.flatMap(Orbit64.Algorithm.expandedCount(2))
     );
     Assert.assertTrue(
-        lowered |>
-            Result.map(algorithm -> Orbit64.Algorithm.faultOf(2, algorithm) |> Option.isEmpty) ==
+        lowered
+            |> Result.map(algorithm -> Orbit64.Algorithm.faultOf(2, algorithm) |> Option.isEmpty) ==
             Ok(true)
     )
 
@@ -24,14 +24,14 @@ def loweredSourceRoundTripsThroughTheStructuredToken(): Unit \ Assert =
     let lowered =
         AlgorithmTool.Parser.parse(source) |> Result.flatMap(AlgorithmTool.Lowering.lower);
     let roundTripped =
-        lowered |>
-            Result.flatMap(
+        lowered
+            |> Result.flatMap(
                 algorithm ->
-                    Orbit64.Algorithm.Encoding.encode(2, algorithm) |>
-                        Result.flatMap(
+                    Orbit64.Algorithm.Encoding.encode(2, algorithm)
+                        |> Result.flatMap(
                             token ->
-                                Orbit64.Algorithm.Encoding.decode(token) |>
-                                    Result.map(match (_, decoded) -> decoded)
+                                Orbit64.Algorithm.Encoding.decode(token)
+                                    |> Result.map(match (_, decoded) -> decoded)
                         )
             );
     Assert.assertEq(expected = lowered, roundTripped)
@@ -42,10 +42,10 @@ def reconstructedSourcePreservesTheExpandedMoveSequence(): Unit \ Assert =
     let original =
         AlgorithmTool.Parser.parse(source) |> Result.flatMap(AlgorithmTool.Lowering.lower);
     let reconstructed =
-        AlgorithmTool.RoundTrip.roundTrip(2, source) |>
-            Result.flatMap(
-                match (_, text) -> AlgorithmTool.Parser.parse(text) |>
-                    Result.flatMap(AlgorithmTool.Lowering.lower)
+        AlgorithmTool.RoundTrip.roundTrip(2, source)
+            |> Result.flatMap(
+                match (_, text) -> AlgorithmTool.Parser.parse(text)
+                    |> Result.flatMap(AlgorithmTool.Lowering.lower)
             );
     Assert.assertEq(
         expected = original |> Result.flatMap(Orbit64.Algorithm.expandedCount(2)),
@@ -56,10 +56,10 @@ def reconstructedSourcePreservesTheExpandedMoveSequence(): Unit \ Assert =
 def reconstructionKeepsSliceSourcesNamed(): Unit \ Assert =
     let source = "def base = U R\ndef prefix = base[0:1]\nexport prefix";
     let reconstructed =
-        AlgorithmTool.RoundTrip.roundTrip(2, source) |>
-            Result.flatMap(
-                match (_, text) -> AlgorithmTool.Parser.parse(text) |>
-                    Result.flatMap(AlgorithmTool.Lowering.lower)
+        AlgorithmTool.RoundTrip.roundTrip(2, source)
+            |> Result.flatMap(
+                match (_, text) -> AlgorithmTool.Parser.parse(text)
+                    |> Result.flatMap(AlgorithmTool.Lowering.lower)
             );
     Assert.assertEq(
         expected = Ok(1ii),

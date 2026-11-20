@@ -84,7 +84,7 @@ def fiveByFiveSolved(): Unit \ Assert =
     );
     match Orbit64.State.encode(5, Orbit64.State.canonical(orbits)) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t) =>
+        case Ok(t)  =>
             Assert.assertEq(
                 expected = Ok(Orbit64.State.canonical(orbits)),
                 Orbit64.State.decode(5, t)
@@ -164,7 +164,7 @@ def fiveByFiveUw(): Unit \ Assert =
     );
     match Orbit64.State.encode(5, Orbit64.State.canonical(orbits)) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t) =>
+        case Ok(t)  =>
             Assert.assertEq(
                 expected = Ok(Orbit64.State.canonical(orbits)),
                 Orbit64.State.decode(5, t)
@@ -244,7 +244,7 @@ def fiveByFive2Ruwf2(): Unit \ Assert =
     );
     match Orbit64.State.encode(5, Orbit64.State.canonical(orbits)) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t) =>
+        case Ok(t)  =>
             Assert.assertEq(
                 expected = Ok(Orbit64.State.canonical(orbits)),
                 Orbit64.State.decode(5, t)
@@ -324,7 +324,7 @@ def fiveByFiveRuw2Rfd2Fu4R(): Unit \ Assert =
     );
     match Orbit64.State.encode(5, Orbit64.State.canonical(orbits)) {
         case Err(e) => Assert.assertEq(expected = "encodes", e)
-        case Ok(t) =>
+        case Ok(t)  =>
             Assert.assertEq(
                 expected = Ok(Orbit64.State.canonical(orbits)),
                 Orbit64.State.decode(5, t)

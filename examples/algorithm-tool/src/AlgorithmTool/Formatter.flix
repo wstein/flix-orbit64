@@ -14,12 +14,12 @@ pub mod AlgorithmTool.Formatter {
 
     /// Format an expression without changing its AST structure.
     pub def expression(expr: AlgorithmTool.Ast.Expr): String = match expr {
-        case Move(move) => moveText(move)
-        case Reference(name) => name
-        case Concat(children) => children |> List.map(formatExpr) |> List.join(" ")
-        case Repeat(child, count) => "(${formatExpr(child)})${count}"
-        case Inverse(child) => "(${formatExpr(child)})'"
-        case Conjugate(left, right) => "[${formatExpr(left)}: ${formatExpr(right)}]"
+        case Move(move)              => moveText(move)
+        case Reference(name)         => name
+        case Concat(children)        => children |> List.map(formatExpr) |> List.join(" ")
+        case Repeat(child, count)    => "(${formatExpr(child)})${count}"
+        case Inverse(child)          => "(${formatExpr(child)})'"
+        case Conjugate(left, right)  => "[${formatExpr(left)}: ${formatExpr(right)}]"
         case Commutator(left, right) => "[${formatExpr(left)}, ${formatExpr(right)}]"
         case Slice(name, start, end) => "${name}[${start}:${end}]"
     }
@@ -50,8 +50,8 @@ pub mod AlgorithmTool.Formatter {
     }
 
     def amountText(amount: Orbit64.Move.Amount): String = match amount {
-        case Orbit64.Move.Amount.Clockwise => ""
-        case Orbit64.Move.Amount.Half => "2"
+        case Orbit64.Move.Amount.Clockwise        => ""
+        case Orbit64.Move.Amount.Half             => "2"
         case Orbit64.Move.Amount.CounterClockwise => "'"
     }
 }

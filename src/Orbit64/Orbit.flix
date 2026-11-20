@@ -72,8 +72,11 @@ pub mod Orbit64.Orbit {
         case Wings => factorial(24)
         // Four indistinguishable copies of each of six colors.
         case Centers =>
-            List.range(0, 5) |>
-                List.foldLeft((acc, t) -> acc * Int32.toBigInt(Rank.binomial(24 - 4 * t, 4)), 1ii)
+            List.range(0, 5)
+                |> List.foldLeft(
+                    (acc, t) -> acc * Int32.toBigInt(Rank.binomial(24 - 4 * t, 4)),
+                    1ii
+                )
     }
 
     ///
@@ -81,8 +84,8 @@ pub mod Orbit64.Orbit {
     ///
     pub def size(o: Orbit): Int32 = match o {
         case Corners => 8
-        case Midges => 12
-        case Wings => 24
+        case Midges  => 12
+        case Wings   => 24
         case Centers => 24
     }
 

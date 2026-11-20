@@ -17,8 +17,8 @@ def aMidge(): Orbit64.Coord.Coord = MidgeCoord(Vector.range(0, 12), Vector.repea
 
 @Test
 def netAcceptsExactlyTheLayout(): Unit \ Assert =
-    drawable() |>
-        List.forEach(
+    drawable()
+        |> List.forEach(
             n ->
                 Assert.assertTrueWithMsg(
                     Result.isOk(Orbit64.Net.draw(n, Orbit64.State.solved(n), false)),
@@ -28,8 +28,8 @@ def netAcceptsExactlyTheLayout(): Unit \ Assert =
 
 @Test
 def netDeclinesAnEmptyOrbitList(): Unit \ Assert =
-    drawable() |>
-        List.forEach(
+    drawable()
+        |> List.forEach(
             n ->
                 Assert.assertTrueWithMsg(
                     Result.isErr(Orbit64.Net.draw(n, Orbit64.State.canonical(Nil), false)),
@@ -39,12 +39,12 @@ def netDeclinesAnEmptyOrbitList(): Unit \ Assert =
 
 @Test
 def netDeclinesAnIncompleteOrbitList(): Unit \ Assert =
-    drawable() |>
-        List.forEach(n -> {
+    drawable()
+        |> List.forEach(n -> {
             let full = Orbit64.State.solved(n) |> Orbit64.State.orbits;
             // every proper prefix, so "one orbit short" and "corners only" both count
-            List.range(0, List.length(full)) |>
-                List.forEach(
+            List.range(0, List.length(full))
+                |> List.forEach(
                     k ->
                         Assert.assertTrueWithMsg(
                             Result.isErr(
@@ -61,8 +61,8 @@ def netDeclinesAnIncompleteOrbitList(): Unit \ Assert =
 
 @Test
 def netDeclinesADuplicatedOrbit(): Unit \ Assert =
-    drawable() |>
-        List.forEach(n -> {
+    drawable()
+        |> List.forEach(n -> {
             let full = Orbit64.State.solved(n) |> Orbit64.State.orbits;
             match full {
                 case first :: _ =>
@@ -72,7 +72,7 @@ def netDeclinesADuplicatedOrbit(): Unit \ Assert =
                         ),
                         "drew a ${n}x${n}x${n} with an orbit repeated"
                     )
-                case Nil => ()
+                case Nil        => ()
             }
         })
 
@@ -80,8 +80,8 @@ def netDeclinesADuplicatedOrbit(): Unit \ Assert =
 def netDeclinesAnOrbitThatSizeDoesNotHave(): Unit \ Assert =
     // A 2x2x2 and a 4x4x4 have no midges; appending one is valid on its own
     // terms and still not a cube of that size.
-    List#{2, 4} |>
-        List.forEach(
+    List#{2, 4}
+        |> List.forEach(
             n ->
                 Assert.assertTrueWithMsg(
                     Result.isErr(
@@ -102,8 +102,8 @@ def netDeclinesAnOrbitThatSizeDoesNotHave(): Unit \ Assert =
 @Test
 def netDeclinesAReorderedOrbitList(): Unit \ Assert =
     // Reversal only changes the layout where the orbits are not all alike.
-    List#{3, 4, 5, 6, 7} |>
-        List.forEach(
+    List#{3, 4, 5, 6, 7}
+        |> List.forEach(
             n ->
                 Assert.assertTrueWithMsg(
                     Result.isErr(
@@ -126,10 +126,10 @@ def netDeclinesAReorderedOrbitList(): Unit \ Assert =
 ///
 @Test
 def everyFaceletIsWrittenExactlyOnce(): Unit \ Assert =
-    List#{3, 4, 5, 6, 7} |>
-        List.forEach(n ->
+    List#{3, 4, 5, 6, 7}
+        |> List.forEach(n ->
             match Orbit64.Net.writtenFacelets(n) {
-                case None => Assert.assertEq(expected = "tables for ${n}", "none")
+                case None     => Assert.assertEq(expected = "tables for ${n}", "none")
                 case Some(fs) =>
                     Assert.assertEq(expected = 6 * n * n, Vector.length(fs));
                     Assert.assertEq(expected = 6 * n * n, Vector.toSet(fs) |> Set.size);

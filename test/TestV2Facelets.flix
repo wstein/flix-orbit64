@@ -34,25 +34,25 @@ def faceletV1Vectors(): List[(Int32, String)] = List#{
 /// The V2 coordinates of a V1 state: the same orbits in the same order.
 def faceletCubeOf(state: Orbit64.State.FramedState): Cube =
     let orbits = Orbit64.State.orbits(state);
-    let wings = orbits |>
-        List.filterMap(c -> match c {
+    let wings = orbits
+        |> List.filterMap(c -> match c {
             case Coord.WingCoord(w) => Some(w)
-            case _ => None
+            case _                  => None
         });
-    let centers = orbits |>
-        List.filterMap(c -> match c {
+    let centers = orbits
+        |> List.filterMap(c -> match c {
             case Coord.CenterCoord(z) => Some(z)
-            case _ => None
+            case _                    => None
         });
-    let corners = orbits |>
-        List.findMap(c -> match c {
+    let corners = orbits
+        |> List.findMap(c -> match c {
             case Coord.CornerCoord(p, t) => Some((p, t))
-            case _ => None
+            case _                       => None
         });
-    let midges = orbits |>
-        List.findMap(c -> match c {
+    let midges = orbits
+        |> List.findMap(c -> match c {
             case Coord.MidgeCoord(p, f) => Some((p, f))
-            case _ => None
+            case _                      => None
         });
     let none = (Vector.empty(), Vector.empty());
     let (cp, ct) = Option.getWithDefault(none, corners);
@@ -71,14 +71,14 @@ def faceletCubeOf(state: Orbit64.State.FramedState): Cube =
 def faceletLetters(n: Int32, fs: Vector[Int32]): String =
     let l = Vector#{"U", "R", "F", "D", "L", "B"};
     let letter = i -> Vector.get(Vector.get(i, fs), l);
-    Vector.range(0, 6) |>
-        Vector.map(
+    Vector.range(0, 6)
+        |> Vector.map(
             face ->
-                Vector.range(0, n * n) |>
-                    Vector.map(i -> letter(face * n * n + i)) |>
-                    Vector.join("")
-        ) |>
-        Vector.join(" ")
+                Vector.range(0, n * n)
+                    |> Vector.map(i -> letter(face * n * n + i))
+                    |> Vector.join("")
+        )
+        |> Vector.join(" ")
 
 def faceletShow(c: Cube): String =
     "${c#cornerPieces} ${c#cornerTwists} ${c#midgePieces} ${c#midgeFlips} " +
@@ -101,7 +101,7 @@ def faceletRead(n: Int32, pose: Pose, text: String): Result[String, String] =
 /// The state `state` has the same facelets in V2 as in V1 `Net`, and V2 reads them back.
 def faceletAgreesWithNet(n: Int32, state: Orbit64.State.FramedState): Unit \ Assert =
     match faceletNet(n, state) {
-        case Err(why) => Assert.fail("${n}: ${why}")
+        case Err(why)     => Assert.fail("${n}: ${why}")
         case Ok(expected) =>
             Assert.assertEq(expected = Ok(expected), faceletWrite(n, state));
             Assert.assertEq(
@@ -112,14 +112,11 @@ def faceletAgreesWithNet(n: Int32, state: Orbit64.State.FramedState): Unit \ Ass
 
 /// A rotated odd cube: V2 writes what `Net` writes, reads the same frame and
 /// state, and a canonical read rotates it back to frame 0.
-def faceletAgreesWithNetRotated(
-    n: Int32,
-    state: Orbit64.State.FramedState,
-    rank: Int32
-): Unit \ Assert =
+def faceletAgreesWithNetRotated(n: Int32, state: Orbit64.State.FramedState, rank: Int32): Unit
+    \ Assert =
     let turned = faceletFramed(state, rank);
     match faceletNet(n, turned) {
-        case Err(why) => Assert.fail("${n} frame ${rank}: ${why}")
+        case Err(why)     => Assert.fail("${n} frame ${rank}: ${why}")
         case Ok(expected) =>
             Assert.assertEq(expected = Ok(expected), faceletWrite(n, turned));
             Assert.assertEq(
@@ -134,21 +131,21 @@ def faceletAgreesWithNetRotated(
 
 @Test
 def facelets2Through7AgreeWithV1Net(): Unit \ Assert =
-    faceletV1Vectors() |>
-        List.forEach(match (n, token) -> match Orbit64.State.decode(n, token) {
-            case Err(why) => Assert.fail("${token}: ${why}")
+    faceletV1Vectors()
+        |> List.forEach(match (n, token) -> match Orbit64.State.decode(n, token) {
+            case Err(why)  => Assert.fail("${token}: ${why}")
             case Ok(state) => faceletAgreesWithNet(n, state)
         })
 
 @Test
 def rotatedOddCubesAgreeWithV1NetAndFrame(): Unit \ Assert =
-    faceletV1Vectors() |>
-        List.filter(match (n, _) -> n >= 3 and Int32.modulo(n, 2) == 1) |>
-        List.forEach(match (n, token) -> match Orbit64.State.decode(n, token) {
-            case Err(why) => Assert.fail("${token}: ${why}")
+    faceletV1Vectors()
+        |> List.filter(match (n, _) -> n >= 3 and Int32.modulo(n, 2) == 1)
+        |> List.forEach(match (n, token) -> match Orbit64.State.decode(n, token) {
+            case Err(why)  => Assert.fail("${token}: ${why}")
             case Ok(state) =>
-                List.range(1, Orbit64.Frame.count()) |>
-                    List.forEach(rank -> faceletAgreesWithNetRotated(n, state, rank))
+                List.range(1, Orbit64.Frame.count())
+                    |> List.forEach(rank -> faceletAgreesWithNetRotated(n, state, rank))
         })
 
 @Test
@@ -156,7 +153,7 @@ def aV1TokenWithAFrameIsTheSolvedCubeAfterX(): Unit \ Assert =
     // FORMAT.md: AAAAAAAAAAAE is the solved 3x3x3 after `x`, frame F R D B L U.
     let shown = "FFFFFFFFF RRRRRRRRR DDDDDDDDD BBBBBBBBB LLLLLLLLL UUUUUUUUU";
     match Orbit64.State.decode(3, "AAAAAAAAAAAE") {
-        case Err(why) => Assert.fail(why)
+        case Err(why)  => Assert.fail(why)
         case Ok(state) =>
             Assert.assertEq(expected = 4, Orbit64.Frame.rank(Orbit64.State.frame(state)));
             Assert.assertEq(expected = Ok(shown), faceletNet(3, state));
@@ -169,8 +166,8 @@ def aV1TokenWithAFrameIsTheSolvedCubeAfterX(): Unit \ Assert =
 
 @Test
 def independentFaceletRowsEncodeToTheirTokens(): Unit \ Assert =
-    TestV2FaceletData.rows() |>
-        List.forEach(
+    TestV2FaceletData.rows()
+        |> List.forEach(
             match (id, _moves, facelets, token, _) -> Assert.assertEq(
                 expected = Ok(token),
                 Orbit64.V2.Facelets.encode(id, facelets)
@@ -179,8 +176,8 @@ def independentFaceletRowsEncodeToTheirTokens(): Unit \ Assert =
 
 @Test
 def independentFaceletRowsDecodeToTheirFacelets(): Unit \ Assert =
-    TestV2FaceletData.rows() |>
-        List.forEach(match (
+    TestV2FaceletData.rows()
+        |> List.forEach(match (
             id,
             moves,
             facelets,
@@ -190,14 +187,14 @@ def independentFaceletRowsDecodeToTheirFacelets(): Unit \ Assert =
             case Ok((e, text)) =>
                 Assert.assertEq(expected = id, e#id);
                 Assert.assertEq(expected = if (canonical == "") facelets else canonical, text)
-            case Err(why) => Assert.fail("${moves}: ${why}")
+            case Err(why)      => Assert.fail("${moves}: ${why}")
         })
 
 @Test
 def solvedFaceletsAreTheSolvedToken(): Unit \ Assert =
-    Orbit64.V2.Registry.entries() |>
-        List.filter(e -> e#model == Model.Color) |>
-        List.forEach(
+    Orbit64.V2.Registry.entries()
+        |> List.filter(e -> e#model == Model.Color)
+        |> List.forEach(
             e ->
                 let n = e#n;
                 let side = f -> String.repeat(n * n, f);
@@ -218,7 +215,7 @@ def faceletError(text: String): Result[String, Cube] =
 /// A 3x3x3 string is rejected, and the message names the reason.
 def assertRejected(reason: String, text: String): Unit \ Assert =
     match faceletError(text) {
-        case Ok(_) => Assert.fail("accepted: ${text}")
+        case Ok(_)    => Assert.fail("accepted: ${text}")
         case Err(why) => Assert.assertTrue(String.contains(substr = reason, why))
     }
 
@@ -268,7 +265,7 @@ def unsupportedTypesAreErrors(): Unit \ Assert =
         Pose.Framed,
         solved3
     ) {
-        case Ok(_) => ""
+        case Ok(_)    => ""
         case Err(why) => why
     };
     Assert.assertTrue(String.contains(substr = "no picture entry", reason(2, Model.Picture)));

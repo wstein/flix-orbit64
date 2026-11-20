@@ -82,10 +82,10 @@ pub mod Orbit64.Move {
     /// Recover a move from a rank below `alphabetSize(n)`.
     pub def unrank(n: Int32, value: BigInt): Move =
         let amount =
-            BigInt.modulo(value, 3ii) |>
-                BigInt.tryToInt32 |>
-                Option.getWithDefault(0) |>
-                amountUnrank;
+            BigInt.modulo(value, 3ii)
+                |> BigInt.tryToInt32
+                |> Option.getWithDefault(0)
+                |> amountUnrank;
         let quotient = value / 3ii;
         let layers = Int32.toBigInt(n / 2);
         let depth =
@@ -101,7 +101,7 @@ pub mod Orbit64.Move {
         else
             match firstFault(n, moves) {
                 case Some(why) => Err("move sequence is invalid: ${why}")
-                case None =>
+                case None      =>
                     let base = alphabetSize(n);
                     let count = List.length(moves);
                     let ordinary =
@@ -112,8 +112,8 @@ pub mod Orbit64.Move {
 
     /// Decode a literal move sequence and return its odd/even layer class.
     pub def decode(token: String): Result[String, (LayerClass, List[Move])] =
-        Orbit64.Internal.Encoding.decodeDelimitedRank(1, token) |>
-            Result.flatMap(match (layers, wireRank) -> decodeSequence(layers, wireRank))
+        Orbit64.Internal.Encoding.decodeDelimitedRank(1, token)
+            |> Result.flatMap(match (layers, wireRank) -> decodeSequence(layers, wireRank))
 
     def decodeSequence(layers: Int32, wireRank: BigInt): Result[String, (LayerClass, List[Move])] =
         if (layers > 1073741823)
@@ -180,8 +180,8 @@ pub mod Orbit64.Move {
     }
 
     def amountRank(amount: Amount): Int32 = match amount {
-        case Amount.Clockwise => 0
-        case Amount.Half => 1
+        case Amount.Clockwise        => 0
+        case Amount.Half             => 1
         case Amount.CounterClockwise => 2
     }
 

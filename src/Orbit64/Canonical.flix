@@ -56,7 +56,7 @@ pub mod Orbit64.Canonical {
     pub def fromFacelets(n: Int32, facelets: Vector[Int32]): Result[String, String] =
         match checkFacelets(n, facelets) {
             case Some(why) => Err(why)
-            case None =>
+            case None      =>
                 Symmetry.leastImage(n, facelets) |> Result.flatMap(least -> standardToken(n, least))
         }
 
@@ -101,11 +101,11 @@ pub mod Orbit64.Canonical {
     ///
     def standardToken(n: Int32, colors: Vector[Int32]): Result[String, String] =
         match standardNames(n, colors) {
-            case Err(why) => Err(why)
+            case Err(why)  => Err(why)
             case Ok(names) =>
                 let renamed = Vector.map(c -> Map.getWithDefault(c, 0, names), colors);
-                Orbit64.Net.fromFacelets(n, renamed) |>
-                    Result.flatMap(state -> Orbit64.State.encode(n, state))
+                Orbit64.Net.fromFacelets(n, renamed)
+                    |> Result.flatMap(state -> Orbit64.State.encode(n, state))
         }
 
     ///
@@ -117,11 +117,11 @@ pub mod Orbit64.Canonical {
 
     def namesByCenters(n: Int32, colors: Vector[Int32]): Result[String, Map[Int32, Int32]] =
         let pairs =
-            List.range(0, 6) |>
-                List.filterMap(
+            List.range(0, 6)
+                |> List.filterMap(
                     face ->
-                        Symmetry.centerFacelet(n, face) |>
-                            Option.map(at -> (Vector.get(at, colors), face))
+                        Symmetry.centerFacelet(n, face)
+                            |> Option.map(at -> (Vector.get(at, colors), face))
                 );
         nameMap(pairs, "the fixed centers of an odd cube must show six different colors")
 
@@ -131,11 +131,11 @@ pub mod Orbit64.Canonical {
     ///
     def namesByCorner(n: Int32, colors: Vector[Int32]): Result[String, Map[Int32, Int32]] =
         let corners =
-            Symmetry.cornerStickers(n) |>
-                List.map(slot -> Vector.map(i -> Vector.get(i, colors), slot));
+            Symmetry.cornerStickers(n)
+                |> List.map(slot -> Vector.map(i -> Vector.get(i, colors), slot));
         let shared =
-            corners |>
-                List.foldLeft(
+            corners
+                |> List.foldLeft(
                     (acc, corner) ->
                         Vector.foldLeft(
                             (set, a) ->
@@ -151,7 +151,7 @@ pub mod Orbit64.Canonical {
                 );
         let opposite = c -> List.filter(o -> not Set.memberOf((c, o), shared), List.range(0, 6));
         match List.head(corners) {
-            case None => Err("the cube has no corners")
+            case None      => Err("the cube has no corners")
             case Some(urf) =>
                 let top = Vector.toList(urf);
                 let pairs =
@@ -165,7 +165,7 @@ pub mod Orbit64.Canonical {
     /// The single opposite color in `candidates`, or -1 when there is not exactly one.
     def oppositeOf(candidates: List[Int32]): Int32 = match candidates {
         case o :: Nil => o
-        case _ => -1
+        case _        => -1
     }
 
     ///

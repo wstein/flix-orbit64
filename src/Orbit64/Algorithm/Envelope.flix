@@ -27,13 +27,13 @@ pub mod Orbit64.Algorithm.Envelope {
 
     /// Conservative reference ceilings; callers may lower each positive budget.
     pub def defaultLimits(): Limits = {
-        maxInputChars = 1048576,
-        maxNodes = 4096,
-        maxReferences = 65536,
-        maxSymbols = 65536,
-        maxCountDigits = 4096,
-        maxDepth = 256,
-        maxJsonDepth = 8,
+        maxInputChars   = 1048576,
+        maxNodes        = 4096,
+        maxReferences   = 65536,
+        maxSymbols      = 65536,
+        maxCountDigits  = 4096,
+        maxDepth        = 256,
+        maxJsonDepth    = 8,
         maxMetadataWork = 1048576
     }
 
@@ -46,59 +46,50 @@ pub mod Orbit64.Algorithm.Envelope {
         decodeWith(defaultLimits(), text)
 
     /// Validate resource use and semantics before rendering canonical JSON.
-    pub def encodeWith(limits: Limits, n: Int32, graph: Orbit64.Algorithm.Algorithm): Result[
-        Fault,
-        String
-    ] =
+    pub def encodeWith(limits: Limits, n: Int32, graph: Orbit64.Algorithm.Algorithm):
+        Result[Fault, String] =
         let Algorithm(nodes, _) = graph;
-        Orbit64.Internal.AlgorithmEnvelopeBudget.settings(limits) |>
-            Result.flatMap(_ -> Orbit64.Internal.AlgorithmEnvelopeBudget.graph(limits, nodes)) |>
-            Result.flatMap(_ -> semantic(n, graph)) |>
-            Result.flatMap(_ -> render(limits, n, graph))
+        Orbit64.Internal.AlgorithmEnvelopeBudget.settings(limits)
+            |> Result.flatMap(_ -> Orbit64.Internal.AlgorithmEnvelopeBudget.graph(limits, nodes))
+            |> Result.flatMap(_ -> semantic(n, graph))
+            |> Result.flatMap(_ -> render(limits, n, graph))
 
-    def render(limits: Limits, n: Int32, graph: Orbit64.Algorithm.Algorithm): Result[
-        Fault,
-        String
-    ] =
+    def render(limits: Limits, n: Int32, graph: Orbit64.Algorithm.Algorithm):
+        Result[Fault, String] =
         let text = Orbit64.Internal.AlgorithmEnvelopeJson.write(n, graph);
         Orbit64.Internal.AlgorithmEnvelopeBudget.input(limits, text) |> Result.map(_ -> text)
 
     /// Preflight parsing, retain every node field, and reject noncanonical spelling.
-    pub def decodeWith(limits: Limits, text: String): Result[
-        Fault,
-        (Int32, Orbit64.Algorithm.Algorithm)
-    ] =
-        Orbit64.Internal.AlgorithmEnvelopeBudget.settings(limits) |>
-            Result.flatMap(_ -> Orbit64.Internal.AlgorithmEnvelopeBudget.input(limits, text)) |>
-            Result.flatMap(
+    pub def decodeWith(limits: Limits, text: String):
+        Result[Fault, (Int32, Orbit64.Algorithm.Algorithm)] =
+        Orbit64.Internal.AlgorithmEnvelopeBudget.settings(limits)
+            |> Result.flatMap(_ -> Orbit64.Internal.AlgorithmEnvelopeBudget.input(limits, text))
+            |> Result.flatMap(
                 _ -> Util.Json.parse(text) |> Result.mapErr(_ -> Fault.Malformed("invalid JSON"))
-            ) |>
-            Result.flatMap(
+            )
+            |> Result.flatMap(
                 json ->
                     Orbit64.Internal.AlgorithmEnvelopeJson.read(
                         limits#maxCountDigits,
                         limits#maxNodes,
                         Int32.max(limits#maxReferences, limits#maxSymbols),
                         json
-                    ) |>
-                        Result.mapErr(readFault)
-            ) |>
-            Result.flatMap(pair -> validateSpelling(limits, text, pair))
+                    )
+                        |> Result.mapErr(readFault)
+            )
+            |> Result.flatMap(pair -> validateSpelling(limits, text, pair))
 
-    def validateSpelling(
-        limits: Limits,
-        text: String,
-        pair: (Int32, Orbit64.Algorithm.Algorithm)
-    ): Result[Fault, (Int32, Orbit64.Algorithm.Algorithm)] =
+    def validateSpelling(limits: Limits, text: String, pair: (Int32, Orbit64.Algorithm.Algorithm)):
+        Result[Fault, (Int32, Orbit64.Algorithm.Algorithm)] =
         let (n, graph) = pair;
-        encodeWith(limits, n, graph) |>
-            Result.flatMap(canonical -> sameSpelling(canonical, text)) |>
-            Result.map(_ -> pair)
+        encodeWith(limits, n, graph)
+            |> Result.flatMap(canonical -> sameSpelling(canonical, text))
+            |> Result.map(_ -> pair)
 
     def semantic(n: Int32, graph: Orbit64.Algorithm.Algorithm): Result[Fault, Unit] =
         match Orbit64.Algorithm.faultOf(n, graph) {
             case Some(why) => Err(Fault.InvalidGraph(why))
-            case None => Ok(())
+            case None      => Ok(())
         }
 
     def sameSpelling(canonical: String, text: String): Result[Fault, Unit] =
@@ -106,8 +97,8 @@ pub mod Orbit64.Algorithm.Envelope {
 
     def readFault(why: String): Fault = match why {
         case "repeat count digit budget exceeded" => Fault.ResourceLimit(why)
-        case "node budget exceeded" => Fault.ResourceLimit(why)
-        case "stored index-list budget exceeded" => Fault.ResourceLimit(why)
-        case _ => Fault.Malformed(why)
+        case "node budget exceeded"               => Fault.ResourceLimit(why)
+        case "stored index-list budget exceeded"  => Fault.ResourceLimit(why)
+        case _                                    => Fault.Malformed(why)
     }
 }

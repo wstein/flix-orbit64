@@ -10,11 +10,11 @@ def main(): Unit \ { IO, Sys.Env } =
     // https://no-color.org -- any non-empty value means plain text.
     let color = match Sys.Env.getVar("NO_COLOR") {
         case Some(v) => String.isEmpty(v)
-        case None => true
+        case None    => true
     };
     match Sys.Env.getArgs() {
         case token :: _ => report(token, color)
-        case Nil => table(color)
+        case Nil        => table(color)
     }
 
 ///
@@ -24,8 +24,8 @@ def main(): Unit \ { IO, Sys.Env } =
 def table(color: Bool): Unit \ IO =
     println("  cube      states  bits  chars");
     println("  ----  ----------  ----  -----");
-    List.range(2, 8) |>
-        List.forEach(n -> {
+    List.range(2, 8)
+        |> List.forEach(n -> {
             let total = Orbit64.State.stateCount(n);
             // BigInt.log2 is the bit length, i.e. the ceiling of the real log.
             let bits = BigInt.log2(total) |> Int32.toString |> String.padLeft(4, ' ');
@@ -46,11 +46,11 @@ def table(color: Bool): Unit \ IO =
 def demo(color: Bool): Unit \ IO =
     let superflip = superflip();
     match Orbit64.State.encode(3, superflip) {
-        case Err(e) => println("encode failed: ${e}")
+        case Err(e)    => println("encode failed: ${e}")
         case Ok(token) =>
             println("  superflip encodes to ${token}");
             match Orbit64.State.decode(3, token) {
-                case Err(e) => println("  decode failed: ${e}")
+                case Err(e)   => println("  decode failed: ${e}")
                 case Ok(back) =>
                     println("  decodes back identically: ${back == superflip}");
                     draw(3, back, color)
@@ -64,17 +64,17 @@ def superflip(): Orbit64.State.FramedState =
     List#{
         Orbit64.Coord.Coord.CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
         Orbit64.Coord.Coord.MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
-    } |>
-        Orbit64.State.canonical
+    }
+        |> Orbit64.State.canonical
 
 ///
 /// Decode `token`, inferring the cube size from its length.
 ///
 def report(token: String, color: Bool): Unit \ IO =
     match List.range(2, 8) |> List.find(n -> Orbit64.State.width(n) == String.length(token)) {
-        case None => println("no cube size uses a ${String.length(token)}-character token")
+        case None    => println("no cube size uses a ${String.length(token)}-character token")
         case Some(n) => match Orbit64.State.decode(n, token) {
-            case Err(e) => println("not a valid ${n}x${n}x${n} token: ${e}")
+            case Err(e)    => println("not a valid ${n}x${n}x${n} token: ${e}")
             case Ok(state) =>
                 let orbits = Orbit64.State.orbits(state);
                 println(

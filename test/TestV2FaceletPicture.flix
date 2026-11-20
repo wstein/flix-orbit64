@@ -9,24 +9,24 @@ def pictureStripped(text: String): List[Char] = String.toList(text) |> List.filt
 /// The same string with the symbol at each given facelet index replaced.
 def picturePut(n: Int32, text: String, edits: List[(Int32, Char)]): String =
     let chars =
-        pictureStripped(text) |>
-            List.mapWithIndex(
+        pictureStripped(text)
+            |> List.mapWithIndex(
                 i ->
                     c ->
-                        List.find(e -> fst(e) == i, edits) |>
-                            Option.map(snd) |>
-                            Option.getWithDefault(c)
+                        List.find(e -> fst(e) == i, edits)
+                            |> Option.map(snd)
+                            |> Option.getWithDefault(c)
             );
-    List.range(0, 6) |>
-        List.map(
+    List.range(0, 6)
+        |> List.map(
             f ->
-                chars |>
-                    List.drop(f * n * n) |>
-                    List.take(n * n) |>
-                    List.map(Char.toString) |>
-                    List.join("")
-        ) |>
-        List.join(" ")
+                chars
+                    |> List.drop(f * n * n)
+                    |> List.take(n * n)
+                    |> List.map(Char.toString)
+                    |> List.join("")
+        )
+        |> List.join(" ")
 
 def pictureAt(text: String, index: Int32): Char =
     pictureStripped(text) |> List.drop(index) |> List.head |> Option.getWithDefault('?')
@@ -53,7 +53,7 @@ def pictureRead(n: Int32, pose: Pose, text: String): Result[String, Cube] =
 /// The string is rejected and the message names the reason.
 def assertPictureRejected(n: Int32, reason: String, text: String): Unit \ Assert =
     match pictureRead(n, Pose.Framed, text) {
-        case Ok(_) => Assert.fail("accepted: ${text}")
+        case Ok(_)    => Assert.fail("accepted: ${text}")
         case Err(why) =>
             if (String.contains(substr = reason, why))
                 ()
@@ -63,8 +63,8 @@ def assertPictureRejected(n: Int32, reason: String, text: String): Unit \ Assert
 
 @Test
 def pictureRowsEncodeToTheirTokens(): Unit \ Assert =
-    TestV2FaceletPictureData.rows() |>
-        List.forEach(
+    TestV2FaceletPictureData.rows()
+        |> List.forEach(
             match (id, _moves, facelets, token, _) -> Assert.assertEq(
                 expected = Ok(token),
                 Orbit64.V2.Facelets.encode(id, facelets)
@@ -73,8 +73,8 @@ def pictureRowsEncodeToTheirTokens(): Unit \ Assert =
 
 @Test
 def pictureRowsDecodeToTheirFacelets(): Unit \ Assert =
-    TestV2FaceletPictureData.rows() |>
-        List.forEach(match (
+    TestV2FaceletPictureData.rows()
+        |> List.forEach(match (
             id,
             moves,
             facelets,
@@ -84,24 +84,24 @@ def pictureRowsDecodeToTheirFacelets(): Unit \ Assert =
             case Ok((e, text)) =>
                 Assert.assertEq(expected = id, e#id);
                 Assert.assertEq(expected = if (canonical == "") facelets else canonical, text)
-            case Err(why) => Assert.fail("${moves}: ${why}")
+            case Err(why)      => Assert.fail("${moves}: ${why}")
         })
 
 /// A row string read back and written again: the string itself, or the canonical one.
 def pictureRoundTrip(id: Int32, facelets: String): Result[String, String] =
     match Orbit64.V2.Registry.entry(id) {
-        case None => Err("no entry ${id}")
+        case None    => Err("no entry ${id}")
         case Some(e) =>
-            pictureRead(e#n, e#pose, facelets) |>
-                Result.flatMap(
+            pictureRead(e#n, e#pose, facelets)
+                |> Result.flatMap(
                     cube -> Orbit64.V2.Facelets.toFacelets(e#n, Model.Picture, e#pose, cube)
                 )
     }
 
 @Test
 def pictureRowsRoundTripThroughTheCube(): Unit \ Assert =
-    TestV2FaceletPictureData.rows() |>
-        List.forEach(
+    TestV2FaceletPictureData.rows()
+        |> List.forEach(
             match (id, _moves, facelets, _, canonical) -> Assert.assertEq(
                 expected = Ok(if (canonical == "") facelets else canonical),
                 pictureRoundTrip(id, facelets)
@@ -111,18 +111,18 @@ def pictureRowsRoundTripThroughTheCube(): Unit \ Assert =
 @Test
 def pictureRowsCoverEveryPictureEntryOfTheBridge(): Unit \ Assert =
     let covered = TestV2FaceletPictureData.rows() |> List.map(match (id, _, _, _, _) -> id);
-    Orbit64.V2.Registry.entries() |>
-        List.filter(e -> e#model == Model.Picture) |>
-        List.forEach(e -> Assert.assertTrue(List.memberOf(e#id, covered)))
+    Orbit64.V2.Registry.entries()
+        |> List.filter(e -> e#model == Model.Picture)
+        |> List.forEach(e -> Assert.assertTrue(List.memberOf(e#id, covered)))
 
 /// The solved cube of a picture entry.
 def pictureSolvedCube(n: Int32): Cube = Orbit64.V2.State.solved(n, Model.Picture)
 
 @Test
 def solvedPicturesAreTheZeroTokens(): Unit \ Assert =
-    Orbit64.V2.Registry.entries() |>
-        List.filter(e -> e#model == Model.Picture) |>
-        List.forEach(
+    Orbit64.V2.Registry.entries()
+        |> List.filter(e -> e#model == Model.Picture)
+        |> List.forEach(
             e ->
                 let solved = pictureSolved(e#n, e#pose);
                 let token = Orbit64.V2.Codec.encode(e#id, pictureSolvedCube(e#n));
@@ -171,7 +171,7 @@ def aRotatedCubeKeepsItsStickersAndSpinsTheFixedCenters(): Unit \ Assert =
     Assert.assertEq(expected = Ok("AAAAAAAAAAAAAE"), Orbit64.V2.Facelets.encode(5, turned));
     match Orbit64.V2.Facelets.encode(4, turned) {
         case Ok(token) => Assert.assertEq(expected = "AAAAAAAAAAAAA", token)
-        case Err(why) => Assert.fail(why)
+        case Err(why)  => Assert.fail(why)
     }
 
 // ------------------------------------------------------------ invalid strings
@@ -294,7 +294,7 @@ def parityRelationsAreChecked(): Unit \ Assert =
 @Test
 def the2x2x2HasNoPictureEntry(): Unit \ Assert =
     match Orbit64.V2.Facelets.fromFacelets(2, Model.Picture, Pose.Framed, "A") {
-        case Ok(_) => Assert.fail("accepted")
+        case Ok(_)    => Assert.fail("accepted")
         case Err(why) => Assert.assertTrue(String.contains(substr = "no picture entry", why))
     };
     match Orbit64.V2.Facelets.toFacelets(
@@ -303,7 +303,7 @@ def the2x2x2HasNoPictureEntry(): Unit \ Assert =
         Pose.Framed,
         Orbit64.V2.State.solved(2, Model.Color)
     ) {
-        case Ok(_) => Assert.fail("accepted")
+        case Ok(_)    => Assert.fail("accepted")
         case Err(why) => Assert.assertTrue(String.contains(substr = "no picture entry", why))
     }
 
@@ -311,7 +311,7 @@ def the2x2x2HasNoPictureEntry(): Unit \ Assert =
 def aCubeThatBreaksALawHasNoPicture(): Unit \ Assert =
     let broken = { rotations = Vector#{1, 0, 0, 0, 0, 0} | pictureSolvedCube(3) };
     match Orbit64.V2.Facelets.toFacelets(3, Model.Picture, Pose.Canonical, broken) {
-        case Ok(_) => Assert.fail("accepted")
+        case Ok(_)    => Assert.fail("accepted")
         case Err(why) => Assert.assertTrue(String.contains(substr = "rotation parity", why))
     }
 

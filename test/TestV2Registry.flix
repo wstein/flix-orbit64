@@ -77,8 +77,8 @@ def registryOffsetsFollowTheAllocationRule(): Unit \ Assert =
 
 @Test
 def v1CountsAreV2ColorFramedCounts(): Unit \ Assert =
-    List#{2, 3, 4, 5, 6, 7} |>
-        List.forEach(
+    List#{2, 3, 4, 5, 6, 7}
+        |> List.forEach(
             n ->
                 Assert.assertEq(
                     expected = Orbit64.State.stateCount(n),
@@ -88,8 +88,8 @@ def v1CountsAreV2ColorFramedCounts(): Unit \ Assert =
 
 @Test
 def solvedStatesEncodeToRunsOfA(): Unit \ Assert =
-    Orbit64.V2.Registry.entries() |>
-        List.forEach(
+    Orbit64.V2.Registry.entries()
+        |> List.forEach(
             e ->
                 let token = Orbit64.V2.Codec.encode(e#id, Orbit64.V2.State.solved(e#n, e#model));
                 let zeros = Orbit64.Internal.Encoding.toBase64(e#offset, e#length);

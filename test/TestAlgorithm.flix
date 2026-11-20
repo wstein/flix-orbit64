@@ -80,8 +80,8 @@ def algorithmStreamsSlicesAndInversesWithoutMaterializingThem(): Unit \ Assert =
             5
         );
     let streamed =
-        Orbit64.Algorithm.foldTerminals(3, dag, Nil, (out, move) -> move :: out) |>
-            Result.map(List.reverse);
+        Orbit64.Algorithm.foldTerminals(3, dag, Nil, (out, move) -> move :: out)
+            |> Result.map(List.reverse);
     Assert.assertEq(
         expected = Ok(List#{
             LayerTurn(U, 0, CounterClockwise),
@@ -112,21 +112,21 @@ def algorithmTokenRoundTripsEveryNodeKindAndDispatches(): Unit \ Assert =
     let token = Orbit64.Algorithm.Encoding.encode(3, dag);
     Assert.assertEq(
         expected = Ok(dag),
-        token |>
-            Result.flatMap(
+        token
+            |> Result.flatMap(
                 encoded ->
-                    Orbit64.Algorithm.Encoding.decode(encoded) |>
-                        Result.map(match (_, decoded) -> decoded)
+                    Orbit64.Algorithm.Encoding.decode(encoded)
+                        |> Result.map(match (_, decoded) -> decoded)
             )
     );
     Assert.assertTrue(
-        token |>
-            Result.map(
+        token
+            |> Result.map(
                 encoded ->
-                    Orbit64.Token.decode(encoded) |>
-                        Result.map(value -> match value {
+                    Orbit64.Token.decode(encoded)
+                        |> Result.map(value -> match value {
                             case Orbit64.Token.Token.AlgorithmToken(_, decoded) => decoded == dag
-                            case _ => false
+                            case _                                              => false
                         })
             ) ==
             Ok(Ok(true))
@@ -145,11 +145,11 @@ def algorithmTokenExportsAnEarlierOperation(): Unit \ Assert =
         );
     Assert.assertEq(
         expected = Ok(dag),
-        Orbit64.Algorithm.Encoding.encode(3, dag) |>
-            Result.flatMap(
+        Orbit64.Algorithm.Encoding.encode(3, dag)
+            |> Result.flatMap(
                 token ->
-                    Orbit64.Algorithm.Encoding.decode(token) |>
-                        Result.map(match (_, decoded) -> decoded)
+                    Orbit64.Algorithm.Encoding.decode(token)
+                        |> Result.map(match (_, decoded) -> decoded)
             )
     )
 
@@ -160,10 +160,10 @@ def algorithmTokenHandlesLargeOperationStreams(): Unit \ Assert =
     let dag = Algorithm(nodes, count - 1);
     Assert.assertEq(
         expected = Ok(dag),
-        Orbit64.Algorithm.Encoding.encode(2, dag) |>
-            Result.flatMap(
+        Orbit64.Algorithm.Encoding.encode(2, dag)
+            |> Result.flatMap(
                 token ->
-                    Orbit64.Algorithm.Encoding.decode(token) |>
-                        Result.map(match (_, decoded) -> decoded)
+                    Orbit64.Algorithm.Encoding.decode(token)
+                        |> Result.map(match (_, decoded) -> decoded)
             )
     )
