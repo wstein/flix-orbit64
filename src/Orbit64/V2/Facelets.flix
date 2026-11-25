@@ -138,9 +138,9 @@ pub mod Orbit64.V2.Facelets {
     def centerRepresentative(n: Int32, row: Int32, col: Int32): Bool =
         let last = n - 1;
         let rank = row * n + col;
-        rank <= col * n + last - row and
-            rank <= (last - row) * n + last - col and
-            rank <= (last - col) * n + row
+        rank <= col * n + last - row
+            and rank <= (last - row) * n + last - col
+            and rank <= (last - col) * n + row
 
     /// The four quarter turn images of a cell, on all six faces, by facelet index.
     def centerTable(n: Int32, row: Int32, col: Int32): Vector[Int32] =
@@ -148,10 +148,10 @@ pub mod Orbit64.V2.Facelets {
         List.range(0, 6 * n * n)
             |> List.filter(i -> {
                 let cell = Int32.modulo(i, n * n);
-                cell == row * n + col or
-                    cell == col * n + last - row or
-                    cell == (last - row) * n + last - col or
-                    cell == (last - col) * n + row
+                cell == row * n + col
+                    or cell == col * n + last - row
+                    or cell == (last - row) * n + last - col
+                    or cell == (last - col) * n + row
             })
             |> List.toVector
 
@@ -164,8 +164,8 @@ pub mod Orbit64.V2.Facelets {
                         |> List.filterMap(
                             col ->
                                 if (
-                                    centerRepresentative(n, row, col) and
-                                        not (odd(n) and row == n / 2 and col == n / 2)
+                                    centerRepresentative(n, row, col)
+                                        and not (odd(n) and row == n / 2 and col == n / 2)
                                 )
                                     Some(centerTable(n, row, col))
                                 else
@@ -555,8 +555,8 @@ pub mod Orbit64.V2.Facelets {
         match List.range(0, 6) |> List.find(f -> Vector.count(x -> x == f, fs) != n * n) {
             case Some(f) =>
                 Err(
-                    "color ${Vector.get(f, letters())} occurs " +
-                        "${Vector.count(x -> x == f, fs)} times, expected ${n * n}"
+                    "color ${Vector.get(f, letters())} occurs "
+                        + "${Vector.count(x -> x == f, fs)} times, expected ${n * n}"
                 )
             case None    => Ok(())
         }
@@ -578,8 +578,8 @@ pub mod Orbit64.V2.Facelets {
                                 List.range(0, m)
                                     |> List.forAll(
                                         k ->
-                                            Vector.get(k, seen) ==
-                                                faceOf(
+                                            Vector.get(k, seen)
+                                                == faceOf(
                                                     n,
                                                     Vector.get(
                                                         Int32.modulo(k - o + m, m),
@@ -736,7 +736,7 @@ pub mod Orbit64.V2.Facelets {
     }
 
     def groupOf(what: String, facelets: Vector[Int32], limit: Int32, per: Int32): Group =
-        { what = what, facelets = facelets, limit = limit, per = per }
+        {what = what, facelets = facelets, limit = limit, per = per}
 
     /// Every sticker class of a cube. A sticker never leaves its class.
     def groups(t: Tables): List[Group] =
@@ -766,8 +766,8 @@ pub mod Orbit64.V2.Facelets {
         match g#facelets |> Vector.toList |> List.find(at -> Vector.get(at, vs) >= g#limit) {
             case Some(at) =>
                 Err(
-                    "facelet ${at} shows '${shows(Vector.get(at, vs))}', " +
-                        "which is no ${g#what} sticker"
+                    "facelet ${at} shows '${shows(Vector.get(at, vs))}', "
+                        + "which is no ${g#what} sticker"
                 )
             case None     =>
                 match values

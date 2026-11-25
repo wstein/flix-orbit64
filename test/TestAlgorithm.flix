@@ -128,8 +128,8 @@ def algorithmTokenRoundTripsEveryNodeKindAndDispatches(): Unit \ Assert =
                             case Orbit64.Token.Token.AlgorithmToken(_, decoded) => decoded == dag
                             case _                                              => false
                         })
-            ) ==
-            Ok(Ok(true))
+            )
+            == Ok(Ok(true))
     )
 
 @Test

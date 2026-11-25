@@ -75,8 +75,7 @@ pub mod Orbit64.State {
     pub def encode(n: Int32, state: FramedState): Result[String, String] =
         match stateFault(n, state) {
             case Some(why) => Err(why)
-            case None      =>
-                Ok(Orbit64.Internal.Encoding.toBase64(encodedValue(n, state), width(n)))
+            case None => Ok(Orbit64.Internal.Encoding.toBase64(encodedValue(n, state), width(n)))
         }
 
     def stateFault(n: Int32, state: FramedState): Option[String] =
@@ -106,8 +105,8 @@ pub mod Orbit64.State {
             Some("expected orbits ${expected} for ${n}x${n}x${n}, got ${kinds}")
 
     def encodedValue(n: Int32, state: FramedState): BigInt =
-        rankCoordinates(n, orbits(state)) * Int32.toBigInt(frameCount(n)) +
-            Int32.toBigInt(Orbit64.Frame.rank(frame(state)))
+        rankCoordinates(n, orbits(state)) * Int32.toBigInt(frameCount(n))
+            + Int32.toBigInt(Orbit64.Frame.rank(frame(state)))
 
     /// Decode a frame-aware state.
     pub def decode(n: Int32, token: String): Result[String, FramedState] =
@@ -219,16 +218,16 @@ pub mod Orbit64.State {
     def rankMidge(permutation: Vector[Int32], coordinate: Coord, parity: Int32): BigInt =
         match coordinate {
             case MidgeCoord(_, flips) =>
-                Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii +
-                    orientationRank(flips, 11, 2)
+                Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii
+                    + orientationRank(flips, 11, 2)
             case _ => 0ii
         }
 
     def rankMidgeLegacy(permutation: Vector[Int32], coordinate: Coord, parity: Int32): BigInt =
         match coordinate {
             case MidgeCoord(_, flips) =>
-                Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii +
-                    BigInt.modulo(Coord.rank(MidgeCoord(Vector.range(0, 12), flips)), 2048ii)
+                Orbit64.Rank.permRankWithParity(permutation, parity) * 2048ii
+                    + BigInt.modulo(Coord.rank(MidgeCoord(Vector.range(0, 12), flips)), 2048ii)
             case _ => 0ii
         }
 

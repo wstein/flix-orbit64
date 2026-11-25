@@ -67,9 +67,9 @@ pub mod Orbit64.Orbit {
         // 8! arrangements; the eighth twist is forced by the sum-mod-3 rule.
         case Corners => factorial(8) * BigInt.pow(base = 3ii, 7)
         // 12! arrangements; the twelfth flip is forced by parity.
-        case Midges => factorial(12) * BigInt.pow(base = 2ii, 11)
+        case Midges  => factorial(12) * BigInt.pow(base = 2ii, 11)
         // Wings carry no orientation, so this is a bare permutation.
-        case Wings => factorial(24)
+        case Wings   => factorial(24)
         // Four indistinguishable copies of each of six colors.
         case Centers =>
             List.range(0, 5)

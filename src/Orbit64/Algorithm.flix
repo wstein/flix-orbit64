@@ -205,8 +205,7 @@ pub mod Orbit64.Algorithm {
                     Err("node ${index}: packed symbol cannot be negative")
                 else
                     match listAt(symbol, alphabetCounts) {
-                        case None       =>
-                            Err("node ${index}: packed symbol is outside its alphabet")
+                        case None => Err("node ${index}: packed symbol is outside its alphabet")
                         case Some(size) =>
                             packedCountsLoop(rest, alphabetCounts, index, size :: out)
                     }
@@ -320,21 +319,19 @@ pub mod Orbit64.Algorithm {
         visit: (a, Orbit64.Move.Move) -> a
     ): Result[String, a] =
         match node {
-            case Node.Terminal(move)       =>
+            case Node.Terminal(move) =>
                 if (backwards) Ok(visit(acc, inverseMove(move))) else Ok(visit(acc, move))
-            case Node.Concat(children)     =>
+            case Node.Concat(children) =>
                 foldReferences(nodes, metas, children, backwards, acc, visit)
             case Node.Repeat(child, count) =>
                 foldRepeated(nodes, metas, child, count, backwards, acc, visit)
-            case Node.Inverse(child)       =>
-                foldNode(nodes, metas, child, not backwards, acc, visit)
-            case Node.Block(_)             =>
+            case Node.Inverse(child) => foldNode(nodes, metas, child, not backwards, acc, visit)
+            case Node.Block(_) => foldAllParts(nodes, metas, reference, backwards, acc, visit)
+            case Node.PackedBlock(_, _) =>
                 foldAllParts(nodes, metas, reference, backwards, acc, visit)
-            case Node.PackedBlock(_, _)    =>
+            case Node.Partition(_, _) =>
                 foldAllParts(nodes, metas, reference, backwards, acc, visit)
-            case Node.Partition(_, _)      =>
-                foldAllParts(nodes, metas, reference, backwards, acc, visit)
-            case Node.SliceParts(_, _, _)  =>
+            case Node.SliceParts(_, _, _) =>
                 foldAllParts(nodes, metas, reference, backwards, acc, visit)
         }
 

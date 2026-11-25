@@ -63,8 +63,8 @@ pub mod Orbit64.Internal.Symmetry {
             None
         else
             Some(
-                "expected ${6 * n * n} stickers for the ${n}x${n}x${n}, " +
-                    "got ${Vector.length(stickers)}"
+                "expected ${6 * n * n} stickers for the ${n}x${n}x${n}, "
+                    + "got ${Vector.length(stickers)}"
             )
 
     def moved(n: Int32, g: Int32, stickers: Vector[Int32]): Vector[Int32] =

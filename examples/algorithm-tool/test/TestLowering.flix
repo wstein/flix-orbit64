@@ -14,8 +14,8 @@ def loweringPreservesNamedSharingAndAlgebraicOperators(): Unit \ Assert =
     );
     Assert.assertTrue(
         lowered
-            |> Result.map(algorithm -> Orbit64.Algorithm.faultOf(2, algorithm) |> Option.isEmpty) ==
-            Ok(true)
+            |> Result.map(algorithm -> Orbit64.Algorithm.faultOf(2, algorithm) |> Option.isEmpty)
+            == Ok(true)
     )
 
 @Test

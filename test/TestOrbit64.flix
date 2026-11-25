@@ -566,7 +566,6 @@ def alphabetIsSixtyFourDistinctUrlSafeCharacters(): Unit \ Assert =
 /// convention, so these pin `Orbit64.Net`'s facelet tables rather than merely
 /// restating them.
 ///
-
 @Test
 def solvedCubeDrawsSixSolidFaces(): Unit \ Assert =
     let expected =

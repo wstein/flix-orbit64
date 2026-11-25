@@ -4,7 +4,6 @@
 /// remaining eighty are a deterministic, seeded sample: twenty each for sizes
 /// two through five. Keeping the documentation corpus executable makes a
 /// changed rank, endian convention, or width fail before it is published.
-
 def namedExamples(): List[(Int32, String)] = List#{
     // Named patterns.
     (3, "AAAAAAAAAAAA"),

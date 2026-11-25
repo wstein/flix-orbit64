@@ -140,15 +140,15 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeBudget {
             |> Result.flatMap(
                 _ ->
                     let depth =
-                        1 +
-                            List.foldLeft(
+                        1
+                            + List.foldLeft(
                                 (largest, child) ->
                                     Int32.max(largest, depthAt(child, totals#depths)),
                                 0,
                                 children
                             );
                     bound(depth, limits#maxDepth, "DAG depth budget exceeded")
-                        |> Result.map(_ -> { depths = depth :: totals#depths | next })
+                        |> Result.map(_ -> {depths = depth :: totals#depths | next})
             )
 
     def checkTotals(limits: Limits, totals: Totals): Result[Fault, Unit] =

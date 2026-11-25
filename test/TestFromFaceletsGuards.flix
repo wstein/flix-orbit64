@@ -27,7 +27,7 @@ def swapFacelets(a: Int32, b: Int32, fs: Vector[Int32]): Vector[Int32] =
         Vector.length(fs)
     )
 
-def refuses(said: { said = String }, what: String, n: Int32, fs: Vector[Int32]): Unit \ Assert =
+def refuses(said: {said = String}, what: String, n: Int32, fs: Vector[Int32]): Unit \ Assert =
     match Orbit64.Net.fromFacelets(n, fs) {
         case Ok(_)    => Assert.assertTrueWithMsg(false, "read a ${n}x${n}x${n} from ${what}")
         case Err(why) =>

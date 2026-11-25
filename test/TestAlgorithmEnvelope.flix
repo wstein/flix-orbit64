@@ -35,9 +35,9 @@ mod TestAlgorithmEnvelope {
     def canonicalEncodingIsAnExplicitIndependentEnvelope(): Unit \ Assert =
         let graph = Algorithm(Node.Terminal(LayerTurn(U, 0, Clockwise)) :: Nil, 0);
         let expected =
-            "{\"format\":\"cube-algorithm-dag@1\"," +
-                "\"moveProfile\":\"cube-layer-turns@1\",\"n\":3," +
-                "\"nodes\":[[\"terminal\",\"U\",0,1]],\"root\":0}";
+            "{\"format\":\"cube-algorithm-dag@1\","
+                + "\"moveProfile\":\"cube-layer-turns@1\",\"n\":3,"
+                + "\"nodes\":[[\"terminal\",\"U\",0,1]],\"root\":0}";
         Assert.assertEq(expected = Ok(expected), Envelope.encode(3, graph))
 
     @Test
@@ -133,14 +133,14 @@ mod TestAlgorithmEnvelope {
         let limits = Envelope.defaultLimits();
         let text = Envelope.encode(3, example()) |> Result.getWithDefault("");
         let restricted =
-            { maxInputChars = 1 | limits }
-                :: { maxNodes = 1 | limits }
-                :: { maxReferences = 1 | limits }
-                :: { maxSymbols = 1 | limits }
-                :: { maxCountDigits = 1 | limits }
-                :: { maxDepth = 1 | limits }
-                :: { maxJsonDepth = 1 | limits }
-                :: { maxMetadataWork = 1 | limits }
+            {maxInputChars = 1 | limits}
+                :: {maxNodes = 1 | limits}
+                :: {maxReferences = 1 | limits}
+                :: {maxSymbols = 1 | limits}
+                :: {maxCountDigits = 1 | limits}
+                :: {maxDepth = 1 | limits}
+                :: {maxJsonDepth = 1 | limits}
+                :: {maxMetadataWork = 1 | limits}
                 :: Nil;
         List.forEach(
             bound -> {
@@ -183,14 +183,14 @@ mod TestAlgorithmEnvelope {
 
     @Test
     def invalidLimitsAreNotReportedAsInvalidGraphs(): Unit \ Assert =
-        let bounds = { maxNodes = 0 | Envelope.defaultLimits() };
+        let bounds = {maxNodes = 0 | Envelope.defaultLimits()};
         let expected =
             Envelope.Fault.InvalidLimits("limits must be positive and within reference ceilings");
         Assert.assertEq(expected = Err(expected), Envelope.decodeWith(bounds, "[]"));
         let high =
-            { maxSymbols = 65537 | Envelope.defaultLimits() }
-                :: { maxReferences = 65537 | Envelope.defaultLimits() }
-                :: { maxNodes = 4097 | Envelope.defaultLimits() }
+            {maxSymbols = 65537 | Envelope.defaultLimits()}
+                :: {maxReferences = 65537 | Envelope.defaultLimits()}
+                :: {maxNodes = 4097 | Envelope.defaultLimits()}
                 :: Nil;
         List.forEach(
             value -> Assert.assertEq(expected = Err(expected), Envelope.decodeWith(value, "[]")),
@@ -201,9 +201,9 @@ mod TestAlgorithmEnvelope {
     def emptyNodesAndSizesOutsideStateRegistryKeepExistingAlgorithmSemantics(): Unit \ Assert =
         let graph = Algorithm(Node.Concat(Nil) :: Nil, 0);
         let golden =
-            "{\"format\":\"cube-algorithm-dag@1\"," +
-                "\"moveProfile\":\"cube-layer-turns@1\",\"n\":16," +
-                "\"nodes\":[[\"concat\",[]]],\"root\":0}";
+            "{\"format\":\"cube-algorithm-dag@1\","
+                + "\"moveProfile\":\"cube-layer-turns@1\",\"n\":16,"
+                + "\"nodes\":[[\"concat\",[]]],\"root\":0}";
         Assert.assertEq(expected = Ok(golden), Envelope.encode(16, graph));
         Assert.assertEq(expected = Ok((16, graph)), Envelope.decode(golden));
         let inner = Algorithm(Node.Terminal(LayerTurn(U, 1, Half)) :: Nil, 0);
@@ -244,7 +244,7 @@ mod TestAlgorithmEnvelope {
             Node.Terminal(LayerTurn(U, 0, Clockwise))
                 :: Node.PackedBlock(0 :: Nil, List.repeat(100, 0))
                 :: Nil;
-        let limits = { maxMetadataWork = 1000 | Envelope.defaultLimits() };
+        let limits = {maxMetadataWork = 1000 | Envelope.defaultLimits()};
         let copies = Algorithm(List.append(base, List.repeat(12, Node.Inverse(1))), 2);
         let scans =
             Algorithm(
@@ -273,7 +273,7 @@ mod TestAlgorithmEnvelope {
                     :: Nil,
                 2
             );
-        let limits = { maxCountDigits = 50 | Envelope.defaultLimits() };
+        let limits = {maxCountDigits = 50 | Envelope.defaultLimits()};
         Assert.assertEq(
             expected = Err(Envelope.Fault.ResourceLimit("repeat count digit budget exceeded")),
             Envelope.encodeWith(limits, 3, graph)
@@ -315,11 +315,11 @@ mod TestAlgorithmEnvelope {
         );
         let symbols = List.repeat(65537, "0") |> List.join(",");
         let wire =
-            "{\"format\":\"cube-algorithm-dag@1\"," +
-                "\"moveProfile\":\"cube-layer-turns@1\",\"n\":3," +
-                "\"nodes\":[[\"terminal\",\"U\",0,1],[\"packedBlock\",[0],[" +
-                symbols +
-                "]]],\"root\":1}";
+            "{\"format\":\"cube-algorithm-dag@1\","
+                + "\"moveProfile\":\"cube-layer-turns@1\",\"n\":3,"
+                + "\"nodes\":[[\"terminal\",\"U\",0,1],[\"packedBlock\",[0],["
+                + symbols
+                + "]]],\"root\":1}";
         Assert.assertEq(
             expected = Err(Envelope.Fault.ResourceLimit("stored index-list budget exceeded")),
             Envelope.decode(wire)

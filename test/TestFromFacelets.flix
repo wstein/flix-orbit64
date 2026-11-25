@@ -170,8 +170,8 @@ def seededStatesReadBackFromTheirFacelets(): Unit \ Assert =
                         let state = legalState(n, seededState(n, s));
                         Assert.assertTrueWithMsg(
                             Orbit64.Net.toFacelets(n, state)
-                                |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs)) ==
-                                Ok(state),
+                                |> Result.flatMap(fs -> Orbit64.Net.fromFacelets(n, fs))
+                                == Ok(state),
                             "seed ${s} of the ${n}x${n}x${n} did not read back"
                         )
                     })
@@ -197,10 +197,8 @@ def seededFaceletsSurviveBeingReadAndDrawn(): Unit \ Assert =
                             case Ok(fs)   =>
                                 Assert.assertTrueWithMsg(
                                     Orbit64.Net.fromFacelets(n, fs)
-                                        |> Result.flatMap(
-                                            state -> Orbit64.Net.toFacelets(n, state)
-                                        ) ==
-                                        Ok(fs),
+                                        |> Result.flatMap(state -> Orbit64.Net.toFacelets(n, state))
+                                        == Ok(fs),
                                     "seed ${s} of the ${n}x${n}x${n} did not draw the same stickers twice"
                                 )
                         })

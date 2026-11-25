@@ -81,8 +81,8 @@ def faceletLetters(n: Int32, fs: Vector[Int32]): String =
         |> Vector.join(" ")
 
 def faceletShow(c: Cube): String =
-    "${c#cornerPieces} ${c#cornerTwists} ${c#midgePieces} ${c#midgeFlips} " +
-        "${c#wings} ${c#centers} ${c#rotations} ${c#frame}"
+    "${c#cornerPieces} ${c#cornerTwists} ${c#midgePieces} ${c#midgeFlips} "
+        + "${c#wings} ${c#centers} ${c#rotations} ${c#frame}"
 
 /// The same orbits with the whole-cube frame `rank`.
 def faceletFramed(state: Orbit64.State.FramedState, rank: Int32): Orbit64.State.FramedState =

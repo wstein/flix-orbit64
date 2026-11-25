@@ -91,7 +91,7 @@ def report(token: String, color: Bool): Unit \ IO =
 def draw(n: Int32, state: Orbit64.State.FramedState, color: Bool): Unit \ IO =
     println("");
     match Orbit64.Net.draw(n, state, color) {
-        case Ok(net) =>
+        case Ok(net)  =>
             println(net);
             // A token carries ordinals, not geometry. Which slot sits where
             // is agreed out of band, so the picture has to say what it read.

@@ -180,9 +180,9 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeJson {
         if (String.length(count) > maxDigits)
             Err("repeat count digit budget exceeded")
         else if (
-            String.isEmpty(count) or
-                String.startsWith(prefix = "0", count) or
-                not List.forAll(c -> c >= '0' and c <= '9', String.toList(count))
+            String.isEmpty(count)
+                or String.startsWith(prefix = "0", count)
+                or not List.forAll(c -> c >= '0' and c <= '9', String.toList(count))
         )
             Err("repeat count must be a positive canonical decimal string")
         else
@@ -190,8 +190,10 @@ pub mod Orbit64.Internal.AlgorithmEnvelopeJson {
                 String.toList(count)
                     |> List.foldLeft(
                         (acc, c) ->
-                            acc * 10ii +
-                                Int32.toBigInt(Char.getNumericValue(c) |> Option.getWithDefault(0)),
+                            acc * 10ii
+                                + Int32.toBigInt(
+                                    Char.getNumericValue(c) |> Option.getWithDefault(0)
+                                ),
                         0ii
                     )
             )

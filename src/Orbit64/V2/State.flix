@@ -104,8 +104,8 @@ pub mod Orbit64.V2.State {
     // ---------------------------------------------------------------- validation
 
     def isPermutation(v: Vector[Int32], k: Int32): Bool =
-        Vector.length(v) == k and
-            Vector.range(0, k) |> Vector.forAll(i -> Vector.exists(x -> x == i, v))
+        Vector.length(v) == k
+            and Vector.range(0, k) |> Vector.forAll(i -> Vector.exists(x -> x == i, v))
 
     def inRange(v: Vector[Int32], size: Int32, bound: Int32): Bool =
         Vector.length(v) == size and Vector.forAll(x -> x >= 0 and x < bound, v)
@@ -170,8 +170,8 @@ pub mod Orbit64.V2.State {
                     "midge flips must be 12 values in 0..1 on odd cubes and empty otherwise"
                 )
                 :: check(
-                    Vector.length(cube#wings) == w and
-                        Vector.forAll(v -> isPermutation(v, 24), cube#wings),
+                    Vector.length(cube#wings) == w
+                        and Vector.forAll(v -> isPermutation(v, 24), cube#wings),
                     "expected ${w} wing permutations of 24"
                 )
                 :: check(Vector.length(cube#centers) == m, "expected ${m} center orbits")
@@ -208,10 +208,10 @@ pub mod Orbit64.V2.State {
                     "midge flips must sum to 0 mod 2"
                 )
                 :: check(
-                    not dropsCorner(n, pose) or
-                        (
-                            Vector.get(6, cube#cornerPieces) == 6 and
-                                Vector.get(6, cube#cornerTwists) == 0
+                    not dropsCorner(n, pose)
+                        or (
+                            Vector.get(6, cube#cornerPieces) == 6
+                                and Vector.get(6, cube#cornerTwists) == 0
                         ),
                     "a canonical even cube has its DBL corner home with twist 0"
                 )
@@ -224,12 +224,12 @@ pub mod Orbit64.V2.State {
                     "fixed-center rotation parity must equal corner parity"
                 )
                 :: check(
-                    model == Model.Color or
-                        Vector.range(0, Vector.length(cube#centers))
+                    model == Model.Color
+                        or Vector.range(0, Vector.length(cube#centers))
                             |> Vector.forAll(
                                 i ->
-                                    parityOf(Vector.get(i, cube#centers)) ==
-                                        requiredCenterParity(n, c, wing, i + 1)
+                                    parityOf(Vector.get(i, cube#centers))
+                                        == requiredCenterParity(n, c, wing, i + 1)
                             ),
                     "a center orbit parity breaks the picture relation"
                 )
