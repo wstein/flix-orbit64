@@ -102,11 +102,10 @@ pub mod AlgorithmTool.Lowering {
         bindings: List[(String, Int32)],
         reversedNodes: List[Orbit64.Algorithm.Node]
     ): Result[String, (Int32, List[Orbit64.Algorithm.Node])] = match expr {
-        case Move(move)              =>
-            Ok(internNode(Orbit64.Algorithm.Node.Terminal(move), reversedNodes))
-        case Reference(name)         =>
+        case Move(move) => Ok(internNode(Orbit64.Algorithm.Node.Terminal(move), reversedNodes))
+        case Reference(name) =>
             lookup(name, bindings) |> Result.map(reference -> (reference, reversedNodes))
-        case Concat(children)        =>
+        case Concat(children) =>
             lowerExpressions(children, bindings, reversedNodes, Nil)
                 |> Result.map(
                     match (references, afterChildren) -> internNode(
@@ -114,7 +113,7 @@ pub mod AlgorithmTool.Lowering {
                         afterChildren
                     )
                 )
-        case Repeat(child, count)    =>
+        case Repeat(child, count) =>
             lowerExpression(child, bindings, reversedNodes)
                 |> Result.map(
                     match (reference, afterChild) -> internNode(
@@ -122,7 +121,7 @@ pub mod AlgorithmTool.Lowering {
                         afterChild
                     )
                 )
-        case Inverse(child)          =>
+        case Inverse(child) =>
             lowerExpression(child, bindings, reversedNodes)
                 |> Result.map(
                     match (reference, afterChild) -> internNode(
@@ -130,7 +129,7 @@ pub mod AlgorithmTool.Lowering {
                         afterChild
                     )
                 )
-        case Conjugate(left, right)  => lowerConjugate(left, right, bindings, reversedNodes)
+        case Conjugate(left, right) => lowerConjugate(left, right, bindings, reversedNodes)
         case Commutator(left, right) => lowerCommutator(left, right, bindings, reversedNodes)
         case Slice(name, start, end) =>
             lookup(name, bindings)

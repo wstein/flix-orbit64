@@ -439,9 +439,9 @@ pub mod Orbit64.Net {
     def centerRepresentative(n: Int32, row: Int32, col: Int32): Bool =
         let last = n - 1;
         let rank = row * n + col;
-        rank <= col * n + last - row and
-            rank <= (last - row) * n + last - col and
-            rank <= (last - col) * n + row
+        rank <= col * n + last - row
+            and rank <= (last - row) * n + last - col
+            and rank <= (last - col) * n + row
 
     /// Four rotational partners on each face, listed by facelet index.
     def centerTable(n: Int32, row: Int32, col: Int32): Vector[Int32] =
@@ -449,10 +449,10 @@ pub mod Orbit64.Net {
         List.range(0, 6 * n * n)
             |> List.filter(i -> {
                 let cell = Int32.modulo(i, n * n);
-                cell == row * n + col or
-                    cell == col * n + last - row or
-                    cell == (last - row) * n + last - col or
-                    cell == (last - col) * n + row
+                cell == row * n + col
+                    or cell == col * n + last - row
+                    or cell == (last - row) * n + last - col
+                    or cell == (last - col) * n + row
             })
             |> List.toVector
 
@@ -465,11 +465,11 @@ pub mod Orbit64.Net {
                         |> List.filterMap(
                             col ->
                                 if (
-                                    centerRepresentative(n, row, col) and
-                                        not (
-                                            Int32.modulo(n, 2) == 1 and
-                                                row == n / 2 and
-                                                col == n / 2
+                                    centerRepresentative(n, row, col)
+                                        and not (
+                                            Int32.modulo(n, 2) == 1
+                                                and row == n / 2
+                                                and col == n / 2
                                         )
                                 )
                                     Some(centerTable(n, row, col))
@@ -616,8 +616,8 @@ pub mod Orbit64.Net {
         let got = List.map(Orbit64.Coord.kind, orbits);
         if (not canDraw(n))
             Err(
-                "no slot convention for the ${n}x${n}x${n}: this module has one " +
-                    "only up to the 7x7x7"
+                "no slot convention for the ${n}x${n}x${n}: this module has one "
+                    + "only up to the 7x7x7"
             )
         // Each orbit being individually valid is not enough. A list that is
         // short, reordered, or carries an orbit this size does not have leaves
@@ -652,7 +652,7 @@ pub mod Orbit64.Net {
             case 5 => match facelets5(orbits) {
                 case Some(fs) => Ok(fs)
                 // Unreachable: validate already fixed the shape.
-                case None =>
+                case None     =>
                     Err("expected orbits ${Orbit64.Orbit.layout(n)} for the ${n}x${n}x${n}")
             }
             case 6 => Ok(faceletsLarge(n, orbits))
@@ -691,13 +691,13 @@ pub mod Orbit64.Net {
         Result[String, Orbit64.State.FramedState] =
         if (not canDraw(n))
             Err(
-                "no slot convention for the ${n}x${n}x${n}: this module has one " +
-                    "only up to the 7x7x7"
+                "no slot convention for the ${n}x${n}x${n}: this module has one "
+                    + "only up to the 7x7x7"
             )
         else if (Vector.length(facelets) != 6 * n * n)
             Err(
-                "expected ${6 * n * n} facelets for the ${n}x${n}x${n}, " +
-                    "got ${Vector.length(facelets)}"
+                "expected ${6 * n * n} facelets for the ${n}x${n}x${n}, "
+                    + "got ${Vector.length(facelets)}"
             )
         else if (not Vector.forAll(f -> f >= 0 and f < 6, facelets))
             Err("every facelet must name a face, 0 to 5")
@@ -755,9 +755,12 @@ pub mod Orbit64.Net {
     ///
     def facelets5(orbits: List[Coord]): Option[Vector[Int32]] =
         match orbits {
-            case CornerCoord(cp, co) :: MidgeCoord(ep, eo) :: WingCoord(wp) :: CenterCoord(
-                xs
-            ) :: CenterCoord(ps) :: Nil =>
+            case CornerCoord(cp, co)
+                :: MidgeCoord(ep, eo)
+                :: WingCoord(wp)
+                :: CenterCoord(xs)
+                :: CenterCoord(ps)
+                :: Nil =>
                 region rc {
                     let sticker = Array.repeat(rc, 150, 0);
                     // The six single centers are not in the token; they are the frame.
@@ -1180,7 +1183,7 @@ pub mod Orbit64.Net {
                     // the six faces, which `fromFacelets` has already bounded
                     // the sticker to. It is the table's property, not this
                     // reader's, so the reader still answers rather than trusts.
-                    case None => Err(noSuchPiece(what, slot, Vector#{seen}))
+                    case None      => Err(noSuchPiece(what, slot, Vector#{seen}))
                 })
             |> Result.map(List.toVector)
 
@@ -1204,8 +1207,8 @@ pub mod Orbit64.Net {
                                 List.range(0, m)
                                     |> List.forAll(
                                         j ->
-                                            Vector.get(j, seen) ==
-                                                Vector.get(
+                                            Vector.get(j, seen)
+                                                == Vector.get(
                                                     Int32.modulo(j - o + m, m),
                                                     Vector.get(p, colors)
                                                 )

@@ -1,13 +1,13 @@
 /// Parse the `key=v,v,...;key=...` state text of `TestV2VectorData`.
 def parseCube(text: String): Orbit64.V2.State.Cube =
-    let fields = String.splitOn({ substr = ";" }, text)
-        |> List.filterMap(f -> match String.splitOn({ substr = "=" }, f) {
+    let fields = String.splitOn({substr = ";"}, text)
+        |> List.filterMap(f -> match String.splitOn({substr = "="}, f) {
             case key :: value :: Nil =>
                 let ints =
                     if (value == "")
                         Nil
                     else
-                        String.splitOn({ substr = "," }, value) |> List.filterMap(Int32.fromString);
+                        String.splitOn({substr = ","}, value) |> List.filterMap(Int32.fromString);
                 Some((key, List.toVector(ints)))
             case _ => None
         });
@@ -21,15 +21,15 @@ def parseCube(text: String): Orbit64.V2.State.Cube =
         prefix ->
             fields
                 |> List.filter(
-                    match (k, _) -> String.startsWith({ prefix = prefix }, k) and
-                        String.length(k) > String.length(prefix) and
-                        not (
-                            k == "cp" or
-                                k == "ct" or
-                                k == "mp" or
-                                k == "mf" or
-                                k == "fr" or
-                                k == "fm"
+                    match (k, _) -> String.startsWith({prefix = prefix}, k)
+                        and String.length(k) > String.length(prefix)
+                        and not (
+                            k == "cp"
+                                or k == "ct"
+                                or k == "mp"
+                                or k == "mf"
+                                or k == "fr"
+                                or k == "fm"
                         )
                 )
                 |> List.map(match (_, v) -> v)

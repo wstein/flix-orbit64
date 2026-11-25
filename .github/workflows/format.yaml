@@ -35,7 +35,7 @@ jobs:
           cache: npm
 
       # npm ci installs exactly what package-lock.json names, integrity
-      # included: Prettier 3.10.1 and the prettier-plugin-flix release tarball.
+      # included: Prettier 3.10.1 and the pinned prettier-plugin-flix version from npm.
       - name: Install pinned formatting tools
         run: npm ci
 

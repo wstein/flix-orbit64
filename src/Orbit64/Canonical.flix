@@ -78,13 +78,13 @@ pub mod Orbit64.Canonical {
     def checkFacelets(n: Int32, facelets: Vector[Int32]): Option[String] =
         if (not Orbit64.Net.canDraw(n))
             Some(
-                "no slot convention for the ${n}x${n}x${n}: this module has one " +
-                    "only up to the 7x7x7"
+                "no slot convention for the ${n}x${n}x${n}: this module has one "
+                    + "only up to the 7x7x7"
             )
         else if (Vector.length(facelets) != 6 * n * n)
             Some(
-                "expected ${6 * n * n} facelets for the ${n}x${n}x${n}, " +
-                    "got ${Vector.length(facelets)}"
+                "expected ${6 * n * n} facelets for the ${n}x${n}x${n}, "
+                    + "got ${Vector.length(facelets)}"
             )
         else if (not Vector.forAll(f -> f >= 0 and f < 6, facelets))
             Some("every facelet must name a face, 0 to 5")

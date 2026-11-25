@@ -309,7 +309,7 @@ def the2x2x2HasNoPictureEntry(): Unit \ Assert =
 
 @Test
 def aCubeThatBreaksALawHasNoPicture(): Unit \ Assert =
-    let broken = { rotations = Vector#{1, 0, 0, 0, 0, 0} | pictureSolvedCube(3) };
+    let broken = {rotations = Vector#{1, 0, 0, 0, 0, 0} | pictureSolvedCube(3)};
     match Orbit64.V2.Facelets.toFacelets(3, Model.Picture, Pose.Canonical, broken) {
         case Ok(_)    => Assert.fail("accepted")
         case Err(why) => Assert.assertTrue(String.contains(substr = "rotation parity", why))

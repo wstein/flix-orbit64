@@ -42,8 +42,8 @@ pub mod AlgorithmTool.Reconstruction {
         refCounts: List[Int32],
         anchors: Set[Int32]
     ): Bool =
-        not Set.memberOf(index, anchors) and
-            (isAlwaysInlinable(node, all) or countAt(index, refCounts) == 1)
+        not Set.memberOf(index, anchors)
+            and (isAlwaysInlinable(node, all) or countAt(index, refCounts) == 1)
 
     /// Cheap regardless of how often it recurs: a bare terminal, or an inverse
     /// chain that bottoms out in one.
@@ -165,11 +165,11 @@ pub mod AlgorithmTool.Reconstruction {
         nodes
             |> List.foldLeft(
                 (anchors, node) -> match node {
-                    case Orbit64.Algorithm.Node.Partition(sequence, _)     =>
+                    case Orbit64.Algorithm.Node.Partition(sequence, _) =>
                         Set.insert(sequence, anchors)
                     case Orbit64.Algorithm.Node.SliceParts(sequence, _, _) =>
                         Set.insert(sequence, anchors)
-                    case _                                                 => anchors
+                    case _ => anchors
                 },
                 Set.empty()
             )
