@@ -1,92 +1,59 @@
 # flix-orbit64
 
-The separate [algorithm DAG envelope review draft](FORMAT-ALGORITHM-DAG.md)
-adds canonical JSON interchange that preserves the complete typed graph. It is
-independent of V2 state tokens and does not retire existing V1 APIs yet.
-
 [![Build and Test](https://github.com/wstein/flix-orbit64/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/wstein/flix-orbit64/actions/workflows/build-and-test.yaml)
 [![Docs](https://github.com/wstein/flix-orbit64/actions/workflows/docs.yaml/badge.svg)](https://wstein.github.io/flix-orbit64/)
 [![Release](https://img.shields.io/github/v/release/wstein/flix-orbit64)](https://github.com/wstein/flix-orbit64/releases/latest)
 [![Flix](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fwstein%2Fflix-orbit64%2Fmain%2F.flixw%2Flock.toml&query=%24.compiler.version&label=Flix&color=blue)](https://flix.dev)
 [![License](https://img.shields.io/github/license/wstein/flix-orbit64)](LICENSE)
 
-A canonical, URL-safe family of compact encodings for `n x n x n` twisty-cube
-states, literal move sequences, and straight-line programs over moves.
+Package 1.0.0 encodes cube **state** only as [Orbit64 V2](FORMAT-V2.md).
+The V1 state class (class `00` in [FORMAT.md](FORMAT.md), the fixed widths
+5, 12, 27, 43, 66, and 90) is not implemented. A V2 token has no class bits.
+Label it, for example `orbit64v2:`, wherever a reader could still meet an
+older decoder.
 
-Under the published Orbit64 coordinate and facelet conventions, two identical
-cubes produce the same token, so string equality is state equality. State
-tokens reserve two leading type bits and are otherwise as narrow as the state
-count permits. `FORMAT.md` defines the `U R F D L B` facelet boundary and the
-whole-cube frame order used for cross-language interchange. Move formats use
-the other leading-bit classes; see the [wire-format specification](FORMAT.md).
-
-```
-2x2x2  AAAAA                                       (solved)
-2x2x2  AAAVW                                       (every corner twisted)
-3x3x3  AAAAAAAAAL_o                                (superflip)
-4x4x4  BUt6SRL-hJFWEmpUa2zYHsiSLJb                 (stripes)
-5x5x5  AAAAAAAAAAzL6QkSbjC7FwAwV9zTa9kKK6ImtYAAAAA  (superflip)
-```
+Move sequences, structured algorithms, and extension envelopes are unchanged
+and are still specified by [FORMAT.md](FORMAT.md) (classes `01`, `10`, and
+`11`). They are not state tokens.
 
 The project carries its own compiler, so there is nothing to install but a
 JDK 21+.
 
-[Flix](https://flix.dev) is an effect-oriented language on the JVM -- functional,
-imperative and logic in one, with traits, algebraic data types, and a type and
-effect system that tracks every side effect in the signature. That earns its keep
-in a codec: `encode` and `decode` are pure by construction and the compiler says
-so, rather than a reader having to take a comment's word for it. Region-based
-local mutation lets the one routine that scatters into an array still type as
-pure, and Java interop is one `import` away on the rare occasion it is wanted.
-
 ```
-./flixw test                                      # 277 tests
-./flixw examples local run cli-tool               # size table, round-trip
-./flixw examples local run cli-tool -- <token>    # decode; length picks n
+./flixw test                                      # V2 state tests, plus move and algorithm tests
+./flixw examples local run cli-tool               # V2 registry table and a solved 3x3x3 round trip
+./flixw examples local run cli-tool -- <token>    # decode a V2 state token
 ```
 
 ## Use it as a library
 
 ```toml
 [dependencies]
-"github:wstein/flix-orbit64" = { version = "0.9.0", mount = "orbit64" }
+"github:wstein/flix-orbit64" = { version = "1.0.0", mount = "orbit64" }
 ```
 
 Flix 0.80 reaches a dependency through its mount, the name before `::` in a
 `use`. Without an explicit `mount` it would be the repository name, which
-`flix-orbit64` cannot be, so name one. `use orbit64::Orbit64` then makes the
-qualified names below work unchanged. Release 0.9.0 was built for Flix 0.75 and
-cannot be resolved by Flix 0.80; until a release built for 0.80 is published,
+`flix-orbit64` cannot be, so name one. Until this 1.0.0 release is published,
 the examples run against this checkout with `./flixw examples local`.
 
 ```flix
 use orbit64::Orbit64
-use orbit64::Orbit64.Coord.Coord.{CornerCoord, MidgeCoord}
 
-def demo(): Unit \ IO =
-    let superflip = List#{
-        CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
-        MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
-    } |> Orbit64.State.canonical;
-    match Orbit64.State.encode(3, superflip) {
-        case Ok(token) => println(token)          //=> AAAAAAAAAL_o
-        case Err(e)    => println("nope: ${e}")
-    }
+def demo(): Result[String, String] =
+    let solved = Orbit64.V2.State.solved(3, Orbit64.V2.Registry.Model.Color);
+    Orbit64.V2.Codec.encode(3, solved)   // entry 3: 3x3x3 color, framed
 ```
 
-The API documentation is published at
-<https://wstein.github.io/flix-orbit64/>, rendered by `flix doc` from the
-compiler this project pins.
+`Orbit64.V2.Codec.decode(token)` returns the registry entry and the cube.
+`Orbit64.V2.Facelets` converts between that cube and a facelet string for
+`n = 2..15`. Entry ids, lengths, and the color and picture models are in
+[FORMAT-V2.md](FORMAT-V2.md).
 
-`Orbit64.State.decode(n, token)` is the exact inverse and returns a
-`FramedState`. Construct coordinate data with `Orbit64.State.canonical`, use
-`Orbit64.State.frame` to read its reference frame, and pass
-the whole `FramedState` to geometry APIs such as `Net`. Everything the
-package defines nests under the `Orbit64` module, so nothing it ships can
-collide with names of yours -- and it defines no top-level `main`, so yours
-still compiles.
+A solved state whose entry starts at offset zero is a run of `A` of that
+entry's length. Entry 3, the 3×3×3 color framed state, is twelve `A`s.
 
-Literal moves are type-safe values rather than notation strings:
+Literal moves stay type-safe values rather than notation strings:
 
 ```flix
 use orbit64::Orbit64
@@ -101,427 +68,34 @@ def moves(): Result[String, String] =
     }) //=> Ok("d4")
 ```
 
-`Orbit64.Token.decode(token)` dispatches states, literal sequences, structured
-algorithms, and extension envelopes without a caller choosing a decoder first.
-Move tokens carry the reachable
-layer count rather than cube parity, so the same token applies to `2l x 2l x
-2l` and `(2l + 1) x (2l + 1) x (2l + 1)` cubes.
-
-## State format
-
-Every twisty cube factors into orbits -- families of pieces that turns permute
-among themselves and never mix. Each orbit gets one coordinate over a range of
-exactly its own size, the coordinates are combined by mixed radix, and the
-result is written in base64url at a fixed width. No separators or field
-alignment are used. The first two bits are the state class tag shared by the
-Orbit64 token family.
-
-| orbit     | count               | range         | bits  |
-|-----------|---------------------|---------------|-------|
-| `Corners` | always 1            | `8! * 3^7`    | 26.39 |
-| `Midges`  | 1 if `n` odd, `n>=3`| `12! * 2^11`  | 39.84 |
-| `Wings`   | `(n-2)/2`           | `24!`         | 79.04 |
-| `Centers` | `(n-2)^2/4`         | `24!/(4!)^6`  | 51.53 |
-
-Where a cube has more than one center orbit, list position is the only thing
-telling them apart -- they are all `CenterCoord`. On a 5x5x5 the renderer's
-convention fixes the fourth entry as the **X-centers** (the four diagonal cells
-of a face's center block) and the fifth as the **plus-centers** (the four
-edge-adjacent cells).
-
-Both counts truncate, so the state codec's `layout` is pure arithmetic in `n`:
-it has no notion of a face, an axis, or a turn.
-
-| cube  | bits   | chars |
-|-------|--------|-------|
-| 2x2x2 |  26.39 |     5 |
-| 3x3x3 |  69.81 |    12 |
-| 4x4x4 | 156.96 |    27 |
-| 5x5x5 | 251.91 |    43 |
-| 6x6x6 | 390.58 |    66 |
-| 7x7x7 | 537.06 |    90 |
-
-Widths are distinct and grow as `n^2`, so a state token's length identifies its
-puzzle. Width is the fewest characters that fit every state beneath the `00`
-class prefix. Tokens are fixed-width and left-padded with `A`, and index 0 is
-`A`, so a solved cube of any size is a run of `A`s.
-
-## Token classes
-
-The first base64url sextet divides the Orbit64 family into four classes:
-
-| Bits | Characters | Meaning |
-|------|------------|---------|
-| `00` | `A`–`P` | state |
-| `01` | `Q`–`f` | literal move sequence |
-| `10` | `g`–`v` | structured algorithm grammar |
-| `11` | `w`–`_` | future extension envelope |
-
-Move sequences and structured algorithms gamma-code their reachable layer count because their
-arbitrary token length cannot identify it. The exact ranks, validation rules,
-and canonical bit padding are specified in [FORMAT.md](FORMAT.md).
-
-Class `10` is the one structured algorithm grammar. It adds sharing,
-repetitions, inverses, stable slices, and packed macro streams while preserving
-exact primitive layer-turn sequences. Class `01` remains the dense default for
-ordinary literal scrambles. Class `11` carries a future format ID and opaque
-payload, rather than duplicating the algorithm grammar.
-
-## The same cube, three ways
-
-The two 3x3x3 states below, in the notations you are most likely to meet them in.
-Facelet strings are in the standard `URFDLB` order, nine stickers per face; the
-piece arrays are corner permutation and orientation, then edge permutation and
-orientation.
-
-**Solved**
-
-```
-facelets  UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB
-pieces    cp 0 1 2 3 4 5 6 7           co 0 0 0 0 0 0 0 0
-          ep 0 1 2 3 4 5 6 7 8 9 10 11 eo 0 0 0 0 0 0 0 0 0 0 0 0
-orbit64   AAAAAAAAAAAA
-```
-
-**Superflip** -- every corner solved, every edge in place but flipped
-
-```
-facelets  UBULURUFURURFRBRDRFUFLFRFDFDFDLDRDBDLULBLFLDLBUBRBLBDB
-pieces    cp 0 1 2 3 4 5 6 7           co 0 0 0 0 0 0 0 0
-          ep 0 1 2 3 4 5 6 7 8 9 10 11 eo 1 1 1 1 1 1 1 1 1 1 1 1
-orbit64   AAAAAAAAAL_o
-```
-
-The superflip's coordinate has its eleven free flip bits all set. The framed
-encoding then multiplies that coordinate by 24 for the stored frame, which is
-why its compact rank ends in `L_o`. It is a fair advertisement for what
-mixed-radix packing buys over fixed-width fields.
-
-| representation | size | bits | over the floor |
-|----------------|------|------|----------------|
-| facelets, `URFDLB`         | 54 characters over a 6-letter alphabet | 139.6 | 2.11x |
-| pieces, `cp` `co` `ep` `eo`| 40 values, packed at 3, 2, 4 and 1 bits | 100.0 | 1.51x |
-| orbit64                    | 12 base64url characters | 72.0 | 1.09x |
-
-The framed-state floor is 69.81 bits, and no base64url encoding can spend fewer than 12
-characters on it. The other two are not wasteful by accident: facelets describe
-stickers rather than pieces, so most 54-character strings are not cubes at all,
-and the piece arrays pay index width for permutations whose ranks are much
-smaller than their alphabets.
-
-The piece arrays use `Net`'s published slot numbering. For a general state,
-compare or exchange facelets at the `U R F D L B` boundary unless both sides
-explicitly use that coordinate convention.
-
-## Examples
-
-The full [100 checked Orbit64 examples](ORBIT64-EXAMPLES.md) pair each token with its spaced `U R F D L B` facelets: 20 familiar 3x3x3 patterns (solved first), followed by 80 deterministic random states across 2x2x2–5x5x5.
-
-`test/TestReadmeExamples.flix` decodes, re-encodes, renders, and reads every example back from its facelets.
-
-## Coordinate and facelet conventions
-
-The codec ranks coordinate ordinals, but the published state contract includes
-their geometry at the facelet boundary. `Orbit64.Net` defines the supported
-2x2x2–7x7x7 layouts: facelets are indexed as `face * n * n + row * n + col`
-in `U R F D L B` order; corners and midges use their standard orders; wings
-and centers are ordered by their reference facelet index. `FORMAT.md` and the
-Cube Rosetta compatibility vectors are normative for that interchange.
-
-Constructing `Coord` values manually still requires that same convention:
-`WingCoord` entry 17 means the wing selected by `Net`'s table, not a
-caller-defined ordinal. Applications with a different internal model should
-convert at the facelet boundary with `Net.toFacelets` and `Net.fromFacelets`,
-rather than translate coordinate arrays themselves.
-
-For 6x6x6 and 7x7x7, `Net` extends the smaller slot tables by facelet
-geometry. Wing orbits follow increasing depth from the outer face; center
-orbits follow the lowest facelet index in each fourfold face rotation class.
-The [format specification](FORMAT.md) fixes the exact ordering.
-
-## Facelets, and talking to other projects
-
-`Orbit64.Net.toFacelets(n, state)` gives the state as `6 * n * n` face indices,
-laid out `face * n * n + row * n + col` with faces `U R F D L B` -- the layout
-[`flix-cube`](https://github.com/wstein/flix-cube)'s `BigCube` and
-`cube-solvers`' `Facelets` both use. An engine may use different internal slot
-orders, but its facelets remain the portable comparison and interchange layer.
-
-`Orbit64.Net.fromFacelets(n, facelets)` is its exact inverse, and the direction
-a project carrying a cube engine of its own needs in order to *produce* a token
-rather than merely draw one:
-
-```flix
-// a cube some other engine turned, as face indices
-Orbit64.Net.fromFacelets(4, stickers)
-    |> Result.flatMap(state -> Orbit64.State.encode(4, state))
-```
-
-Both directions read one set of tables, which is why the inverse lives here
-rather than in the adapter. Those tables are private, so a project writing its
-own reader would have to copy them -- and then the same geometry sits in two
-places, where a correction to one silently misses the other.
-
-`test/TestFacelets.flix` checks both directions against `flix-cube`. Its
-sticker strings come from `BigCube.showFacelets` after applying a named turn in
-that project, by an engine sharing no code with this one, and every fixture has
-to both draw to those stickers and read back from them, at the 4x4x4 and the
-5x5x5 alike.
-
-On odd cubes, `fromFacelets` accepts one of the 24 right-handed fixed-center
-orientations, normalizes facelets for coordinate recovery, and returns the
-corresponding `FramedState`. It rejects center arrangements that are not a
-whole-cube rotation. It also rejects
-facelets whose corner and midge permutations differ in parity, such as a solved
-cube with only two corners swapped, with the same reason `State.encode` gives.
-
-## One token per pattern
-
-A token names a state: two cubes that differ only by how they are held,
-mirrored or colored have different tokens. A *pattern* is the color state up to
-those choices, and `Orbit64.Canonical` gives it one token:
-
-```flix
-// the solved 3x3x3, and the same cube after an x rotation: one token
-Orbit64.Canonical.fromToken(3, "AAAAAAAAAAAA")          //=> Ok("AAAAAAAAAAAA")
-Orbit64.Canonical.fromToken(3, "AAAAAAAAAAAE")          //=> Ok("AAAAAAAAAAAA")
-// a scrambled 2x2x2
-Orbit64.Canonical.fromToken(2, "EJ6kr")                 //=> Ok("AXnYr")
-// a cube some other engine turned, as face indices
-Orbit64.Canonical.fromFacelets(4, stickers)
-```
-
-The result is an ordinary state token, so `Orbit64.State.decode` reads it back
-and every existing token keeps its meaning; this adds a function and changes
-no format. (`Orbit64.State.canonical` is unrelated: it builds a `FramedState`.)
-The token is the same for all 48 symmetries (24 rotations and their mirror
-images) and for any renaming of the six colors, so a pattern and its
-mirror image share it. From the 4x4x4 up, pieces of one color are
-interchangeable, and no representative has to be picked: Orbit64 already reads
-colors, so swapping equal-colored pieces changes no token. A cube that is
-unreachable in every coloring is an error, not a token. The definition,
-including the rule that orders sticker strings and the convention the token
-depends on, is in [FORMAT.md](FORMAT.md#canonical-form).
-
-This repository is the reference implementation of the function, and
-FORMAT.md is meant to be enough to reproduce it. The expected tokens in
-`test/TestCanonicalVectors.flix` come from an independent implementation in
-Rust: scrambles of every size, slice scrambles whose centers
-move, and pairs of one cube turned, mirrored and recolored from its
-cross-check of 324 states. `test/TestCanonical.flix` checks idempotence, both
-conversion directions and invariance under all 48 symmetries and three color
-renamings, pins the inputs that must fail, and pairs a chiral pattern with its
-mirror image. The Rust implementation also counted 77 802 tokens over all
-3 674 160 2x2x2 states; that exhaustive run is not repeated in this
-repository's tests.
-
-## Design decisions
-
-**Orientation is stored one entry short.** The last corner twist is forced by
-the sum-mod-3 rule and the last edge flip by parity, so `rank` drops them and
-`unrank` reconstructs them. Free, and it is what turns `3^8` into `3^7`.
-
-**Odd-cube permutation parity is enforced.** Corner and midge permutations must
-have the same parity. The codec ranks the midge permutation in the matching
-half of its range, reclaiming that bit, then records one of 24 fixed-center
-frames. The frame makes 5x5x5 one character wider; other supported odd sizes
-still fit their existing widths.
-
-**`encode` refuses coordinates that are not a cube.** That is a different
-question from the one above, and the two are worth keeping apart. Parity says
-whether a cube could have been *reached* by turning; this says whether each
-coordinate is a cube at all -- eight distinct corners, twists that sum to zero
-mod three, four centers of each color. `encode` checks both.
-
-It has to. A coordinate above its own range does not merely encode itself
-wrongly: the assembly is Horner, so the surplus carries into the next orbit and
-corrupts a coordinate that was correct. And a coordinate inside its range but
-not a cube -- a permutation with a repeat -- ranks as some other legitimate
-state, so it encodes silently to a token for a different cube. Neither is
-visible to `decode`, which can only bounds-check the token as a whole.
-`Orbit64.Coord.faultOf` names the rule that was broken.
-
-**Whole-cube rotation is not quotiented out of the state format.** Dropping
-the orientation from the encoding would save log2(24) ~ 4.6 bits, but encoding
-would then need a search over rotations, which belongs in a separate function:
-`Orbit64.Canonical` does that search, and the state format stays as it is. So
-`stateCount(4)` is exactly 24 times the classic 4x4x4 figure, and
-`stateCount(3)` exactly twice the classic 3x3x3 figure. Both are asserted in
-the tests.
-
-**base64url over base58.** Measured on a reference implementation, the
-big-integer division base58 needs came to about 2% of an encode -- the cost is
-in reading the cube, not in packing it. So density wins: 6 bits per character
-against 5.858, which is a character off the 3x3x3 token.
-
-**Centers are indistinguishable, wings are not.** Four centers of a color are
-interchangeable, so a center orbit is a multiset arrangement. Two wings of a
-color pair look interchangeable but are not: the pair appears in opposite order
-depending on the slot's handedness, so `24!` is right and `24!/2^12` is not.
-`Orbit64.Rank.multisetRank` handles the first; a plain Lehmer rank handles the second.
-
-## Datalog, and where it stops paying
-
-Flix embeds Datalog, which here earns its keep in exactly one place and not in
-the place next door.
-
-`Orbit.layout(n)` is arithmetic -- one corner orbit, midges when `n` is odd,
-`(n-2)/2` wing orbits, `(n-2)^2/4` center orbits -- and nothing inside the codec
-can check that, because the codec *is* that formula. So the tests derive the
-same answer from geometry instead: build the cubies of an `n`-cube, turn the
-layers a solver is allowed to turn, and take the connected components of the
-graph that says one turn carries this piece to that one. Two pieces share an
-orbit exactly when some sequence of turns connects them, which is a transitive
-closure, which is three rules:
-
-```
-Same(x, y) :- Turn(x, y).
-Same(x, y) :- Same(y, x).
-Same(x, z) :- Same(x, y), Same(y, z).
-```
-
-The two derivations share no code -- the library has no notion of a face, an
-axis or a turn -- so agreement between them means something. It is not
-decorative either: an extra wing orbit fails at the 2x2x2, and midges on even
-cubes fails at the 4x4x4. And it is cheap, because a 7x7x7 has only 218 surface
-pieces.
-
-The neighboring idea does not pay. Distance-from-solved is a lattice rule of
-the same shape -- `Dist(t; d+1) :- Dist(s; d), Move(s, t)` under a minimum
-lattice -- and it does work: over the 2x2x2's 3,674,160 states and 11 million
-move facts it terminates and reports a depth of 22 quarter turns. It also dies
-of heap exhaustion at the JVM's 4 GB default after nearly five minutes, and
-needs 12 GB to finish in under three. Against graphs of increasing size the
-engine stays near-linear in facts to about a million and then degrades on
-allocation, so this is a memory ceiling and not bad asymptotics. But a distance
-table is a fact about solving cubes rather than encoding them, and neither the
-subject nor the budget belongs here. It stays out of the codec and out of CI.
+`Orbit64.Token.decode(token)` dispatches literal sequences, structured
+algorithms, and extension envelopes. It rejects class `00`.
 
 ## Layout
 
-- `src/Orbit64/Rank.flix` -- Lehmer codes, combination ranks in the
-  combinatorial number system, multiset ranks. Every intermediate radix stays inside `Int32`; big
-  integers appear only in the final assembly.
-- `src/Orbit64/Orbit.flix` -- which orbits a cube has and how large each one is.
-- `src/Orbit64/Coord.flix` -- one orbit's state and its rank/unrank.
-- `src/Orbit64/State.flix` -- framed mixed-radix state assembly and
-  `Orbit64.State.canonical`, `encode`, and `decode`.
-- `src/Orbit64/Move.flix` -- primitive layer turns and literal move-sequence
-  encoding.
-- `src/Orbit64/Algorithm/Encoding.flix` -- structured algorithm grammar
-  encoding over the public DAG.
-- `src/Orbit64/Token.flix` -- first-sextet dispatch across the token family.
-- `src/Orbit64/Internal/Encoding.flix` -- shared base64url and canonical
-  delimiter-padded bitstream primitives.
-- `src/Orbit64/Canonical.flix`, `src/Orbit64/Internal/Symmetry.flix` -- the
-  canonical token of a pattern, and the 48 cube symmetries as facelet
-  permutations it is built on.
-- `src/Orbit64/Net.flix` -- draws a decoded cube as a colored net, up to the
-  7x7x7, and reads one back out of its facelets. It is the only module that
-  knows where pieces and facelets sit; `Orbit64.Move` names faces but carries no
-  slot geometry.
-- `examples/cli-tool/` -- the demo command line, a separate package that
-  depends on this one the same way any other consumer would, kept out of the
-  library so that it can define a top-level `main`. Run it against this
-  checkout with `./flixw examples local run cli-tool`.
-- `test/TestVectors.flix` -- conformance vectors generated by an independent
-  reference implementation that drives a geometric cube model: real turns on a
-  3D facelet representation, orbits found by connected components, every state
-  verified to round-trip at sticker level.
-- `test/TestOrbit64.flix` -- sizes, round-trips, and error handling.
-- `test/TestMove.flix`, `test/TestAlgorithm.flix` -- primitive-move validation,
-  structured-algorithm tokens, large-size headers, and malformed payload
-  rejection.
-- `test/TestToken.flix` -- universal class dispatch, including explicit 6x6x6
-  and 7x7x7 state-class coverage and extension-envelope decoding.
-- `test/TestNet4x4.flix` -- fixtures for the 4x4x4 display convention: states
-  built by a separate geometric model, with that model's own nets as the
-  expected output.
-- `test/TestNet5x5.flix` -- the same for the 5x5x5, including a wide turn that
-  distinguishes the two center orbits.
-- `test/TestNetLarge.flix` -- independent inner-slice facelets on the 6x6x6
-  and 7x7x7, and all 24 fixed-center frames on the 7x7x7.
-- `test/TestFacelets.flix` -- cross-project fixtures at the facelet layer,
-  generated by `flix-cube`'s turn engine and checked in both directions. Six
-  single turns at each of the 4x4x4 and 5x5x5, and one 5x5x5 sequence combining
-  an outer turn, a wide turn and an inner slice, which is where wings and both
-  center orbits arrive from two layers at once.
-- `test/TestFromFacelets.flix` -- `toFacelets` and `fromFacelets` as exact
-  inverses, asserted each way round over the conformance vectors rather than
-  over solved cubes, and again over a deterministic seed matrix of unranked
-  coordinates that reaches arbitrary wing permutations and center colorings.
-- `test/TestFromFaceletsGuards.flix` -- what `fromFacelets` must refuse, each
-  case asserting the wording of the refusal, so that a guard cannot go on
-  passing once some earlier check is what actually catches the input.
-- `test/TestNetGuards.flix` -- what the renderer must refuse (incomplete,
-  reordered, duplicated and foreign orbit lists), and a direct check that each
-  convention's tables cover every facelet exactly once.
-- `test/TestOrbitDiscovery.flix` -- derives `Orbit.layout` a second time, from
-  geometry instead of arithmetic. It builds a cube, turns it, and takes the
-  connected components of the "one turn maps this piece to that one" graph,
-  which is three Datalog rules. The two derivations share no code, so an orbit
-  count that is wrong at a size with no test vectors still fails.
+- `src/Orbit64/V2/` — the state codec: `Registry`, `State`, `Codec`, `Facelets`
+- `src/Orbit64/Move.flix` — primitive layer turns and literal move-sequence encoding
+- `src/Orbit64/Algorithm/` — structured algorithm grammar
+- `src/Orbit64/Token.flix` — dispatch for the non-state classes
+- `examples/cli-tool/` — the demo command line, run with `./flixw examples local run cli-tool`
 
-
-## References
-
-- [`flix-cube`](https://github.com/wstein/flix-cube) -- the same facelet layout,
-  and the independent turn engine `test/TestFacelets.flix` checks against.
-- [KPuzzle](https://standards.cubing.net/draft/3/kpuzzle/) -- a Cubing Standards
-  draft describing a puzzle as named orbits of indexed permutations and
-  orientations. Close in spirit to this format's coordinates, and explicitly a
-  draft.
-- [Twizzle Binary 3x3x3 Format](https://standards.cubing.net/draft/5/binary-3x3x3-encoding/)
-  -- 12 bytes, lexicographic permutation ranks, deliberately not minimal so that
-  it can validate what it decodes. 3x3x3 only, by name and by design.
-- Twizzle Search and `cube-solvers` both model these puzzles at the piece level,
-  the latter with an oriented `mEdge`, a distinct `wEdge`, and `xCenter` and
-  `tCenter` for a 5x5x5 -- this same decomposition, arrived at independently.
-  Both are worth reading and neither is a source for anything here: they are
-  GPL, this package is Apache-2.0, and its tables are derived from geometry for
-  that reason as much as any other. Comparison happens at the facelet layer,
-  where no license question arises because nobody owns what color a sticker is.
-- [A Rubik's Cube Solving Guide](https://circuitcellar.com/research-design-hub/projects/a-rubiks-cube-solving-guide/)
-  (Circuit Cellar) -- packs each edge into 5 bits (orientation, then
-  permutation) and each corner into 5 bits likewise, two 64-bit integers for
-  all 12 edges and all 8 corners. Fixed-width per-cubie packing rather than
-  this format's mixed-radix ranking, and not base64url or otherwise made
-  URL-safe -- built for a PIC32's 32KB of RAM, not for a shareable token --
-  but the closest existing relative to this package's name and bit layout.
+API documentation is published at <https://wstein.github.io/flix-orbit64/>.
 
 ## Formatting
 
 Formatting is done by Prettier with the Flix plugin
 ([`prettier-plugin-flix`](https://github.com/wstein/prettier-plugin-flix)). The
 [Format workflow](.github/workflows/format.yaml) checks the Flix files under
-`src/`, `test/` and `examples/*/` with it, at a width of 100 columns; the
-generated `test/*Data.flix` files are left out (see `.prettierignore`). The
-unrelated [Format V2 workflow](.github/workflows/format-v2.yaml) checks the
-Orbit64 token format. To run the check locally, use Node.js 22 and run:
+`src/`, `test/` and `examples/*/`. The generated `test/*Data.flix` files are
+left out (see `.prettierignore`). The [Format V2 workflow](.github/workflows/format-v2.yaml)
+checks the Orbit64 V2 token format.
 
 ```sh
 npm ci
 npm run format:check
 ```
 
-Both commands are also available through the wrapper as tasks from
-[`.flixw/tasks.toml`](.flixw/tasks.toml), which is the same idea as npm's
-`scripts`:
-
-```sh
-./flixw task fmt-check   # check; the same as npm run format:check
-./flixw task fmt         # rewrite the files in place
-```
-
-The tasks are not called `format`: `./flixw format` is the Flix compiler's own
-formatter verb, which this project does not use.
-
-The npm lockfile pins Prettier and the prebuilt plugin. The plugin tracks the
-Flix 0.80 grammar, which is also the compiler `flixw` pins here. When updating
-either version, run both the format check and `./flixw test`.
-
-See `AGENTS.md` for the toolchain, and
-<https://wstein.github.io/flix-orbit64/> for the generated API documentation.
+See `AGENTS.md` for the toolchain.
 
 ## License
 

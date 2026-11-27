@@ -1,5 +1,10 @@
 # Orbit64 token format
 
+**Retired for state tokens as of package 1.0.0.** State tokens are
+[FORMAT-V2.md](FORMAT-V2.md), and the library no longer encodes or decodes
+class `00`. This document still specifies move sequences (class `01`),
+structured algorithms (class `10`), and extension envelopes (class `11`).
+
 Orbit64 is a family of canonical, URL-safe token formats for `n x n x n`
 twisty cubes. Every token uses the base64url alphabet, without padding, in this
 index order:
@@ -88,7 +93,7 @@ In compact form, the list is `U R F D L B`.
 
 ## Spaced facelet reference vectors
 
-`Orbit64.Net.toFacelets` writes six face fields in `U R F D L B` order. Each
+The retired V1 net wrote six face fields in `U R F D L B` order. Each
 field has `n * n` letters, and a space separates fields. These checked vectors
 make the state-token-to-facelet mapping concrete for every size the net
 supports (2×2×2 through 7×7×7). The 6×6×6 and 7×7×7 entries are solved
@@ -324,22 +329,21 @@ sticker order and geometry above, and the URF corner for even cubes. A stored
 canonical token should carry the convention name. Sizes above 7 have no
 canonical form.
 
-The API is `Orbit64.Canonical.fromFacelets(n, facelets)`, `fromToken(n, token)`
-and `fromState(n, state)`, each returning `Result[String, String]`.
+The V1 canonical-token functions are not in package 1.0.0. Pattern canonicalization
+for state tokens is the V2 canonical pose (`FORMAT-V2.md`).
 
 ## Public API
 
-State operations live under `Orbit64.State`; the package root is the format
-family, not an alias for one member:
+As of package 1.0.0 the library implements this surface:
 
 ```text
-Orbit64.State.canonical / frame / orbits / encode / decode
-Orbit64.Canonical.fromFacelets / fromToken / fromState
+Orbit64.V2.Codec.encode / decode
+Orbit64.V2.Facelets.toFacelets / fromFacelets / encode / decode
 Orbit64.Move.encode / decode        (decode returns a layer class)
 Orbit64.Algorithm.Encoding.encode / decode
-Orbit64.Token.decode
+Orbit64.Token.decode                (rejects class 00)
 ```
 
-`Orbit64.Token.decode` dispatches on the first two bits and returns a tagged
-value carrying `n` and a `FramedState`, move sequence, structured algorithm,
+`Orbit64.Token.decode` dispatches on the first two bits of a non-state token and
+returns a tagged value carrying a move sequence, structured algorithm,
 or extension envelope.

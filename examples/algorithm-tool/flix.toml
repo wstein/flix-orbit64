@@ -4,4 +4,4 @@ repository = "github:wstein/flix-orbit64"
 flix       = "0.80.0"
 
 [dependencies]
-"github:wstein/flix-orbit64" = { version = "0.9.0", mount = "orbit64" }
+"github:wstein/flix-orbit64" = { version = "1.0.0", mount = "orbit64" }

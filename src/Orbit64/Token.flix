@@ -1,10 +1,13 @@
 ///
-/// Tagged decoding across the Orbit64 token family.
+/// Tagged decoding of move, algorithm, and extension tokens.
+///
+/// State tokens are Orbit64 V2. This decoder does not read the retired V1
+/// state class: a class-`00` token is an error, and `Orbit64.V2.Codec` is the
+/// state decoder.
 ///
 pub mod Orbit64.Token {
-    /// A decoded state, literal move sequence, structured algorithm, or extension.
+    /// A decoded literal move sequence, structured algorithm, or extension.
     pub enum Token with Eq, ToString {
-        case StateToken(Int32, Orbit64.State.FramedState),
         case MoveSequenceToken(Orbit64.Move.LayerClass, List[Orbit64.Move.Move]),
         case AlgorithmToken(Orbit64.Move.LayerClass, Orbit64.Algorithm.Algorithm),
         case ExtensionToken(Int32, String)
@@ -22,7 +25,7 @@ pub mod Orbit64.Token {
 
     def dispatch(tokenClass: Int32, token: String): Result[String, Token] =
         match tokenClass {
-            case 0 => decodeState(token)
+            case 0 => Err("V1 state tokens are retired; decode state tokens with Orbit64.V2.Codec")
             case 1 => decodeMoves(token)
             case 2 => decodeAlgorithm(token)
             case _ => decodeExtension(token)
@@ -61,15 +64,4 @@ pub mod Orbit64.Token {
             case None    =>
                 Err("extension payload contains a character outside the base64url alphabet")
         }
-
-    def decodeState(token: String): Result[String, Token] =
-        match sizeForWidth(String.length(token), 2) {
-            case None    => Err("no cube size uses a ${String.length(token)}-character state token")
-            case Some(n) =>
-                Orbit64.State.decode(n, token) |> Result.map(state -> Token.StateToken(n, state))
-        }
-
-    def sizeForWidth(target: Int32, n: Int32): Option[Int32] =
-        let width = Orbit64.State.width(n);
-        if (width == target) Some(n) else if (width > target) None else sizeForWidth(target, n + 1)
 }
