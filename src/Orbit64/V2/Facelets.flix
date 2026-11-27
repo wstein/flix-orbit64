@@ -27,9 +27,9 @@
 /// takes the 4x4x4 reference for even `n` and the 5x5x5 reference for odd `n`.
 /// The wings of the 4x4x4 serve every `n`; a corner uses only the axis values
 /// `0` and `n - 1`, so the corners of the 5x5x5 are those of the 4x4x4 for even
-/// `n`; midges exist only on odd cubes, where the rule takes the 5x5x5. V1's
-/// `Net` confirms the result for `n = 2..7`, and the Julia program
-/// `tools/format-v2/facelet_vectors.jl` derives the tables from geometry for all `n`.
+/// `n`; midges exist only on odd cubes, where the rule takes the 5x5x5. The
+/// retired V1 net agreed for `n = 2..7`. `tools/format-v2/facelet_vectors.jl`
+/// derives the tables from geometry for all `n`.
 ///
 /// A whole-cube rotation is applied to a facelet string through the geometry
 /// of `FORMAT.md`, not through V1's `x`, `z`, `y` composition: frame `r` is

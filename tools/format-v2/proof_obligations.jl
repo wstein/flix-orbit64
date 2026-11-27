@@ -191,7 +191,7 @@ function free_count(n::Int, picture::Bool)::BigInt
     t
 end
 
-"V1 `State.stateCount(n)`, transcribed from src/Orbit64/State.flix and Orbit.flix."
+"Retired V1 state count, kept as a numeric check. The formula is the old State.stateCount(n); the V1 sources are no longer in the library."
 function v1_state_count(n::Int)::BigInt
     t = factorial(big(8)) * big(3)^7
     isodd(n) && (t *= factorial(big(12)) * big(2)^11)
