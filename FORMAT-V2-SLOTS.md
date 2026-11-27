@@ -10,9 +10,9 @@ This is the slot convention of [FORMAT-V2.md](FORMAT-V2.md) written out: the
 facelet index of every slot of every orbit, for `n = 2..15`. A facelet is
 `face * n^2 + row * n + col` over the faces `U R F D L B`. Slots are numbered
 from 0 in the order listed. A corner, midge or wing lists the facelets of its
-slot, reference sticker first; a center slot is one facelet. For `n <= 7`
-the tables are those of `Orbit64.Net`; for `n >= 8` they extend the reference
-slots of the 4x4x4 (even `n`) or 5x5x5 (odd `n`) as FORMAT-V2.md describes.
+slot, reference sticker first; a center slot is one facelet. The tables
+are read from `Orbit64.V2.Facelets`: corners and midges expand the 5x5x5
+reference and wings expand the 4x4x4 reference, for every `n`.
 
 Corner stickers are listed in one fixed order: the first is on the U or D
 face, and the other two follow clockwise as seen from outside the cube.
