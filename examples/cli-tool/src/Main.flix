@@ -1,116 +1,69 @@
 use orbit64::Orbit64
 
 ///
-/// Prints the format's size table and demonstrates a round-trip.
+/// Prints the V2 registry and demonstrates a state-token round trip.
 ///
-/// With an argument, decodes that token instead: `../../flixw run -- <token>`.
-/// The token's length picks the puzzle, since no two sizes share a width.
+/// With an argument, decodes that V2 state token instead.
 ///
 def main(): Unit \ { IO, Sys.Env } =
-    // https://no-color.org -- any non-empty value means plain text.
-    let color = match Sys.Env.getVar("NO_COLOR") {
-        case Some(v) => String.isEmpty(v)
-        case None    => true
-    };
     match Sys.Env.getArgs() {
-        case token :: _ => report(token, color)
-        case Nil        => table(color)
+        case token :: _ => report(token)
+        case Nil        => table()
     }
 
 ///
-/// One row per cube size: how many states, how wide a token, and what the
-/// solved cube looks like.
+/// One row per registry entry, then the solved 3x3x3 color framed token.
 ///
-def table(color: Bool): Unit \ IO =
-    println("  cube      states  bits  chars");
-    println("  ----  ----------  ----  -----");
-    List.range(2, 8)
-        |> List.forEach(n -> {
-            let total = Orbit64.State.stateCount(n);
-            // BigInt.log2 is the bit length, i.e. the ceiling of the real log.
-            let bits = BigInt.log2(total) |> Int32.toString |> String.padLeft(4, ' ');
-            let chars = Orbit64.State.width(n) |> Int32.toString |> String.padLeft(5, ' ');
-            println("  ${n}x${n}x${n}  ${sci(total)}  ${bits}  ${chars}")
+def table(): Unit \ IO =
+    println("  id   n  model    pose       chars");
+    println("  --  --  -------  ---------  -----");
+    Orbit64.V2.Registry.entries()
+        |> List.forEach(e -> {
+            let id = Int32.toString(e#id) |> String.padLeft(4, ' ');
+            let n = Int32.toString(e#n) |> String.padLeft(2, ' ');
+            let model = match e#model {
+                case Orbit64.V2.Registry.Model.Color   => "color  "
+                case Orbit64.V2.Registry.Model.Picture => "picture"
+            };
+            let pose = match e#pose {
+                case Orbit64.V2.Registry.Pose.Canonical => "canonical"
+                case Orbit64.V2.Registry.Pose.Framed    => "framed   "
+            };
+            let chars = Int32.toString(e#length) |> String.padLeft(5, ' ');
+            println("${id}  ${n}  ${model}  ${pose}  ${chars}")
         });
     println("");
-    demo(color)
+    demo()
 
 ///
-/// Encode a scrambled 3x3x3 and read it back.
+/// Encode the solved 3x3x3 color framed state (registry entry 3) and read it back.
 ///
-/// The state below is the superflip: every corner solved, every edge in place
-/// but flipped. Its coordinate is exactly 2047 -- the eleven free flip bits all
-/// set, and nothing else -- which is a fair advertisement for what mixed-radix
-/// packing buys over fixed-width fields.
-///
-def demo(color: Bool): Unit \ IO =
-    let superflip = superflip();
-    match Orbit64.State.encode(3, superflip) {
+def demo(): Unit \ IO =
+    let solved = Orbit64.V2.State.solved(3, Orbit64.V2.Registry.Model.Color);
+    match Orbit64.V2.Codec.encode(3, solved) {
         case Err(e)    => println("encode failed: ${e}")
         case Ok(token) =>
-            println("  superflip encodes to ${token}");
-            match Orbit64.State.decode(3, token) {
-                case Err(e)   => println("  decode failed: ${e}")
-                case Ok(back) =>
-                    println("  decodes back identically: ${back == superflip}");
-                    draw(3, back, color)
+            println("  solved 3x3x3 color framed encodes to ${token}");
+            match Orbit64.V2.Codec.decode(token) {
+                case Err(e)        => println("  decode failed: ${e}")
+                case Ok((e, back)) =>
+                    let again = Orbit64.V2.Codec.encode(e#id, back);
+                    println("  decodes as entry ${e#id}, re-encodes: ${again == Ok(token)}")
             }
     }
 
 ///
-/// The superflip as a state: corners solved, every midge in place and flipped.
+/// Decode `token` with the V2 codec and print its facelets.
 ///
-def superflip(): Orbit64.State.FramedState =
-    List#{
-        Orbit64.Coord.Coord.CornerCoord(Vector.range(0, 8), Vector.repeat(8, 0)),
-        Orbit64.Coord.Coord.MidgeCoord(Vector.range(0, 12), Vector.repeat(12, 1))
+def report(token: String): Unit \ IO =
+    match Orbit64.V2.Codec.decode(token) {
+        case Err(why)      => println(why)
+        case Ok((e, cube)) =>
+            println(
+                "entry ${e#id}: ${e#n}x${e#n}x${e#n} ${e#model} ${e#pose} (${e#length} characters)"
+            );
+            match Orbit64.V2.Facelets.toFacelets(e#n, e#model, e#pose, cube) {
+                case Ok(text) => println(text)
+                case Err(why) => println(why)
+            }
     }
-        |> Orbit64.State.canonical
-
-///
-/// Decode `token`, inferring the cube size from its length.
-///
-def report(token: String, color: Bool): Unit \ IO =
-    match List.range(2, 8) |> List.find(n -> Orbit64.State.width(n) == String.length(token)) {
-        case None    => println("no cube size uses a ${String.length(token)}-character token")
-        case Some(n) => match Orbit64.State.decode(n, token) {
-            case Err(e)    => println("not a valid ${n}x${n}x${n} token: ${e}")
-            case Ok(state) =>
-                let orbits = Orbit64.State.orbits(state);
-                println(
-                    "${n}x${n}x${n}, ${List.length(orbits)} orbits, ${Orbit64.State.frame(state)}:"
-                );
-                orbits |> List.forEach(c -> println("  ${Orbit64.Coord.kind(c)}: ${c}"));
-                draw(n, state, color)
-        }
-    }
-
-///
-/// Print the net, or say why there isn't one.
-///
-def draw(n: Int32, state: Orbit64.State.FramedState, color: Bool): Unit \ IO =
-    println("");
-    match Orbit64.Net.draw(n, state, color) {
-        case Ok(net)  =>
-            println(net);
-            // A token carries ordinals, not geometry. Which slot sits where
-            // is agreed out of band, so the picture has to say what it read.
-            println("");
-            println("  drawn as ${Orbit64.Net.convention(n)}")
-        // Why it declined is the library's to say. Inferring it from `n`
-        // here was how the message came to claim things that were not so.
-        case Err(why) => println("  (${why})")
-    }
-
-///
-/// A rough magnitude for `x`, as `d.dddEn`. Only for the table.
-///
-def sci(x: BigInt): String =
-    let digits = BigInt.toString(x);
-    let n = String.length(digits);
-    if (n <= 4)
-        String.padLeft(10, ' ', digits)
-    else
-        let head = String.slice(start = 0, end = 1, digits);
-        let tail = String.slice(start = 1, end = 4, digits);
-        String.padLeft(10, ' ', "${head}.${tail}e${n - 1}")

@@ -1,5 +1,5 @@
 [package]
-version    = "0.9.0"
+version    = "1.0.0"
 repository = "github:wstein/flix-orbit64"
 # Exactly x.y.z, three integers. The compiler checks the shape; flixw enforces
 # it as the floor the lock satisfies.

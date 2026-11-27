@@ -3,7 +3,7 @@
 ///
 /// This module knows about characters and integers, not cubes. Keeping it
 /// below `Internal` prevents transport details from becoming a second public
-/// codec API beside `Orbit64.State`, `Orbit64.Move`, and `Orbit64.Token`.
+/// codec API beside `Orbit64.V2`, `Orbit64.Move`, and `Orbit64.Token`.
 ///
 pub mod Orbit64.Internal.Encoding {
     ///

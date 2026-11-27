@@ -1,13 +1,12 @@
 # Algorithm-tool design examples
 
 This is a separate Flix package for the source frontend described in
-[`ALGORITHM-DAG.md`](../../ALGORITHM-DAG.md). It depends on Orbit64 0.9.0 and
+[`ALGORITHM-DAG.md`](../../ALGORITHM-DAG.md). It depends on Orbit64 1.0.0 and
 keeps source parsing, formatting, optimization, and legacy imports outside the
 notation-independent library DAG.
 
-Run its checks from the repository root with the repository wrapper. Release
-0.9.0 was built for Flix 0.75 and cannot be resolved by the pinned Flix 0.80,
-so `local` builds this checkout's library instead:
+Run its checks from the repository root with the repository wrapper. Until
+release 1.0.0 is published, `local` builds this checkout's library instead:
 
 ```console
 ./flixw examples local check algorithm-tool

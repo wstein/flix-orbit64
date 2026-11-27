@@ -2,10 +2,9 @@
 /// The facelet bridge of Orbit64 V2: a cube state to its stickers and back.
 ///
 /// A facelet string writes the `6 n^2` stickers as the letters `U R F D L B`,
-/// one per facelet, six face fields in that order separated by one space, in
-/// the layout of `FORMAT.md` (facelet `face * n^2 + row * n + col`). Reading
-/// ignores spaces. This is the notation of V1's `Orbit64.Net`, for every
-/// `n = 2..15`.
+/// one per facelet, six face fields in that order separated by one space
+/// (facelet `face * n^2 + row * n + col`). Reading ignores spaces. This is the
+/// facelet notation of `FORMAT-V2.md`, for every `n = 2..15`.
 ///
 /// The color model writes the letters. The picture model, where every sticker
 /// is distinct, writes one base64url symbol per facelet instead: the sticker's

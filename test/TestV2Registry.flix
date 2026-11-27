@@ -1,5 +1,3 @@
-use Orbit64.V2.Registry.{Model, Pose}
-
 @Test
 def registryHasFiftyFourEntries(): Unit \ Assert =
     Assert.assertEq(expected = 54, List.length(Orbit64.V2.Registry.entries()))
@@ -74,17 +72,6 @@ def registryOffsetsFollowTheAllocationRule(): Unit \ Assert =
     Assert.assertEq(expected = countOf(10), offsetOf(11));
     Assert.assertEq(expected = countOf(16), offsetOf(17));
     Assert.assertEq(expected = countOf(52), offsetOf(53))
-
-@Test
-def v1CountsAreV2ColorFramedCounts(): Unit \ Assert =
-    List#{2, 3, 4, 5, 6, 7}
-        |> List.forEach(
-            n ->
-                Assert.assertEq(
-                    expected = Orbit64.State.stateCount(n),
-                    Orbit64.V2.State.count(n, Model.Color, Pose.Framed)
-                )
-        )
 
 @Test
 def solvedStatesEncodeToRunsOfA(): Unit \ Assert =
